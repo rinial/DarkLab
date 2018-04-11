@@ -9,7 +9,7 @@
 
 ADarkLabPlayerController::ADarkLabPlayerController()
 {
-	bShowMouseCursor = true;
+	//bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
 }
 
