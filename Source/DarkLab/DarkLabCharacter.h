@@ -41,6 +41,6 @@ private:
 	// TODO delete later
 	// A point light
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Equipment, meta = (AllowPrivateAccess = "true"))
-	UPointLightComponent* PointLight;
+		UPointLightComponent* PointLight;
 };
 
