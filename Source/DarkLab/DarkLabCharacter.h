@@ -43,4 +43,3 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Equipment, meta = (AllowPrivateAccess = "true"))
 		UPointLightComponent* PointLight;
 };
-

@@ -36,5 +36,3 @@ protected:
 	void OnSetDestinationPressed();
 	void OnSetDestinationReleased();
 };
-
-
