@@ -2,6 +2,21 @@
 
 #include "MainCharacter.h"
 
+void AMainCharacter::MoveUp(float Value)
+{
+	AddMovementInput(FVector(1.0f, 0.0f, 0.0f), Value);
+}
+
+void AMainCharacter::MoveRight(float Value)
+{
+	AddMovementInput(FVector(0.0f, 1.0f, 0.0f), Value);
+}
+
+void AMainCharacter::Look(FVector Direction)
+{
+	// TODO
+}
+
 // Takes one 'life' and calls CalculateLoss
 void AMainCharacter::TakeLife()
 {
@@ -20,11 +35,12 @@ void AMainCharacter::CalculateLoss()
 		OnLoss();
 }
 
-// TODO
 // Called on loss
 void AMainCharacter::OnLoss()
 {
 	UE_LOG(LogTemp, Warning, TEXT("You lost!"));
+
+	// TODO
 }
 
 // Sets default values

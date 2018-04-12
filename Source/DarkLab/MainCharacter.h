@@ -16,14 +16,19 @@ class DARKLAB_API AMainCharacter : public ACharacter
 public:
 	// Takes one 'life' and calls CalculateLoss
 	UFUNCTION(BlueprintCallable, Category = "Main Character")
-	virtual void TakeLife();
+	void TakeLife();
+
+	// Movement 
+	void MoveUp(float Value);
+	void MoveRight(float Value);
+	void Look(FVector Direction);
 
 private:
 	// Checks for the loss
-	virtual void CalculateLoss();
+	void CalculateLoss();
 
 	// Called on loss
-	virtual void OnLoss();
+	void OnLoss();
 
 	// The number of character's 'lives'
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Character", meta = (AllowPrivateAccess = "true"))
@@ -38,7 +43,7 @@ private:
 	UCameraComponent* TopDownCamera;
 
 public:
-	// Sets default values for this character's properties
+	// Sets default values
 	AMainCharacter();
 
 protected:
