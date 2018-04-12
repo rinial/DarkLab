@@ -56,5 +56,24 @@ void AMainPlayerController::LookWithStick()
 
 void AMainPlayerController::LookWithMouse()
 {
+	// TODO delete later
+	// For future use
+	/*FHitResult TraceHitResult;
+	PC->GetHitResultUnderCursor(ECC_Visibility, true, TraceHitResult);
+	FVector CursorFV = TraceHitResult.ImpactNormal;
+	FRotator CursorR = CursorFV.Rotation();
+	CursorToWorld->SetWorldLocation(TraceHitResult.Location);
+	CursorToWorld->SetWorldRotation(CursorR);
+	
+	// Trace to see what is under the mouse cursor
+	FHitResult Hit;
+	GetHitResultUnderCursor(ECC_Visibility, false, Hit);
+
+	if (Hit.bBlockingHit)
+	{
+		// We hit something, move there
+		SetNewMoveDestination(Hit.ImpactPoint);
+	}*/
+
 	// TODO
 }
