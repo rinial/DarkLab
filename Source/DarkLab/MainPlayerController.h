@@ -21,6 +21,10 @@ protected:
 	virtual void SetupInputComponent() override;
 	// End PlayerController interface
 
+	// Cotntrol where the character goes
+	void MoveUp(float Value);
+	void MoveRight(float Value);
+
 	// Control where the character looks
 	void LookWithStick();
 	void LookWithMouse();

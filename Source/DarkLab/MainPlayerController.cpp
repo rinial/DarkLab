@@ -14,12 +14,39 @@ void AMainPlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
 
-	// TODO
+	// TODO update look direction
 }
 
 void AMainPlayerController::SetupInputComponent()
 {
-	// TODO
+	Super::SetupInputComponent();
+
+	// TODO delete later
+	// For future use
+	/*InputComponent->BindAction("SetDestination", IE_Pressed, this, &ADarkLabPlayerController::OnSetDestinationPressed);
+	InputComponent->BindAction("SetDestination", IE_Released, this, &ADarkLabPlayerController::OnSetDestinationReleased);*/
+
+	check(InputComponent);
+
+	InputComponent->BindAxis("MoveUp", this, &AMainPlayerController::MoveUp);
+	InputComponent->BindAxis("MoveRight", this, &AMainPlayerController::MoveRight);
+
+	InputComponent->BindAxis("LookUp");
+	InputComponent->BindAxis("LookRight");
+}
+
+void AMainPlayerController::MoveUp(float Value)
+{
+	AMainCharacter* Character = Cast<AMainCharacter>(GetCharacter());
+	if (Character)
+		Character->MoveUp(Value);
+}
+
+void AMainPlayerController::MoveRight(float Value)
+{
+	AMainCharacter* Character = Cast<AMainCharacter>(GetCharacter());
+	if (Character)
+		Character->MoveRight(Value);
 }
 
 void AMainPlayerController::LookWithStick()
