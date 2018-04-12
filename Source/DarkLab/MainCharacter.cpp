@@ -14,7 +14,7 @@ void AMainCharacter::MoveRight(float Value)
 
 void AMainCharacter::Look(FVector Direction)
 {
-	// TODO
+	SetActorRotation(Direction.Rotation());
 }
 
 // Takes one 'life' and calls CalculateLoss
@@ -63,6 +63,7 @@ void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	// TODO
 }
 
 // Called every frame

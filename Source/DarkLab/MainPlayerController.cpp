@@ -14,19 +14,20 @@ void AMainPlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
 
-	// TODO update look direction
+	// TODO check if mouse is connected
+	LookWithStick();
 }
 
 void AMainPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
+	check(InputComponent);
+
 	// TODO delete later
 	// For future use
 	/*InputComponent->BindAction("SetDestination", IE_Pressed, this, &ADarkLabPlayerController::OnSetDestinationPressed);
 	InputComponent->BindAction("SetDestination", IE_Released, this, &ADarkLabPlayerController::OnSetDestinationReleased);*/
-
-	check(InputComponent);
 
 	InputComponent->BindAxis("MoveUp", this, &AMainPlayerController::MoveUp);
 	InputComponent->BindAxis("MoveRight", this, &AMainPlayerController::MoveRight);
@@ -51,7 +52,18 @@ void AMainPlayerController::MoveRight(float Value)
 
 void AMainPlayerController::LookWithStick()
 {
-	// TODO
+	AMainCharacter* Character = Cast<AMainCharacter>(GetCharacter());
+	if (Character)
+	{
+		float XValue = this->InputComponent->GetAxisValue("LookUp");
+		float YValue = this->InputComponent->GetAxisValue("LookRight");
+
+		FVector direction(XValue, YValue, 0.0f);
+
+		// Doesn't work on small direction vectors to prevent undesired rotations
+		if (direction.Size() > 0.25f)
+			Character->Look(direction);
+	}
 }
 
 void AMainPlayerController::LookWithMouse()
@@ -64,7 +76,7 @@ void AMainPlayerController::LookWithMouse()
 	FRotator CursorR = CursorFV.Rotation();
 	CursorToWorld->SetWorldLocation(TraceHitResult.Location);
 	CursorToWorld->SetWorldRotation(CursorR);
-	
+
 	// Trace to see what is under the mouse cursor
 	FHitResult Hit;
 	GetHitResultUnderCursor(ECC_Visibility, false, Hit);
@@ -75,5 +87,9 @@ void AMainPlayerController::LookWithMouse()
 		SetNewMoveDestination(Hit.ImpactPoint);
 	}*/
 
-	// TODO
+	AMainCharacter* Character = Cast<AMainCharacter>(GetCharacter());
+	if (Character)
+	{
+		// TODO
+	}
 }
