@@ -26,6 +26,9 @@ protected:
 	void MoveRight(float Value);
 
 	// Control where the character looks
-	void LookWithStick();
 	void LookWithMouse();
+	void LookWithStick();
+
+private:
+	bool bLookWithMouse = true;
 };

@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MainPlayerController.h"
+#include "DrawDebugHelpers.h"
 #include "MainCharacter.h"
 
 AMainPlayerController::AMainPlayerController()
@@ -14,7 +15,10 @@ void AMainPlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
 
-	// TODO check if mouse is connected
+	if(bLookWithMouse)
+		LookWithMouse();
+	// We try to look with stick anyway
+	// If we get input, we start looking with stick
 	LookWithStick();
 }
 
@@ -50,6 +54,26 @@ void AMainPlayerController::MoveRight(float Value)
 		Character->MoveRight(Value);
 }
 
+void AMainPlayerController::LookWithMouse()
+{
+	AMainCharacter* Character = Cast<AMainCharacter>(GetCharacter());
+	if (Character)
+	{
+		FVector mLocation , mDirection;
+		DeprojectMousePositionToWorld(mLocation, mDirection);
+
+		FVector cLocation = Character->GetActorLocation();
+
+		FVector direction = mLocation - cLocation;
+		// TODO change something to use camera lag
+		//FVector direction = mLocation + mDirection * Character->CameraBoom->CameraLagSpeed - cLocation;
+		//FVector direction = mLocation - Character->TopDownCamera->GetComponentLocation();
+		direction.Z = 0.0f; 
+
+		Character->Look(direction);
+	}
+}
+
 void AMainPlayerController::LookWithStick()
 {
 	AMainCharacter* Character = Cast<AMainCharacter>(GetCharacter());
@@ -61,35 +85,18 @@ void AMainPlayerController::LookWithStick()
 		FVector direction(XValue, YValue, 0.0f);
 
 		// Doesn't work on small direction vectors to prevent undesired rotations
-		if (direction.Size() > 0.25f)
-			Character->Look(direction);
-	}
-}
+		// Also doesn't override bLookWithMouse if no input is found
+		if (direction.Size() < 0.25f)
+			return;
 
-void AMainPlayerController::LookWithMouse()
-{
-	// TODO delete later
-	// For future use
-	/*FHitResult TraceHitResult;
-	PC->GetHitResultUnderCursor(ECC_Visibility, true, TraceHitResult);
-	FVector CursorFV = TraceHitResult.ImpactNormal;
-	FRotator CursorR = CursorFV.Rotation();
-	CursorToWorld->SetWorldLocation(TraceHitResult.Location);
-	CursorToWorld->SetWorldRotation(CursorR);
+		if (bLookWithMouse)
+		{
+			// Now we look with stick
+			bLookWithMouse = false;
+			// And we dont need cursor
+			bShowMouseCursor = true;
+		}
 
-	// Trace to see what is under the mouse cursor
-	FHitResult Hit;
-	GetHitResultUnderCursor(ECC_Visibility, false, Hit);
-
-	if (Hit.bBlockingHit)
-	{
-		// We hit something, move there
-		SetNewMoveDestination(Hit.ImpactPoint);
-	}*/
-
-	AMainCharacter* Character = Cast<AMainCharacter>(GetCharacter());
-	if (Character)
-	{
-		// TODO
+		Character->Look(direction);
 	}
 }
