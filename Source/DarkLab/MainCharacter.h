@@ -14,19 +14,18 @@ class DARKLAB_API AMainCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
+	// Movement 
+	void MoveUp(const float value);
+	void MoveRight(const float value);
+	void Look(const FVector direction);
+
 	// Takes one 'life' and calls CalculateLoss
 	UFUNCTION(BlueprintCallable, Category = "Main Character")
 	void TakeLife();
 
-	// Movement 
-	void MoveUp(float Value);
-	void MoveRight(float Value);
-	void Look(FVector Direction);
-
 private:
 	// Checks for the loss
 	void CalculateLoss();
-
 	// Called on loss
 	void OnLoss();
 
@@ -52,8 +51,5 @@ protected:
 
 public:
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void Tick(const float deltaTime) override;
 };

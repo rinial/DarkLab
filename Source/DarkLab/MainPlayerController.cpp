@@ -1,37 +1,99 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MainPlayerController.h"
-#include "DrawDebugHelpers.h"
-#include "MainCharacter.h"
 
+// Movement controls
+void AMainPlayerController::MoveUp(const float value)
+{
+	if (!Character)
+		return;
+	
+	Character->MoveUp(value);
+}
+void AMainPlayerController::MoveRight(const float value)
+{
+	if (!Character)
+		return;
+	
+	Character->MoveRight(value);
+}
+
+// Rotation controls
+void AMainPlayerController::LookWithMouse()
+{
+	if (!Character)
+		return;
+
+	FVector mLocation, mDirection;
+	if (!DeprojectMousePositionToWorld(mLocation, mDirection))
+		return;
+
+	const FVector cLocation = Character->GetActorLocation();
+
+	FVector direction = mLocation - cLocation;
+	// TODO change something to use camera lag
+	//FVector direction = mLocation + mDirection * Character->CameraBoom->CameraLagSpeed - cLocation;
+	//FVector direction = mLocation - Character->TopDownCamera->GetComponentLocation();
+	direction.Z = 0.0f;
+
+	Character->Look(direction);
+}
+void AMainPlayerController::LookWithStick()
+{
+	if (!Character)
+		return;
+
+	const float xValue = InputComponent->GetAxisValue("LookUp");
+	const float yValue = InputComponent->GetAxisValue("LookRight");
+
+	FVector direction(xValue, yValue, 0.0f);
+
+	// Doesn't work on small direction vectors to prevent undesired rotations
+	// Also doesn't override bLookWithMouse if no input is found
+	if (direction.Size() < 0.25f)
+		return;
+
+	if (bLookWithMouse)
+	{
+		// Now we look with stick
+		bLookWithMouse = false;
+		// And we dont need cursor
+		bShowMouseCursor = true;
+	}
+
+	Character->Look(direction);
+}
+
+// Sets default values
 AMainPlayerController::AMainPlayerController()
 {
 	// Show cursor in game
 	bShowMouseCursor = true;
-	DefaultMouseCursor = EMouseCursor::Crosshairs;
+	DefaultMouseCursor = EMouseCursor::CardinalCross;
+
+	// Can't get character at this point
+	Character = nullptr;
 }
 
-void AMainPlayerController::PlayerTick(float DeltaTime)
+// Called when the game starts or when spawned
+void AMainPlayerController::BeginPlay()
 {
-	Super::PlayerTick(DeltaTime);
+	Super::BeginPlay();
 
-	if(bLookWithMouse)
-		LookWithMouse();
-	// We try to look with stick anyway
-	// If we get input, we start looking with stick
-	LookWithStick();
+	Character = Cast<AMainCharacter>(GetCharacter());
 }
 
+// Sets controls
 void AMainPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	check(InputComponent);
+	//check(InputComponent);
 
 	// TODO delete later
 	// For future use
-	/*InputComponent->BindAction("SetDestination", IE_Pressed, this, &ADarkLabPlayerController::OnSetDestinationPressed);
-	InputComponent->BindAction("SetDestination", IE_Released, this, &ADarkLabPlayerController::OnSetDestinationReleased);*/
+	/*InputComponent->BindAction("SetDestination", IE_Pressed, this, &AMainPlayerController::OnSetDestinationPressed);
+	InputComponent->BindAction("SetDestination", IE_Released, this, &AMainPlayerController::OnSetDestinationReleased);*/
 
 	InputComponent->BindAxis("MoveUp", this, &AMainPlayerController::MoveUp);
 	InputComponent->BindAxis("MoveRight", this, &AMainPlayerController::MoveRight);
@@ -40,63 +102,15 @@ void AMainPlayerController::SetupInputComponent()
 	InputComponent->BindAxis("LookRight");
 }
 
-void AMainPlayerController::MoveUp(float Value)
+// Called every frame
+void AMainPlayerController::PlayerTick(const float deltaTime)
 {
-	AMainCharacter* Character = Cast<AMainCharacter>(GetCharacter());
-	if (Character)
-		Character->MoveUp(Value);
-}
+	Super::PlayerTick(deltaTime);
 
-void AMainPlayerController::MoveRight(float Value)
-{
-	AMainCharacter* Character = Cast<AMainCharacter>(GetCharacter());
-	if (Character)
-		Character->MoveRight(Value);
-}
+	if(bLookWithMouse)
+		LookWithMouse();
 
-void AMainPlayerController::LookWithMouse()
-{
-	AMainCharacter* Character = Cast<AMainCharacter>(GetCharacter());
-	if (Character)
-	{
-		FVector mLocation , mDirection;
-		DeprojectMousePositionToWorld(mLocation, mDirection);
-
-		FVector cLocation = Character->GetActorLocation();
-
-		FVector direction = mLocation - cLocation;
-		// TODO change something to use camera lag
-		//FVector direction = mLocation + mDirection * Character->CameraBoom->CameraLagSpeed - cLocation;
-		//FVector direction = mLocation - Character->TopDownCamera->GetComponentLocation();
-		direction.Z = 0.0f; 
-
-		Character->Look(direction);
-	}
-}
-
-void AMainPlayerController::LookWithStick()
-{
-	AMainCharacter* Character = Cast<AMainCharacter>(GetCharacter());
-	if (Character)
-	{
-		float XValue = this->InputComponent->GetAxisValue("LookUp");
-		float YValue = this->InputComponent->GetAxisValue("LookRight");
-
-		FVector direction(XValue, YValue, 0.0f);
-
-		// Doesn't work on small direction vectors to prevent undesired rotations
-		// Also doesn't override bLookWithMouse if no input is found
-		if (direction.Size() < 0.25f)
-			return;
-
-		if (bLookWithMouse)
-		{
-			// Now we look with stick
-			bLookWithMouse = false;
-			// And we dont need cursor
-			bShowMouseCursor = true;
-		}
-
-		Character->Look(direction);
-	}
+	// We try to look with stick anyway
+	// If we get input, we start looking with stick
+	LookWithStick();
 }

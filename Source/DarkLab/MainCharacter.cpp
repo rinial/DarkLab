@@ -2,19 +2,18 @@
 
 #include "MainCharacter.h"
 
-void AMainCharacter::MoveUp(float Value)
+// Movement functions
+void AMainCharacter::MoveUp(const float value)
 {
-	AddMovementInput(FVector(1.0f, 0.0f, 0.0f), Value);
+	AddMovementInput(FVector(1.0f, 0.0f, 0.0f), value);
 }
-
-void AMainCharacter::MoveRight(float Value)
+void AMainCharacter::MoveRight(const float value)
 {
-	AddMovementInput(FVector(0.0f, 1.0f, 0.0f), Value);
+	AddMovementInput(FVector(0.0f, 1.0f, 0.0f), value);
 }
-
-void AMainCharacter::Look(FVector Direction)
+void AMainCharacter::Look(const FVector direction)
 {
-	SetActorRotation(Direction.Rotation());
+	SetActorRotation(direction.Rotation());
 }
 
 // Takes one 'life' and calls CalculateLoss
@@ -34,7 +33,6 @@ void AMainCharacter::CalculateLoss()
 	if (Lives <= 0)
 		OnLoss();
 }
-
 // Called on loss
 void AMainCharacter::OnLoss()
 {
@@ -67,17 +65,9 @@ void AMainCharacter::BeginPlay()
 }
 
 // Called every frame
-void AMainCharacter::Tick(float DeltaTime)
+void AMainCharacter::Tick(const float deltaTime)
 {
-	Super::Tick(DeltaTime);
-
-	// TODO
-}
-
-// Called to bind functionality to input
-void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	Super::Tick(deltaTime);
 
 	// TODO
 }
