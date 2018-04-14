@@ -58,7 +58,7 @@ void AMainPlayerController::LookWithStick()
 		// Now we look with stick
 		bLookWithMouse = false;
 		// And we dont need cursor
-		bShowMouseCursor = true;
+		bShowMouseCursor = false;
 	}
 
 	Character->Look(direction);
@@ -69,7 +69,7 @@ AMainPlayerController::AMainPlayerController()
 {
 	// Show cursor in game
 	bShowMouseCursor = true;
-	DefaultMouseCursor = EMouseCursor::CardinalCross;
+	DefaultMouseCursor = EMouseCursor::Crosshairs;
 
 	// Can't get character at this point
 	Character = nullptr;
