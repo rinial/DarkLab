@@ -6,6 +6,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "MainGameMode.generated.h"
 
+// Controls the game
 UCLASS(Blueprintable)
 class DARKLAB_API AMainGameMode : public AGameModeBase
 {

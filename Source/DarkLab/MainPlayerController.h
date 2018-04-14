@@ -7,6 +7,7 @@
 #include "MainCharacter.h"
 #include "MainPlayerController.generated.h"
 
+// Handles controls
 UCLASS()
 class DARKLAB_API AMainPlayerController : public APlayerController
 {
