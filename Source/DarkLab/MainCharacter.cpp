@@ -1,6 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MainCharacter.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Equipable.h"
+// TODO delete later?
+#include "Flashlight.h"
+#include "Components/ArrowComponent.h"
+#include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
 
 // Movement functions
 void AMainCharacter::MoveUp(const float value)
@@ -52,6 +59,16 @@ AMainCharacter::AMainCharacter()
 	TopDownCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("TopDownCamera"));
 	TopDownCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 
+	// TODO delete later?
+	// Create a position for future equipment
+	EquipmentPosition = CreateDefaultSubobject<UArrowComponent>(TEXT("EquipmentPosition"));
+	EquipmentPosition->SetupAttachment(RootComponent);
+
+	// TODO delete later: we shouldn't spawn objects from character
+	static ConstructorHelpers::FObjectFinder<UBlueprint> flashlightBP(TEXT("Blueprint'/Game/Blueprints/FlashlightBP.FlashlightBP'"));
+	if (flashlightBP.Object)
+		MyFlashlightBP = (UClass*)flashlightBP.Object->GeneratedClass;
+
  	// Set this character to call Tick() every frame
 	PrimaryActorTick.bCanEverTick = true;
 }
@@ -61,7 +78,12 @@ void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	// TODO
+	// TODO delete later: we shouldn't spawn objects from character
+	AFlashlight* flashlight = GetWorld()->SpawnActor<AFlashlight>(MyFlashlightBP, GetActorLocation(), GetActorRotation());
+	UE_LOG(LogTemp, Warning, TEXT("Spawned a flashlight"));
+	IEquipable* toEquip = Cast<IEquipable>(flashlight);
+	if (toEquip)
+		toEquip->Execute_Equip(flashlight, this);
 }
 
 // Called every frame

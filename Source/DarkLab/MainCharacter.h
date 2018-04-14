@@ -4,10 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "Camera/CameraComponent.h"
 #include "MainCharacter.generated.h"
 
+// The main character of the game
 UCLASS(Blueprintable)
 class DARKLAB_API AMainCharacter : public ACharacter
 {
@@ -35,11 +34,23 @@ private:
 
 	// Camera boom positioning the camera above the character
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character", meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* CameraBoom;
+	class USpringArmComponent* CameraBoom;
 
 	// Top down camera
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character", meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* TopDownCamera;
+	class UCameraComponent* TopDownCamera;
+
+	// TODO delete later
+	TSubclassOf<class AFlashlight> MyFlashlightBP;
+
+public:
+	// TODO delete later?
+	// Position for equipment
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Character")
+	class UArrowComponent* EquipmentPosition;
+
+	// Some equiped object
+	class IEquipable* EquipedObject;
 
 public:
 	// Sets default values
