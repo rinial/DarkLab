@@ -6,17 +6,13 @@
 // Movement controls
 void AMainPlayerController::MoveUp(const float value)
 {
-	if (!Character)
-		return;
-	
-	Character->MoveUp(value);
+	if (Character)
+		Character->MoveUp(value);
 }
 void AMainPlayerController::MoveRight(const float value)
 {
-	if (!Character)
-		return;
-	
-	Character->MoveRight(value);
+	if (Character)
+		Character->MoveRight(value);
 }
 
 // Rotation controls
@@ -68,22 +64,14 @@ void AMainPlayerController::LookWithStick()
 // Makes the character use something he has equiped
 void AMainPlayerController::UseEquiped()
 {
-	UE_LOG(LogTemp, Warning, TEXT("UseEquiped called"));
-
-	if (!Character)
-		return;
-
-	Character->UseEquiped();
+	if (Character)
+		Character->UseEquiped();
 }
 // Makes the character avtivate smth near him
 void AMainPlayerController::Activate()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Activate called"));
-
-	if (!Character)
-		return;
-
-	Character->Activate();
+	if (Character)
+		Character->Activate();
 }
 
 // Show/Hide menu
