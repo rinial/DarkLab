@@ -8,9 +8,10 @@
 // Enables or disables light
 void AFlashlight::Use_Implementation()
 {
-	bLight = !bLight;
-	MainLight->bIsActive = bLight;
-	ExtraLight->bIsActive = bLight;
+	UE_LOG(LogTemp, Warning, TEXT("Toggled flashlight"));
+
+	MainLight->ToggleVisibility();
+	ExtraLight->ToggleVisibility();
 }
 
 // Sets default values

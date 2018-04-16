@@ -70,15 +70,20 @@ void AMainPlayerController::UseEquiped()
 {
 	UE_LOG(LogTemp, Warning, TEXT("UseEquiped called"));
 
-	// TODO
-}
+	if (!Character)
+		return;
 
+	Character->UseEquiped();
+}
 // Makes the character avtivate smth near him
 void AMainPlayerController::Activate()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Activate called"));
 
-	// TODO
+	if (!Character)
+		return;
+
+	Character->Activate();
 }
 
 // Show/Hide menu

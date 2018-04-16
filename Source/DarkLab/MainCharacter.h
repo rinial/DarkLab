@@ -18,6 +18,10 @@ public:
 	void MoveRight(const float value);
 	void Look(const FVector direction);
 
+	// Other controls
+	void UseEquiped();
+	void Activate();
+
 	// Takes one 'life' and calls CalculateLoss
 	UFUNCTION(BlueprintCallable, Category = "Main Character")
 	void TakeLife();

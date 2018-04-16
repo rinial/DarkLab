@@ -4,6 +4,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Equipable.h"
+#include "Usable.h"
 // TODO delete later?
 #include "Flashlight.h"
 #include "Components/ArrowComponent.h"
@@ -21,6 +22,25 @@ void AMainCharacter::MoveRight(const float value)
 void AMainCharacter::Look(const FVector direction)
 {
 	SetActorRotation(direction.Rotation());
+}
+
+// Uses equiped object if it is IUsable
+void AMainCharacter::UseEquiped()
+{
+	if (!EquipedObject)
+		return;
+
+	IUsable* toUse = Cast<IUsable>(EquipedObject);
+	if (toUse)
+		toUse->Execute_Use(Cast<UObject>(EquipedObject));
+}
+
+// Activates nearby object on scene
+void AMainCharacter::Activate()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Activated"));
+
+	// TODO
 }
 
 // Takes one 'life' and calls CalculateLoss
