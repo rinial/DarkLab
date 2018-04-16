@@ -7,7 +7,6 @@
 #include "Usable.h"
 // TODO delete later?
 #include "Flashlight.h"
-#include "Components/ArrowComponent.h"
 #include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
 
 // Movement functions
@@ -87,12 +86,7 @@ AMainCharacter::AMainCharacter()
 	TopDownCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("TopDownCamera"));
 	TopDownCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 
-	// TODO delete later?
-	// Create a position for future equipment
-	EquipmentPosition = CreateDefaultSubobject<UArrowComponent>(TEXT("EquipmentPosition"));
-	EquipmentPosition->SetupAttachment(RootComponent);
-
-	// TODO delete later: we find blueprints from character
+	// TODO delete later: we shouldn't find blueprints from character
 	static ConstructorHelpers::FObjectFinder<UBlueprint> flashlightBP(TEXT("Blueprint'/Game/Blueprints/FlashlightBP.FlashlightBP'"));
 	if (flashlightBP.Object)
 		MyFlashlightBP = (UClass*)flashlightBP.Object->GeneratedClass;

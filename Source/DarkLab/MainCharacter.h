@@ -48,11 +48,6 @@ private:
 	TSubclassOf<class AFlashlight> MyFlashlightBP;
 
 public:
-	// TODO delete later?
-	// Position for equipment
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Character")
-	class UArrowComponent* EquipmentPosition;
-
 	// Some equiped object
 	class IEquipable* EquipedObject;
 
