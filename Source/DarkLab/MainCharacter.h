@@ -56,6 +56,10 @@ public:
 	// Some equiped object
 	class IEquipable* EquipedObject;
 
+	// Is true when a character loses a life. Used for "death" animation
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character")
+	bool bIsDisabled = false;
+
 public:
 	// Sets default values
 	AMainCharacter();

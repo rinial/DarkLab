@@ -50,6 +50,7 @@ void AMainCharacter::TakeLife()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Died once"));
 		--Lives;
+		bIsDisabled = true;
 	}
 	CalculateLoss();
 }
@@ -59,11 +60,18 @@ void AMainCharacter::CalculateLoss()
 {
 	if (Lives <= 0)
 		OnLoss();
+	// TODO if not lost, make a delay, after that change bIsDisabled to false and respawn
 }
 // Called on loss
 void AMainCharacter::OnLoss()
 {
 	UE_LOG(LogTemp, Warning, TEXT("You lost!"));
+
+	APlayerController* controller = Cast<APlayerController>(GetController());
+	if(controller)
+		DisableInput(controller);
+
+	// use Delay for some animations to play
 
 	// TODO
 }
