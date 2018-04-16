@@ -65,6 +65,30 @@ void AMainPlayerController::LookWithStick()
 	Character->Look(direction);
 }
 
+// Makes the character use something he has equiped
+void AMainPlayerController::UseEquiped()
+{
+	UE_LOG(LogTemp, Warning, TEXT("UseEquiped called"));
+
+	// TODO
+}
+
+// Makes the character avtivate smth near him
+void AMainPlayerController::Activate()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Activate called"));
+
+	// TODO
+}
+
+// Show/Hide menu
+void AMainPlayerController::ShowHideMenu()
+{
+	UE_LOG(LogTemp, Warning, TEXT("ShowHideMenu called"));
+
+	// TODO
+}
+
 // Sets default values
 AMainPlayerController::AMainPlayerController()
 {
@@ -89,18 +113,20 @@ void AMainPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	//check(InputComponent);
+	// check(InputComponent);
 
-	// TODO delete later
-	// For future use
-	/*InputComponent->BindAction("SetDestination", IE_Pressed, this, &AMainPlayerController::OnSetDestinationPressed);
-	InputComponent->BindAction("SetDestination", IE_Released, this, &AMainPlayerController::OnSetDestinationReleased);*/
+	// Bind axis and buttons for use
 
 	InputComponent->BindAxis("MoveUp", this, &AMainPlayerController::MoveUp);
 	InputComponent->BindAxis("MoveRight", this, &AMainPlayerController::MoveRight);
 
 	InputComponent->BindAxis("LookUp");
 	InputComponent->BindAxis("LookRight");
+
+	InputComponent->BindAction("UseEquiped", IE_Pressed, this, &AMainPlayerController::UseEquiped);
+	InputComponent->BindAction("Activate", IE_Pressed, this, &AMainPlayerController::Activate);
+
+	InputComponent->BindAction("Menu/Cancel", IE_Pressed, this, &AMainPlayerController::ShowHideMenu);
 }
 
 // Called every frame

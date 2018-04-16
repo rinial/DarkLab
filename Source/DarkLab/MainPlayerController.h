@@ -25,6 +25,14 @@ private:
 	// Control where the character looks
 	void LookWithMouse();
 	void LookWithStick();
+
+	// Makes the character use something he has equiped
+	void UseEquiped();
+	// Makes the character avtivate smth near him
+	void Activate();
+
+	// Show/Hide menu
+	void ShowHideMenu();
 	
 public:
 	// Sets default values
