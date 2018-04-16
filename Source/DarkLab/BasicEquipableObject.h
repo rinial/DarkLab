@@ -18,7 +18,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Equipable")
 	void Equip(AMainCharacter* character);
 	virtual void Equip_Implementation(AMainCharacter* character) override;
-
+	
 	// Called when the object is to be unequiped
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Equipable")
 	void Unequip(AMainCharacter* character);

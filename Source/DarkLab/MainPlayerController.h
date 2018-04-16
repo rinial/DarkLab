@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "MainCharacter.h"
 #include "MainPlayerController.generated.h"
 
 // Handles controls
@@ -17,7 +16,7 @@ private:
 	// While true rotation is controled with mouse
 	bool bLookWithMouse = true;
 	// Character under control
-	AMainCharacter* Character;
+	class AMainCharacter* Character;
 
 	// Cotntrol where the character goes
 	void MoveUp(const float value);

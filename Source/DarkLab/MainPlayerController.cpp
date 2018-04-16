@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MainPlayerController.h"
+#include "MainCharacter.h"
 
 // Movement controls
 void AMainPlayerController::MoveUp(const float value)

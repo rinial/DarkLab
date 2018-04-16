@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "MainCharacter.h"
 #include "Equipable.generated.h"
+
+class AMainCharacter;
 
 // This class does not need to be modified.
 UINTERFACE(BlueprintType)
