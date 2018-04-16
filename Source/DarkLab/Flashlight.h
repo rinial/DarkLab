@@ -20,8 +20,6 @@ public:
 	virtual void Use_Implementation() override;
 
 private:
-	bool bLight = true;
-
 	// Flashlight's direction and root object
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flashlight", meta = (AllowPrivateAccess = "true"))
 	class UArrowComponent* Direction;

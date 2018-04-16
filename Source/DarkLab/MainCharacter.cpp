@@ -84,7 +84,7 @@ AMainCharacter::AMainCharacter()
 	EquipmentPosition = CreateDefaultSubobject<UArrowComponent>(TEXT("EquipmentPosition"));
 	EquipmentPosition->SetupAttachment(RootComponent);
 
-	// TODO delete later: we shouldn't spawn objects from character
+	// TODO delete later: we find blueprints from character
 	static ConstructorHelpers::FObjectFinder<UBlueprint> flashlightBP(TEXT("Blueprint'/Game/Blueprints/FlashlightBP.FlashlightBP'"));
 	if (flashlightBP.Object)
 		MyFlashlightBP = (UClass*)flashlightBP.Object->GeneratedClass;

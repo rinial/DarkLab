@@ -7,12 +7,15 @@
 // Called when the object is to be equiped
 void ABasicEquipableObject::Equip_Implementation(AMainCharacter* character)
 {
+	// TODO move it to function parameters
+	FName location = FName("LeftHand");
+
 	// TOTO change later
-	USceneComponent* attachLocation = Cast<USceneComponent>(character->EquipmentPosition);
-	if (!attachLocation)
+	USceneComponent* mesh = Cast<USceneComponent>(character->GetMesh());
+	if (!mesh)
 		return;
 
-	AttachToComponent(attachLocation, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	AttachToComponent(mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, location);
 	character->EquipedObject = this;
 }
 // Called when the object is to be unequiped
