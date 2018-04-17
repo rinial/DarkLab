@@ -32,6 +32,10 @@ private:
 	// Called on loss
 	void OnLoss();
 
+	// The coefficient for the movement backwards
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Character", meta = (AllowPrivateAccess = "true"))
+	float BackMoveCoeff = 0.6f;
+
 	// The number of character's 'lives'
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Character", meta = (AllowPrivateAccess = "true"))
 	int Lives = 1;

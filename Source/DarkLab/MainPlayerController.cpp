@@ -6,19 +6,19 @@
 // Movement controls
 void AMainPlayerController::MoveUp(const float value)
 {
-	if (Character)
+	if (Character && bCharacterActive)
 		Character->MoveUp(value);
 }
 void AMainPlayerController::MoveRight(const float value)
 {
-	if (Character)
+	if (Character && bCharacterActive)
 		Character->MoveRight(value);
 }
 
 // Rotation controls
 void AMainPlayerController::LookWithMouse()
 {
-	if (!Character)
+	if (!(Character && bCharacterActive))
 		return;
 
 	FVector mLocation, mDirection;
@@ -37,7 +37,7 @@ void AMainPlayerController::LookWithMouse()
 }
 void AMainPlayerController::LookWithStick()
 {
-	if (!Character)
+	if (!(Character && bCharacterActive))
 		return;
 
 	const float xValue = InputComponent->GetAxisValue("LookUp");
@@ -64,13 +64,13 @@ void AMainPlayerController::LookWithStick()
 // Makes the character use something he has equiped
 void AMainPlayerController::UseEquiped()
 {
-	if (Character)
+	if (Character && bCharacterActive)
 		Character->UseEquiped();
 }
 // Makes the character avtivate smth near him
 void AMainPlayerController::Activate()
 {
-	if (Character)
+	if (Character && bCharacterActive)
 		Character->Activate();
 }
 
@@ -80,6 +80,14 @@ void AMainPlayerController::ShowHideMenu()
 	UE_LOG(LogTemp, Warning, TEXT("ShowHideMenu called"));
 
 	// TODO
+}
+
+// Called on loss
+void AMainPlayerController::OnLoss()
+{
+	UE_LOG(LogTemp, Warning, TEXT("You actually lost!"));
+
+	bCharacterActive = false;
 }
 
 // Sets default values
@@ -127,7 +135,7 @@ void AMainPlayerController::PlayerTick(const float deltaTime)
 {
 	Super::PlayerTick(deltaTime);
 
-	if(bLookWithMouse)
+	if (bLookWithMouse)
 		LookWithMouse();
 
 	// We try to look with stick anyway

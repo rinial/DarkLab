@@ -18,6 +18,9 @@ private:
 	// Character under control
 	class AMainCharacter* Character;
 
+	// While true character can be moved and rotated and he can use stuff
+	bool bCharacterActive = true;
+
 	// Cotntrol where the character goes
 	void MoveUp(const float value);
 	void MoveRight(const float value);
@@ -33,6 +36,10 @@ private:
 
 	// Show/Hide menu
 	void ShowHideMenu();
+
+public:
+	// Called on loss from MainCharacter
+	void OnLoss();
 	
 public:
 	// Sets default values

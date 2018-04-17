@@ -5,6 +5,7 @@
 #include "Camera/CameraComponent.h"
 #include "Equipable.h"
 #include "Usable.h"
+#include "MainPlayerController.h"
 // TODO delete later?
 #include "Flashlight.h"
 #include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
@@ -12,11 +13,25 @@
 // Movement functions
 void AMainCharacter::MoveUp(const float value)
 {
-	AddMovementInput(FVector(1.0f, 0.0f, 0.0f), value);
+	FRotator rotation = GetActorRotation();
+	FVector direction = rotation.Vector();
+	FVector v2 = FVector(1.0f, 0.0f, 0.0f) * value;
+	// Angle between applied movement and view direction
+	float angle = FMath::RadiansToDegrees(acosf(FVector::DotProduct(direction, v2)));
+	// UE_LOG(LogTemp, Warning, TEXT("%f"), angle);
+
+	AddMovementInput(FVector(1.0f - (1.0f - BackMoveCoeff) * angle / 180.0f, 0.0f, 0.0f), value);
 }
 void AMainCharacter::MoveRight(const float value)
 {
-	AddMovementInput(FVector(0.0f, 1.0f, 0.0f), value);
+	FRotator rotation = GetActorRotation();
+	FVector direction = rotation.Vector();
+	FVector v2 = FVector(0.0f, 1.0f, 0.0f) * value;
+	// Angle between applied movement and view direction
+	float angle = FMath::RadiansToDegrees(acosf(FVector::DotProduct(direction, v2)));
+	// UE_LOG(LogTemp, Warning, TEXT("%f"), angle);
+
+	AddMovementInput(FVector(0.0f, 1.0f - (1.0f - BackMoveCoeff) * angle / 180.0f, 0.0f), value);
 }
 void AMainCharacter::Look(const FVector direction)
 {
@@ -66,9 +81,9 @@ void AMainCharacter::OnLoss()
 {
 	UE_LOG(LogTemp, Warning, TEXT("You lost!"));
 
-	APlayerController* controller = Cast<APlayerController>(GetController());
-	if(controller)
-		DisableInput(controller);
+	AMainPlayerController* controller = Cast<AMainPlayerController>(GetController());
+	if (controller)
+		controller->OnLoss();
 
 	// use Delay for some animations to play
 

@@ -4,6 +4,7 @@
 #include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 #include "Runtime/Engine/Classes/Components/SphereComponent.h"
 #include "Runtime/Engine/Classes/GameFramework/FloatingPawnMovement.h"
+#include "MainCharacter.h"
 
 // Movement functions
 void ADarkness::Move(const FVector direction)
@@ -46,12 +47,32 @@ void ADarkness::Tracking()
 
 	// We don't move if objects are already close
 	// TODO delete magic number
-	if (direction.Size() < 1.0f)
+	if (direction.Size() < 10.0f)
 		return;
 
 	direction.Normalize();
 
 	Move(direction);
+}
+
+// Used for collision overlaps
+void ADarkness::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Entered the darkness!"));
+	
+	AMainCharacter* character = Cast<AMainCharacter>(OtherActor);
+	if (!character)
+		return;
+
+	character->TakeLife();
+
+	// TODO
+}
+void ADarkness::OnEndOverlap(UPrimitiveComponent* OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Escaped the darkness!"));
+
+	// TODO
 }
 
 // Sets default values
@@ -64,6 +85,8 @@ ADarkness::ADarkness()
 	// Create a sphere for collision
 	Collision = CreateDefaultSubobject<USphereComponent>(TEXT("SphereCollision"));
 	Collision->SetupAttachment(RootComponent);
+	Collision->OnComponentBeginOverlap.AddDynamic(this, &ADarkness::OnBeginOverlap);
+	Collision->OnComponentEndOverlap.AddDynamic(this, &ADarkness::OnEndOverlap);
 
 	// Create a floating movement
 	Movement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("FloatingMovement"));
@@ -76,8 +99,6 @@ ADarkness::ADarkness()
 void ADarkness::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// TODO
 }
 
 // Called every frame
