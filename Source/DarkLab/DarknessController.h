@@ -11,6 +11,12 @@ UCLASS()
 class DARKLAB_API ADarknessController : public AAIController
 {
 	GENERATED_BODY()
+
+private:
+	// Player character reference
+	class AMainCharacter* Character;
+	// Controlled darkness
+	class ADarkness* Darkness;
 	
 public:
 	// Starts following the player
