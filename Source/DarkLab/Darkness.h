@@ -12,7 +12,14 @@ class DARKLAB_API ADarkness : public APawn
 {
 	GENERATED_BODY()
 
-	// TODO
+private:
+	// The particle system, forming the main body of the Darkness
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness", meta = (AllowPrivateAccess = "true"))
+	class UParticleSystemComponent* DarkParticles;
+
+	// The spherical collision of the darkness
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness", meta = (AllowPrivateAccess = "true"))
+	class USphereComponent* Collision;
 
 public:
 	// Sets default values

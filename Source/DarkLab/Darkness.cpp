@@ -1,11 +1,19 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Darkness.h"
+#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
+#include "Runtime/Engine/Classes/Components/SphereComponent.h"
 
 // Sets default values
 ADarkness::ADarkness()
 {
-	// TODO
+	// Create a particle system
+	DarkParticles = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("DarkParticles"));
+	SetRootComponent(DarkParticles);
+
+	// Create a sphere for collision
+	Collision = CreateDefaultSubobject<USphereComponent>(TEXT("SphereCollision"));
+	Collision->SetupAttachment(RootComponent);
 
  	// Set this pawn to call Tick() every frame
 	PrimaryActorTick.bCanEverTick = true;
