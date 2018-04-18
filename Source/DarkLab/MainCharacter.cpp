@@ -9,6 +9,11 @@
 // TODO delete later?
 #include "Flashlight.h"
 #include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
+#include "Runtime/Engine/Classes/Engine/PointLight.h"
+#include "Runtime/Engine/Public/EngineUtils.h"
+#include "Components/PointLightComponent.h"
+#include "Runtime/Engine/Classes/Components/CapsuleComponent.h"
+#include "Runtime/CoreUObject/Public/UObject/UObjectIterator.h"
 
 // Movement functions
 void AMainCharacter::MoveUp(const float value)
@@ -69,6 +74,56 @@ void AMainCharacter::TakeLife()
 	CalculateLoss();
 }
 
+// TODO make it more generic, move somewhere
+// Returns the light level on the position
+float AMainCharacter::GetLightingAmount()
+{
+	FVector Loc = GetActorLocation();
+	// Checks head
+	Loc += FVector(0, 0, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	// TODO should somehow make it ignore equiped stuff?
+	FCollisionQueryParams Params = FCollisionQueryParams(FName(TEXT("LightTrace")), true, this);
+	float Result = 0.0f;
+
+	TArray<UPointLightComponent*> PointLights;
+	UWorld* YourGameWorld = GetWorld();
+	for (TObjectIterator<UPointLightComponent> Itr; Itr; ++Itr)
+	{
+		//World Check
+		if (Itr->GetWorld() != YourGameWorld)
+		{
+			continue;
+		}
+
+		PointLights.Add(*Itr);
+	}
+
+	for (UPointLightComponent* LightComp : PointLights)
+	{
+		FVector End = LightComp->GetComponentLocation();
+		float Distance = FVector::Dist(Loc, End);
+		float LightRadius = LightComp->AttenuationRadius;
+		bool bHit = GetWorld()->LineTraceTestByChannel(Loc, End, ECC_Visibility, Params);
+
+		//UE_LOG(LogTemp, Warning, TEXT("wow light"));
+		if (Distance <= LightRadius && !bHit)
+		{
+			float temp = FMath::Pow(FMath::Max(0.0f, 1.0f - (Distance / LightRadius)), (LightComp->LightFalloffExponent + 1)) * (LightRadius * 1.25);
+			temp = FMath::Clamp(temp, 0.0f, 1.0f);
+			//UE_LOG(LogTemp, Warning, TEXT("%f"), temp);
+			// It always counts the brightest light
+			if (temp > Result)
+				Result = temp;
+		}
+	}
+	
+	if (Result > 1.0f)
+		Result = 1.0f;
+
+	//UE_LOG(LogTemp, Warning, TEXT("Final %f"), Result);
+	return Result;
+}
+
 // Checks for the loss
 void AMainCharacter::CalculateLoss()
 {
@@ -81,11 +136,17 @@ void AMainCharacter::OnLoss()
 {
 	UE_LOG(LogTemp, Warning, TEXT("You lost!"));
 
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
+	PrimaryActorTick.bCanEverTick = false;
+
+	// Tell the controller that we lost
 	AMainPlayerController* controller = Cast<AMainPlayerController>(GetController());
 	if (controller)
 		controller->OnLoss();
 
 	// use Delay for some animations to play
+
+	// GetWorld()->GetAuthGameMode()->RestartPlayerAtPlayerStart();
 
 	// TODO
 }
@@ -129,4 +190,6 @@ void AMainCharacter::Tick(const float deltaTime)
 	Super::Tick(deltaTime);
 
 	// TODO
+	// delete
+	GetLightingAmount();
 }

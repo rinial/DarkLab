@@ -26,6 +26,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Main Character")
 	void TakeLife();
 
+	// TODO make it more generic, move somewhere
+	// Returns the light level on the position
+	float GetLightingAmount();
+
 private:
 	// Checks for the loss
 	void CalculateLoss();

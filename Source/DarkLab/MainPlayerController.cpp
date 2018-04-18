@@ -2,6 +2,7 @@
 
 #include "MainPlayerController.h"
 #include "MainCharacter.h"
+#include "Runtime/Engine/Classes/GameFramework/GameModeBase.h"
 
 // Movement controls
 void AMainPlayerController::MoveUp(const float value)
@@ -88,6 +89,13 @@ void AMainPlayerController::OnLoss()
 	UE_LOG(LogTemp, Warning, TEXT("You actually lost!"));
 
 	bCharacterActive = false;
+
+	// TODO Use Delay to let the character die
+	// TODO make gamemode do this
+	UnPossess();
+	GetWorld()->GetAuthGameMode()->RestartPlayer(this);
+	Character = Cast<AMainCharacter>(GetCharacter());
+	bCharacterActive = true;
 }
 
 // Sets default values
