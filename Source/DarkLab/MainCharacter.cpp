@@ -59,40 +59,21 @@ void AMainCharacter::Activate()
 	// TODO
 }
 
-// Takes one 'life' and calls CalculateLoss
-void AMainCharacter::TakeLife()
+// Happens when something 'damages' the character
+void AMainCharacter::Disable()
 {
-	if (Lives > 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Died once"));
-		--Lives;
-		bIsDisabled = true;
-	}
-	CalculateLoss();
-}
+	UE_LOG(LogTemp, Warning, TEXT("Got disabled"));
 
-// Checks for the loss
-void AMainCharacter::CalculateLoss()
-{
-	if (Lives <= 0)
-		OnLoss();
-	// TODO if not lost, make a delay, after that change bIsDisabled to false and respawn
-}
-// Called on loss
-void AMainCharacter::OnLoss()
-{
-	UE_LOG(LogTemp, Warning, TEXT("You lost!"));
+	bIsDisabled = true;
 
 	// TODO destroy instead?
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
 	PrimaryActorTick.SetTickFunctionEnable(false);
 
-	// Tell the controller that we lost
+	// Tell the controller that we got disabled
 	AMainPlayerController* controller = Cast<AMainPlayerController>(GetController());
 	if (controller)
-		controller->OnLoss();
-
-	// TODO use Delay for some animations to play
+		controller->OnDisabled();
 
 	// TODO Destroy?
 }
@@ -138,6 +119,6 @@ void AMainCharacter::Tick(const float deltaTime)
 	Super::Tick(deltaTime);
 
 	// TODO delete
-	// We check the light at the head
+	// We check the light level
 	GameMode->GetLightingAmount(this, true);
 }

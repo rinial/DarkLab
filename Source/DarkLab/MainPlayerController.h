@@ -37,9 +37,20 @@ private:
 	// Show/Hide menu
 	void ShowHideMenu();
 
+	// The number of character's 'lives'
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Character Controller", meta = (AllowPrivateAccess = "true"))
+	int Lives = 3;
+
 public:
-	// Called on loss from MainCharacter
+	// Called from the main character. Takes one 'life' and calls CalculateLoss
+	void OnDisabled();
+private:
+	// Checks for the loss and calls OnLoss
+	void CalculateLoss();
+	// Called when disabled and no 'lives' are left
 	void OnLoss();
+	// Respawns the character
+	void Enable();
 	
 public:
 	// Sets default values

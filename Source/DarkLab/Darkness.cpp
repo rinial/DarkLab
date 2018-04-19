@@ -4,7 +4,12 @@
 #include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 #include "Runtime/Engine/Classes/Components/SphereComponent.h"
 #include "Runtime/Engine/Classes/GameFramework/FloatingPawnMovement.h"
+#include "DarknessController.h"
 #include "MainCharacter.h"
+#include "MainGameMode.h"
+// For on screen debug
+#include "Runtime/Engine/Public/EngineGlobals.h"
+#include "Runtime/Engine/Classes/Engine/Engine.h"
 
 // Movement functions
 void ADarkness::Move(const FVector direction)
@@ -28,6 +33,12 @@ void ADarkness::Stop()
 // Track something
 void ADarkness::Tracking()
 {
+	// We check the light level
+	float luminosity = GameMode->GetLightingAmount(this, true, 60);
+
+	if (GEngine)
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Darkness luminosity: %f"), luminosity), true);
+
 	FVector currentLocation;
 	switch (TrackingType)
 	{
@@ -58,19 +69,22 @@ void ADarkness::Tracking()
 // Used for collision overlaps
 void ADarkness::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Entered the darkness!"));
+	// UE_LOG(LogTemp, Warning, TEXT("Entered the darkness!"));
 	
 	AMainCharacter* character = Cast<AMainCharacter>(OtherActor);
 	if (!character)
 		return;
 
-	character->TakeLife();
+	character->Disable();
 
-	// TODO
+	// Tell the controller that darkness disabled player
+	ADarknessController* controller = Cast<ADarknessController>(GetController());
+	if (controller)
+		controller->OnDisabling();
 }
 void ADarkness::OnEndOverlap(UPrimitiveComponent* OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Escaped the darkness!"));
+	// UE_LOG(LogTemp, Warning, TEXT("Escaped the darkness!"));
 
 	// TODO
 }
@@ -99,6 +113,8 @@ ADarkness::ADarkness()
 void ADarkness::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
 }
 
 // Called every frame

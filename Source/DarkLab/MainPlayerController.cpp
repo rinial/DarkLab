@@ -83,16 +83,42 @@ void AMainPlayerController::ShowHideMenu()
 	// TODO
 }
 
+// Takes one 'life' and calls CalculateLoss
+void AMainPlayerController::OnDisabled()
+{
+	if (Lives > 0)
+	{
+		--Lives;
+		UE_LOG(LogTemp, Warning, TEXT("Disabled once"));
+
+		bCharacterActive = false;
+
+		UnPossess();
+		CalculateLoss();
+	}
+}
+// Checks for the loss and calls OnLoss
+void AMainPlayerController::CalculateLoss()
+{
+	if (Lives <= 0)
+		OnLoss();
+	else
+	{
+		// TODO Use Delay to let the character die
+		// TODO make gamemode do this
+		Enable();
+	}
+}
 // Called on loss
 void AMainPlayerController::OnLoss()
 {
 	UE_LOG(LogTemp, Warning, TEXT("You actually lost!"));
 
-	bCharacterActive = false;
-
-	// TODO Use Delay to let the character die
-	// TODO make gamemode do this
-	UnPossess();
+	// TODO
+}
+// Respawns the character
+void AMainPlayerController::Enable()
+{
 	GetWorld()->GetAuthGameMode()->RestartPlayer(this);
 	Character = Cast<AMainCharacter>(GetCharacter());
 	bCharacterActive = true;

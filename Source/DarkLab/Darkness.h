@@ -54,6 +54,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness", meta = (AllowPrivateAccess = "true"))
 	class UFloatingPawnMovement* Movement;
 
+	// A reference to the game mode
+	class AMainGameMode* GameMode;
+
 public:
 	// Used for the collision overlaps
 	UFUNCTION(BlueprintCallable, Category = "Overlap")

@@ -106,20 +106,20 @@ float AMainGameMode::GetLightingAmount(const AActor* actor, const TArray<FVector
 				// Now it's 0 near the edge and 0 in center
 				temp = 1 - temp;
 
-				//UE_LOG(LogTemp, Warning, TEXT("%f"), temp);
+				// UE_LOG(LogTemp, Warning, TEXT("%f"), temp);
 				// It always counts the brightest light
 				if (temp > localResult)
 					localResult = temp;
 			}
 		}
 		
-		UE_LOG(LogTemp, Warning, TEXT("%f"), localResult);
+		// UE_LOG(LogTemp, Warning, TEXT("%f"), localResult);
 		// We take the maximum value of the positions
 		if (localResult > result)
 			result = localResult;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Final %f"), result);
+	// UE_LOG(LogTemp, Warning, TEXT("Final %f"), result);
 	return result;
 }
 

@@ -22,23 +22,14 @@ public:
 	void UseEquiped();
 	void Activate();
 
-	// Takes one 'life' and calls CalculateLoss
+	// Happens when something 'damages' the character
 	UFUNCTION(BlueprintCallable, Category = "Main Character")
-	void TakeLife();
+	void Disable();
 
 private:
-	// Checks for the loss
-	void CalculateLoss();
-	// Called on loss
-	void OnLoss();
-
 	// The coefficient for the movement backwards
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Character", meta = (AllowPrivateAccess = "true"))
 	float BackMoveCoeff = 0.6f;
-
-	// The number of character's 'lives'
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Character", meta = (AllowPrivateAccess = "true"))
-	int Lives = 1;
 
 	// Camera boom positioning the camera above the character
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character", meta = (AllowPrivateAccess = "true"))
