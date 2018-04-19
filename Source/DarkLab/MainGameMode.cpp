@@ -68,7 +68,7 @@ float AMainGameMode::GetLightingAmount(const AActor* actor, const TArray<FVector
 	// We find local results for all locations
 	for (FVector location : locations)
 	{
-		DrawDebugPoint(gameWorld, location, 5, FColor::Red);
+		// DrawDebugPoint(gameWorld, location, 5, FColor::Red);
 
 		// This will be used for the spot lights
 		FBoxSphereBounds bounds = FBoxSphereBounds(location, FVector(1, 1, 1), 1);
@@ -98,7 +98,7 @@ float AMainGameMode::GetLightingAmount(const AActor* actor, const TArray<FVector
 			// If location could be lit
 			if (!bHit)
 			{
-				DrawDebugLine(gameWorld, location, lightLocation, FColor::Cyan);
+				// DrawDebugLine(gameWorld, location, lightLocation, FColor::Cyan);
 
 				// 1 if near the edge of light, 0 if in center
 				float temp = distance / lightRadius;
@@ -107,7 +107,7 @@ float AMainGameMode::GetLightingAmount(const AActor* actor, const TArray<FVector
 				// Now it's 0 near the edge and 1 in center
 				temp = 1 - temp;
 				// Finally we take intensity into account
-				//temp *= lightComp->Intensity * spotK;
+				// temp *= lightComp->Intensity * spotK;
 
 				// UE_LOG(LogTemp, Warning, TEXT("%f"), temp);
 				// It always counts the brightest light
