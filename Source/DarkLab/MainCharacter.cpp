@@ -9,8 +9,8 @@
 #include "MainGameMode.h"
 // TODO delete later?
 #include "Flashlight.h"
-#include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
-#include "Runtime/Engine/Classes/Components/CapsuleComponent.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Components/CapsuleComponent.h"
 
 // Movement functions
 void AMainCharacter::MoveUp(const float value)

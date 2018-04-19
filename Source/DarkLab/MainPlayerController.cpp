@@ -2,7 +2,7 @@
 
 #include "MainPlayerController.h"
 #include "MainCharacter.h"
-#include "Runtime/Engine/Classes/GameFramework/GameModeBase.h"
+#include "GameFramework/GameModeBase.h"
 
 // Movement controls
 void AMainPlayerController::MoveUp(const float value)

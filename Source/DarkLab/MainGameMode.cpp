@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MainGameMode.h"
-#include "Runtime/Engine/Public/EngineUtils.h"
+#include "EngineUtils.h"
 #include "Components/PointLightComponent.h"
-#include "Runtime/Engine/Classes/Components/SpotLightComponent.h"
-#include "Runtime/CoreUObject/Public/UObject/UObjectIterator.h"
+#include "Components/SpotLightComponent.h"
+#include "UObject/UObjectIterator.h"
 #include "DrawDebugHelpers.h"
 
 // Returns the light level on the position

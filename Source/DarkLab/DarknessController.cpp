@@ -2,7 +2,7 @@
 
 #include "DarknessController.h"
 #include "Darkness.h"
-#include "Runtime/Engine/Classes/GameFramework/PawnMovementComponent.h"
+#include "GameFramework/PawnMovementComponent.h"
 
 // Called on disabling a character
 void ADarknessController::OnDisabling()

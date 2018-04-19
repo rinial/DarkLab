@@ -1,15 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Darkness.h"
-#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
-#include "Runtime/Engine/Classes/Components/SphereComponent.h"
-#include "Runtime/Engine/Classes/GameFramework/FloatingPawnMovement.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "Components/SphereComponent.h"
+#include "GameFramework/FloatingPawnMovement.h"
 #include "DarknessController.h"
 #include "MainCharacter.h"
 #include "MainGameMode.h"
 // For on screen debug
-#include "Runtime/Engine/Public/EngineGlobals.h"
-#include "Runtime/Engine/Classes/Engine/Engine.h"
+#include "EngineGlobals.h"
+#include "Engine/Engine.h"
 
 // Movement functions
 void ADarkness::Move(const FVector direction)
