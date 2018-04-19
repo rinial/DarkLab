@@ -106,6 +106,8 @@ float AMainGameMode::GetLightingAmount(const AActor* actor, const TArray<FVector
 				temp = FMath::Pow(temp, 0.5f);
 				// Now it's 0 near the edge and 1 in center
 				temp = 1 - temp;
+				// Finally we take intensity into account
+				//temp *= lightComp->Intensity * spotK;
 
 				// UE_LOG(LogTemp, Warning, TEXT("%f"), temp);
 				// It always counts the brightest light

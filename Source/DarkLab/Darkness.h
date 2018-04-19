@@ -43,7 +43,14 @@ private:
 	FVector TrackedLocation;
 
 	// The amount of light the darkness is in
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness", meta = (AllowPrivateAccess = "true"))
 	float Luminosity = 0.0f;
+	// The darkness's resistance to light
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness", meta = (AllowPrivateAccess = "true"))
+	float LightResistance = 0.0f;
+	// The speed of resistance rising
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness", meta = (AllowPrivateAccess = "true"))
+	float LightResSpeed = 0.01f;
 
 	// The particle system, forming the main body of the darkness
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness", meta = (AllowPrivateAccess = "true"))

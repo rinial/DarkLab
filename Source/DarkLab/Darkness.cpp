@@ -14,7 +14,9 @@
 // Movement functions
 void ADarkness::Move(const FVector direction)
 {
-	Movement->AddInputVector(direction);
+	// Moves slower in light, but light resistance helps
+	// '*2' is used cause light is already very visible at 0.5 luminosity
+	Movement->AddInputVector(direction * FMath::Max(0.0f, 1 - 2 * Luminosity * (1 - LightResistance)));
 }
 void ADarkness::MoveToLocation(FVector location)
 {
@@ -118,9 +120,16 @@ void ADarkness::Tick(float DeltaTime)
 
 	// TODO delete from here later. we should evaluate it less often
 	// We check the light level
-	Luminosity = GameMode->GetLightingAmount(this);// , true, Collision->GetScaledSphereRadius());
+	Luminosity = GameMode->GetLightingAmount(this, true, Collision->GetScaledSphereRadius());
 	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Light resistance: %f"), LightResistance), true);
 		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Darkness luminosity: %f"), Luminosity), true);
+	}
+
+	// Increase resistance if stuck in light
+	if (Luminosity > LightResistance)
+		LightResistance += DeltaTime * LightResSpeed;
 
 	// TODO delete the "if" part
 	if (bShouldTrack)
