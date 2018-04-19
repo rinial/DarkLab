@@ -120,5 +120,5 @@ void AMainCharacter::Tick(const float deltaTime)
 
 	// TODO delete
 	// We check the light level
-	GameMode->GetLightingAmount(this, true);
+	// GameMode->GetLightingAmount(this, true);
 }

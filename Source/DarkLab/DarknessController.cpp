@@ -9,7 +9,7 @@ void ADarknessController::OnDisabling()
 {
 	// Start tracking a new one after a delay
 	FTimerHandle handler;
-	((AActor*)this)->GetWorldTimerManager().SetTimer(handler, this, &ADarknessController::TrackPlayer, 1.0f, false, 10.0f);
+	((AActor*)this)->GetWorldTimerManager().SetTimer(handler, this, &ADarknessController::TrackPlayer, 1.0f, false, TrackingRestartDelay);
 }
 
 // Starts following the player

@@ -16,6 +16,10 @@ private:
 	// Controlled darkness
 	class ADarkness* Darkness;
 
+	// The time between a character 'death' and restart of tracking
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness Controller", meta = (AllowPrivateAccess = "true"))
+	float TrackingRestartDelay = 8.0f;
+
 public:
 	// Called on disabling a character
 	void OnDisabling();

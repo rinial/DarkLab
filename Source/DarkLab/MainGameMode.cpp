@@ -90,9 +90,10 @@ float AMainGameMode::GetLightingAmount(const AActor* actor, const TArray<FVector
 			FVector lightLocation = lightComp->GetComponentLocation();
 			float distance = FVector::Dist(location, lightLocation);
 			float lightRadius = lightComp->AttenuationRadius;
+			// UE_LOG(LogTemp, Warning, TEXT("dist: %f, rad: %f"), distance, lightRadius);
 			if (distance > lightRadius)
 				continue;
-			bool bHit = GetWorld()->LineTraceTestByChannel(location, lightLocation, ECC_Visibility, params);
+			bool bHit = GetWorld()->LineTraceTestByChannel(lightLocation, location, ECC_Visibility, params);
 
 			// If location could be lit
 			if (!bHit)
@@ -101,9 +102,9 @@ float AMainGameMode::GetLightingAmount(const AActor* actor, const TArray<FVector
 
 				// 1 if near the edge of light, 0 if in center
 				float temp = distance / lightRadius;
-				// We take into account the squared falloff
+				// We take into account the inverse squared falloff
 				temp = FMath::Pow(temp, 0.5f);
-				// Now it's 0 near the edge and 0 in center
+				// Now it's 0 near the edge and 1 in center
 				temp = 1 - temp;
 
 				// UE_LOG(LogTemp, Warning, TEXT("%f"), temp);

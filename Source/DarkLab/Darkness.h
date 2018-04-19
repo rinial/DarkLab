@@ -42,6 +42,9 @@ private:
 	AActor* TrackedActor;
 	FVector TrackedLocation;
 
+	// The amount of light the darkness is in
+	float Luminosity = 0.0f;
+
 	// The particle system, forming the main body of the darkness
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness", meta = (AllowPrivateAccess = "true"))
 	class UParticleSystemComponent* DarkParticles;

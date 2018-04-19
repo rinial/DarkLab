@@ -33,12 +33,6 @@ void ADarkness::Stop()
 // Track something
 void ADarkness::Tracking()
 {
-	// We check the light level
-	float luminosity = GameMode->GetLightingAmount(this, true, 60);
-
-	if (GEngine)
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Darkness luminosity: %f"), luminosity), true);
-
 	FVector currentLocation;
 	switch (TrackingType)
 	{
@@ -121,6 +115,12 @@ void ADarkness::BeginPlay()
 void ADarkness::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// TODO delete from here later. we should evaluate it less often
+	// We check the light level
+	Luminosity = GameMode->GetLightingAmount(this);// , true, Collision->GetScaledSphereRadius());
+	if (GEngine)
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Darkness luminosity: %f"), Luminosity), true);
 
 	// TODO delete the "if" part
 	if (bShouldTrack)
