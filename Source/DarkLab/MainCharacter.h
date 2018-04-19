@@ -26,10 +26,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Main Character")
 	void TakeLife();
 
-	// TODO make it more generic, move somewhere
-	// Returns the light level on the position
-	float GetLightingAmount();
-
 private:
 	// Checks for the loss
 	void CalculateLoss();
@@ -51,6 +47,9 @@ private:
 	// Top down camera
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character", meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* TopDownCamera;
+
+	// A reference to the game mode
+	class AMainGameMode* GameMode;
 
 	// TODO delete later
 	TSubclassOf<class AFlashlight> MyFlashlightBP;

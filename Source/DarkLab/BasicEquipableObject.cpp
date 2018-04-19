@@ -2,7 +2,6 @@
 
 #include "BasicEquipableObject.h"
 #include "MainCharacter.h"
-#include "Components/ArrowComponent.h"
 
 // Called when the object is to be equiped
 void ABasicEquipableObject::Equip_Implementation(AMainCharacter* character)
