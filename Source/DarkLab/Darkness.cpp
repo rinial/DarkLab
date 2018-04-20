@@ -15,8 +15,8 @@
 void ADarkness::Move(const FVector direction)
 {
 	// Moves slower in light, but light resistance helps
-	// Luminosity coefficient ('3 * ') is higher than 1 because light is already easily visible at low luminosity (like 0.3)
-	Movement->AddInputVector(direction * FMath::Max(0.0f, 1 - 3 * Luminosity * (1 - LightResistance)));
+	float temp = 1 - LightFearK * Luminosity * FMath::Max(0.0f, Luminosity - LightResistance);
+	Movement->AddInputVector(direction * FMath::Max(0.0f, temp));
 }
 void ADarkness::MoveToLocation(FVector location)
 {
@@ -36,6 +36,22 @@ void ADarkness::Stop()
 {
 	State = EDarkStateEnum::VE_Passive;
 	TrackingType = ETrackingEnum::VE_None;
+}
+// Like Move but it sometimes goes backwards when light is too strong, which is great for some situations and will look weird in others
+void ADarkness::MoveWithFear(const FVector direction)
+{
+	// Moves slower in light, but light resistance helps
+	// In high luminosity the darkness can actually retreat
+	float temp = 1 - LightFearK * Luminosity * FMath::Max(0.0f, Luminosity - LightResistance);
+	if(temp >= 0)
+		Movement->AddInputVector(direction * temp); // same as normal Move
+	else
+	{
+		FVector fleeDirection = GetActorLocation() - BrightestLightLocation;
+		fleeDirection.Normalize();
+		Movement->AddInputVector(fleeDirection * temp * -1);
+	}
+	/*Movement->AddInputVector(direction * (1 - LightFearK * Luminosity * FMath::Max(0.0f, Luminosity - LightResistance)));*/
 }
 // Track something
 void ADarkness::Tracking()
@@ -64,7 +80,9 @@ void ADarkness::Tracking()
 
 	direction.Normalize();
 
-	Move(direction);
+	// TODO maybe normal Move shoudld be used
+	// Move(direction);
+	MoveWithFear(direction);
 }
 
 // Used for collision overlaps
@@ -130,8 +148,8 @@ void ADarkness::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// TODO delete from here later. we should evaluate it less often
-	// We check the light level
-	Luminosity = GameMode->GetLightingAmount(this, true, Collision->GetScaledSphereRadius());
+	// We check the light level	
+	Luminosity = GameMode->GetLightingAmount(BrightestLightLocation, this, true, Collision->GetScaledSphereRadius());
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Light resistance: %f"), LightResistance), true);

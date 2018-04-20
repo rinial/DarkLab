@@ -36,6 +36,9 @@ public:
 	void MoveToLocation(FVector location);
 	void MoveToActor(AActor* actor);
 	void Stop();
+	// TODO make something different similar
+	// Like Move but it sometimes goes backwards when light is too strong, which is great for some situations and will look weird in others
+	void MoveWithFear(const FVector direction);
 
 	// TODO delete later
 	// This is only used for tests
@@ -57,12 +60,18 @@ protected:
 	// The amount of light the darkness is in
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
 	float Luminosity = 0.0f;
+	// The amount of light the darkness is in
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
+	FVector BrightestLightLocation;
 	// The darkness's resistance to light
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
 	float LightResistance = 0.0f;
 	// The speed of resistance rising
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
 	float LightResSpeed = 0.01f;
+	// The darkness's resistance to light
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
+	float LightFearK = 10.0f;
 
 	// Current state of the darkness
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: State")

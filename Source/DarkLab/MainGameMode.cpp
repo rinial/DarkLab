@@ -7,22 +7,22 @@
 #include "UObject/UObjectIterator.h"
 #include "DrawDebugHelpers.h"
 
-// Returns the light level on the position
-float AMainGameMode::GetLightingAmount(const AActor* actor, const bool sixPoints, const float sixPointsRadius)
+// Returns the light level and the location of the brightest light
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints, const float sixPointsRadius)
 {
 	if (!actor)
 		return 0.0f;
-	return GetLightingAmount(actor, actor->GetActorLocation(), sixPoints, sixPointsRadius);
+	return GetLightingAmount(lightLoc, actor, actor->GetActorLocation(), sixPoints, sixPointsRadius);
 }
-float AMainGameMode::GetLightingAmount(const FVector location, const bool sixPoints, const float sixPointsRadius)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const FVector location, const bool sixPoints, const float sixPointsRadius)
 {
-	return GetLightingAmount(nullptr, location, sixPoints, sixPointsRadius);
+	return GetLightingAmount(lightLoc, nullptr, location, sixPoints, sixPointsRadius);
 }
-float AMainGameMode::GetLightingAmount(const TArray<FVector> locations)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const TArray<FVector> locations)
 {
-	return GetLightingAmount(nullptr, locations);
+	return GetLightingAmount(lightLoc, nullptr, locations);
 }
-float AMainGameMode::GetLightingAmount(const AActor* actor, const FVector location, const bool sixPoints, const float sixPointsRadius)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints, const float sixPointsRadius)
 {
 	TArray<FVector> locations;
 	locations.Add(location);
@@ -36,9 +36,9 @@ float AMainGameMode::GetLightingAmount(const AActor* actor, const FVector locati
 		locations.Add(location + FVector::ForwardVector * sixPointsRadius);
 		locations.Add(location - FVector::ForwardVector * sixPointsRadius);
 	}
-	return GetLightingAmount(actor, locations);
+	return GetLightingAmount(lightLoc, actor, locations);
 }
-float AMainGameMode::GetLightingAmount(const AActor* actor, const TArray<FVector> locations)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations)
 {
 	FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("LightTrace")), true);
 	// Add actor and all of its components as ignored
@@ -68,12 +68,10 @@ float AMainGameMode::GetLightingAmount(const AActor* actor, const TArray<FVector
 	// We find local results for all locations
 	for (FVector location : locations)
 	{
-		// DrawDebugPoint(gameWorld, location, 5, FColor::Red);
+		DrawDebugPoint(gameWorld, location, 5, FColor::Red);
 
 		// This will be used for the spot lights
 		FBoxSphereBounds bounds = FBoxSphereBounds(location, FVector(1, 1, 1), 1);
-
-		float localResult = 0.0f;
 
 		// We take the highest local result among lights
 		for (UPointLightComponent* lightComp : pointLights)
@@ -111,15 +109,13 @@ float AMainGameMode::GetLightingAmount(const AActor* actor, const TArray<FVector
 
 				// UE_LOG(LogTemp, Warning, TEXT("%f"), temp);
 				// It always counts the brightest light
-				if (temp > localResult)
-					localResult = temp;
+				if (temp > result)
+				{
+					result = temp;
+					lightLoc = lightLocation;
+				}
 			}
 		}
-		
-		// UE_LOG(LogTemp, Warning, TEXT("%f"), localResult);
-		// We take the maximum value of the positions
-		if (localResult > result)
-			result = localResult;
 	}
 
 	// UE_LOG(LogTemp, Warning, TEXT("Final %f"), result);
