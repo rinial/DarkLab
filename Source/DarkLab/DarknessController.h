@@ -14,10 +14,12 @@ class DARKLAB_API ADarknessController : public AAIController
 
 private:
 	// Controlled darkness
+	UPROPERTY()
 	class ADarkness* Darkness;
 
+protected:
 	// The time between a character 'death' and restart of tracking
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness Controller", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness Controller: Tracking")
 	float TrackingRestartDelay = 8.0f;
 
 public:
@@ -26,6 +28,7 @@ public:
 	
 public:
 	// Starts following the player
+	UFUNCTION(BlueprintCallable, Category = "Darkness Controller: Tracking")
 	void TrackPlayer();
 
 	// Called when the game starts or when spawned

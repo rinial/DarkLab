@@ -46,9 +46,9 @@ void AMainCharacter::UseEquiped()
 	if (!EquipedObject)
 		return;
 
-	IUsable* toUse = Cast<IUsable>(EquipedObject);
+	IUsable* toUse = Cast<IUsable>(EquipedObject->_getUObject());
 	if (toUse)
-		toUse->Execute_Use(Cast<UObject>(EquipedObject));
+		toUse->Execute_Use(Cast<UObject>(EquipedObject->_getUObject()));
 }
 
 // Activates nearby object on scene

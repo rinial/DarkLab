@@ -20,6 +20,6 @@ class DARKLAB_API IActivatable
 
 public:
 	// Called when the object is activated
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Usable")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Activatable")
 	void Activate();
 };

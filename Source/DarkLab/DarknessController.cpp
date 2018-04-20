@@ -7,6 +7,8 @@
 // Called on disabling a character
 void ADarknessController::OnDisabling()
 {
+	Darkness->Stop();
+
 	// Start tracking a new one after a delay
 	FTimerHandle handler;
 	((AActor*)this)->GetWorldTimerManager().SetTimer(handler, this, &ADarknessController::TrackPlayer, 1.0f, false, TrackingRestartDelay);

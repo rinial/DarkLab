@@ -15,7 +15,7 @@
 void ADarkness::Move(const FVector direction)
 {
 	// Moves slower in light, but light resistance helps
-	// '*2' is used cause light is already very visible at 0.5 luminosity
+	// Luminosity coefficient ('3 * ') is higher than 1 because light is already easily visible at low luminosity (like 0.3)
 	Movement->AddInputVector(direction * FMath::Max(0.0f, 1 - 3 * Luminosity * (1 - LightResistance)));
 }
 void ADarkness::MoveToLocation(FVector location)

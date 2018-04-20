@@ -26,28 +26,32 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Main Character")
 	void Disable();
 
-private:
+protected:
 	// The coefficient for the movement backwards
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Character", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Character: Movement")
 	float BackMoveCoeff = 0.6f;
 
 	// Camera boom positioning the camera above the character
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character: Components")
 	class USpringArmComponent* CameraBoom;
 
 	// Top down camera
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character: Components")
 	class UCameraComponent* TopDownCamera;
 
+private:
 	// A reference to the game mode
+	UPROPERTY()
 	class AMainGameMode* GameMode;
 
 	// TODO delete later
+	// Move spawns to gamemode or somewhere else
 	TSubclassOf<class AFlashlight> MyFlashlightBP;
 
 public:
 	// Some equiped object
-	class IEquipable* EquipedObject;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character")
+	TScriptInterface<class IEquipable> EquipedObject;
 
 	// Is true when a character loses a life. Used for "death" animation
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character")

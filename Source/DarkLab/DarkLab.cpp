@@ -6,4 +6,3 @@
 IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, DarkLab, "DarkLab" );
 
 DEFINE_LOG_CATEGORY(LogDarkLab)
- 

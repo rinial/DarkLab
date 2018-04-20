@@ -30,48 +30,51 @@ public:
 
 	// TODO delete later
 	// This is only used for tests
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Darkness")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Darkness: Tracking")
 	bool bShouldTrack = true;
 
-private:
+protected:
 	// Tracks something
 	void Tracking();
 
 	// Tracking parameters
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Tracking")
 	ETrackingEnum TrackingType = ETrackingEnum::VE_None;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Tracking")
 	AActor* TrackedActor;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Tracking")
 	FVector TrackedLocation;
 
 	// The amount of light the darkness is in
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
 	float Luminosity = 0.0f;
 	// The darkness's resistance to light
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
 	float LightResistance = 0.0f;
 	// The speed of resistance rising
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
 	float LightResSpeed = 0.01f;
 
 	// The particle system, forming the main body of the darkness
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Components")
 	class UParticleSystemComponent* DarkParticles;
-
 	// The spherical collision of the darkness
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Components")
 	class USphereComponent* Collision;
-
 	// The movement component of the darkness
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Components")
 	class UFloatingPawnMovement* Movement;
 
+private:
 	// A reference to the game mode
+	UPROPERTY()
 	class AMainGameMode* GameMode;
 
 public:
 	// Used for the collision overlaps
-	UFUNCTION(BlueprintCallable, Category = "Overlap")
+	UFUNCTION(BlueprintCallable, Category = "Darkness: Overlap")
 	void OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
-	UFUNCTION(BlueprintCallable, Category = "Overlap")
+	UFUNCTION(BlueprintCallable, Category = "Darkness: Overlap")
 	void OnEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 public:

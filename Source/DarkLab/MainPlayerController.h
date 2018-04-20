@@ -13,14 +13,20 @@ class DARKLAB_API AMainPlayerController : public APlayerController
 	GENERATED_BODY()
 
 private:
-	// While true rotation is controled with mouse
-	bool bLookWithMouse = true;
 	// Character under control
-	class AMainCharacter* Character;
+	UPROPERTY()
+	class AMainCharacter* MainCharacter;
 
-	// While true character can be moved and rotated and he can use stuff
-	bool bCharacterActive = true;
+protected:
+	// While true rotation is controled with mouse
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Player Controller")
+	bool bLookWithMouse = true;
 
+	// The number of character's 'lives'
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Player Controller")
+	int Lives = 3;
+
+private:
 	// Cotntrol where the character goes
 	void MoveUp(const float value);
 	void MoveRight(const float value);
@@ -37,13 +43,10 @@ private:
 	// Show/Hide menu
 	void ShowHideMenu();
 
-	// The number of character's 'lives'
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Character Controller", meta = (AllowPrivateAccess = "true"))
-	int Lives = 3;
-
 public:
 	// Called from the main character. Takes one 'life' and calls CalculateLoss
 	void OnDisabled();
+
 private:
 	// Checks for the loss and calls OnLoss
 	void CalculateLoss();

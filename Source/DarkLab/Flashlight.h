@@ -19,17 +19,17 @@ public:
 	void Use();
 	virtual void Use_Implementation() override;
 
-private:
+protected:
 	// Flashlight's direction and root object
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flashlight", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flashlight: Components")
 	class UArrowComponent* Direction;
 
 	// Main light
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flashlight", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flashlight: Components")
 	class USpotLightComponent* MainLight;
 
 	// Extra light
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flashlight", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flashlight: Components")
 	class UPointLightComponent* ExtraLight;
 
 public:
