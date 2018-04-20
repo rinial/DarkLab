@@ -15,6 +15,15 @@ enum class ETrackingEnum : uint8
 	VE_Location	UMETA(DisplayName = "Location")
 };
 
+// Darkness states
+UENUM(BlueprintType)
+enum class EDarkStateEnum : uint8
+{
+	VE_Passive 	UMETA(DisplayName = "Passive"),
+	VE_Hunting 	UMETA(DisplayName = "Hunting"),
+	VE_Retreating	UMETA(DisplayName = "Retreating")
+};
+
 // The darkness that hunts the player
 UCLASS(Blueprintable)
 class DARKLAB_API ADarkness : public APawn
@@ -54,6 +63,10 @@ protected:
 	// The speed of resistance rising
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
 	float LightResSpeed = 0.01f;
+
+	// Current state of the darkness
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: State")
+	EDarkStateEnum State = EDarkStateEnum::VE_Passive;
 
 	// The particle system, forming the main body of the darkness
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Components")

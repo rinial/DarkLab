@@ -25,11 +25,16 @@ void ADarkness::MoveToLocation(FVector location)
 }
 void ADarkness::MoveToActor(AActor* actor)
 {
+	// TODO move somewhere
+	// Starts hunting
+	State = EDarkStateEnum::VE_Hunting;
+
 	TrackedActor = actor;
 	TrackingType = ETrackingEnum::VE_Actor;
 }
 void ADarkness::Stop()
 {
+	State = EDarkStateEnum::VE_Passive;
 	TrackingType = ETrackingEnum::VE_None;
 }
 // Track something
@@ -67,9 +72,15 @@ void ADarkness::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor * Oth
 {
 	// UE_LOG(LogTemp, Warning, TEXT("Entered the darkness!"));
 	
+	// Darkness is harmless when it isn't hunting
+	if (State != EDarkStateEnum::VE_Hunting)
+		return;
+
 	AMainCharacter* character = Cast<AMainCharacter>(OtherActor);
 	if (!character)
 		return;
+
+	Stop();
 
 	character->Disable();
 
