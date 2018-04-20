@@ -91,7 +91,6 @@ void AMainPlayerController::OnDisabled()
 		--Lives;
 		UE_LOG(LogTemp, Warning, TEXT("Disabled once"));
 
-		UnPossess();
 		CalculateLoss();
 	}
 }
@@ -102,9 +101,10 @@ void AMainPlayerController::CalculateLoss()
 		OnLoss();
 	else
 	{
-		// TODO Use Delay to let the character die
 		// TODO make gamemode do this
-		Enable();
+		// Respawn after a delay
+		FTimerHandle handler;
+		((AActor*)this)->GetWorldTimerManager().SetTimer(handler, this, &AMainPlayerController::Enable, 1.0f, false, RespawnDelay);
 	}
 }
 // Called on loss
@@ -117,6 +117,8 @@ void AMainPlayerController::OnLoss()
 // Respawns the character
 void AMainPlayerController::Enable()
 {
+	// We only unposses at this point, otherwise we would have no character during the respawn delay
+	UnPossess();
 	GetWorld()->GetAuthGameMode()->RestartPlayer(this);
 	MainCharacter = Cast<AMainCharacter>(GetCharacter());
 }

@@ -26,6 +26,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Player Controller")
 	int Lives = 3;
 
+	// The time between a character 'death' and respawn
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Player Controller")
+	float RespawnDelay = 4.0f;
+
 private:
 	// Cotntrol where the character goes
 	void MoveUp(const float value);
