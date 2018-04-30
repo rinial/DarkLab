@@ -43,6 +43,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character: Components")
 	class UBoxComponent* Activator;
 
+public:
+	// Used for the activator's collision overlaps
+	UFUNCTION(BlueprintCallable, Category = "Main Character: Overlap")
+	void OnActivatorBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+	UFUNCTION(BlueprintCallable, Category = "Main Character: Overlap")
+	void OnActivatorEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
 private:
 	// A reference to the game mode
 	UPROPERTY()

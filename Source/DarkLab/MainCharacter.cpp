@@ -79,6 +79,20 @@ void AMainCharacter::Disable()
 	// TODO Destroy?
 }
 
+// Used for the activator's collision overlaps
+void AMainCharacter::OnActivatorBeginOverlap(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Found activatable"));
+
+	// TODO
+}
+void AMainCharacter::OnActivatorEndOverlap(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Losssst activatable"));
+
+	// TODO
+}
+
 // Sets default values
 AMainCharacter::AMainCharacter()
 {
@@ -92,7 +106,9 @@ AMainCharacter::AMainCharacter()
 
 	// Create an activator
 	Activator = CreateDefaultSubobject<UBoxComponent>(TEXT("Activator"));
-	CameraBoom->SetupAttachment(RootComponent);
+	Activator->SetupAttachment(RootComponent);
+	Activator->OnComponentBeginOverlap.AddDynamic(this, &AMainCharacter::OnActivatorBeginOverlap);
+	Activator->OnComponentEndOverlap.AddDynamic(this, &AMainCharacter::OnActivatorEndOverlap);
 
 	// TODO delete later: we shouldn't find blueprints from character
 	static ConstructorHelpers::FObjectFinder<UClass> flashlightBP(TEXT("Class'/Game/Blueprints/FlashlightBP.FlashlightBP_C'"));
