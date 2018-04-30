@@ -6,6 +6,7 @@
 #include "Components/BoxComponent.h"
 #include "Equipable.h"
 #include "Usable.h"
+#include "Activatable.h"
 #include "MainPlayerController.h"
 #include "MainGameMode.h"
 // TODO delete later?
@@ -49,7 +50,7 @@ void AMainCharacter::UseEquiped()
 
 	IUsable* toUse = Cast<IUsable>(EquipedObject->_getUObject());
 	if (toUse)
-		toUse->Execute_Use(Cast<UObject>(EquipedObject->_getUObject()));
+		toUse->Execute_Use(EquipedObject->_getUObject());
 }
 
 // Activates nearby object on scene
@@ -57,7 +58,12 @@ void AMainCharacter::Activate()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Activated"));
 
-	// TODO
+	if (ActivatableObjects.Num() == 0)
+		return;
+
+	// TODO should take the closet one in front, not the first one
+	TScriptInterface<IActivatable> toActivate = ActivatableObjects[0];
+	toActivate->Execute_Activate(toActivate->_getUObject(), this);
 }
 
 // Happens when something 'damages' the character
@@ -82,15 +88,25 @@ void AMainCharacter::Disable()
 // Used for the activator's collision overlaps
 void AMainCharacter::OnActivatorBeginOverlap(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
+	// We don't count our currently equiped object
+	UObject* otherObject = Cast<UObject>(OtherActor);
+	if (EquipedObject && otherObject == EquipedObject->_getUObject())
+		return;
+
 	UE_LOG(LogTemp, Warning, TEXT("Found activatable"));
 
-	// TODO
+	ActivatableObjects.AddUnique(OtherActor);
 }
 void AMainCharacter::OnActivatorEndOverlap(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Losssst activatable"));
+	// We don't count our currently equiped object
+	UObject* otherObject = Cast<UObject>(OtherActor);
+	if (EquipedObject && otherObject == EquipedObject->_getUObject())
+		return;
 
-	// TODO
+	UE_LOG(LogTemp, Warning, TEXT("Lost activatable"));
+
+	ActivatableObjects.Remove(OtherActor);
 }
 
 // Sets default values
@@ -110,10 +126,14 @@ AMainCharacter::AMainCharacter()
 	Activator->OnComponentBeginOverlap.AddDynamic(this, &AMainCharacter::OnActivatorBeginOverlap);
 	Activator->OnComponentEndOverlap.AddDynamic(this, &AMainCharacter::OnActivatorEndOverlap);
 
-	// TODO delete later: we shouldn't find blueprints from character
+	// TODO delete later
+	// this can be used somewhere
+	// we shouldn't find blueprints from character
+	/*
 	static ConstructorHelpers::FObjectFinder<UClass> flashlightBP(TEXT("Class'/Game/Blueprints/FlashlightBP.FlashlightBP_C'"));
 	if (flashlightBP.Object)
 		MyFlashlightBP = flashlightBP.Object;
+	*/
 
  	// Set this character to call Tick() every frame
 	PrimaryActorTick.bCanEverTick = true;
@@ -126,8 +146,11 @@ void AMainCharacter::BeginPlay()
 
 	GameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
 	
-	// TODO delete later: we shouldn't spawn objects from character
+	// TODO delete later
+	// this can be used somewhere
+	// we shouldn't spawn objects from character
 	// nor should we equip like this
+	/*
 	AFlashlight* flashlight = GetWorld()->SpawnActor<AFlashlight>(MyFlashlightBP, GetActorLocation(), GetActorRotation());
 	if (flashlight)
 	{
@@ -136,6 +159,7 @@ void AMainCharacter::BeginPlay()
 		if (toEquip)
 			toEquip->Execute_Equip(flashlight, this, FName("LeftHand"));
 	}
+	*/
 }
 
 // Called every frame

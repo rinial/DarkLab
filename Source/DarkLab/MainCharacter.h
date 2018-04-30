@@ -56,17 +56,21 @@ private:
 	class AMainGameMode* GameMode;
 
 	// TODO delete later
-	// Move spawns to gamemode or somewhere else
-	TSubclassOf<class AFlashlight> MyFlashlightBP;
+	// move spawns to gamemode or somewhere else
+	// TSubclassOf<class AFlashlight> MyFlashlightBP;
 
 public:
+	// Is true when a character loses a life. Used for "death" animation
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character")
+	bool bIsDisabled = false;
+
 	// Some equiped object
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character")
 	TScriptInterface<class IEquipable> EquipedObject;
 
-	// Is true when a character loses a life. Used for "death" animation
+	// Objects currently inside the activator volume
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character")
-	bool bIsDisabled = false;
+	TArray<TScriptInterface<class IActivatable>> ActivatableObjects;
 
 public:
 	// Sets default values
