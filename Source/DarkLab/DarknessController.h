@@ -6,6 +6,15 @@
 #include "AIController.h"
 #include "DarknessController.generated.h"
 
+// Darkness states
+UENUM(BlueprintType)
+enum class EDarkStateEnum : uint8
+{
+	VE_Passive 	UMETA(DisplayName = "Passive"),
+	VE_Hunting 	UMETA(DisplayName = "Hunting"),
+	VE_Retreating	UMETA(DisplayName = "Retreating")
+};
+
 // Controls the darkness
 UCLASS()
 class DARKLAB_API ADarknessController : public AAIController
@@ -23,6 +32,11 @@ protected:
 	float TrackingRestartDelay = 8.0f;
 
 public:
+	// Current state of the darkness
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: State")
+	EDarkStateEnum State = EDarkStateEnum::VE_Passive;
+
+public:
 	// Called on disabling a character
 	void OnDisabling();
 	
@@ -33,4 +47,7 @@ public:
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	// Called every frame
+	virtual void Tick(const float deltaTime) override;
 };

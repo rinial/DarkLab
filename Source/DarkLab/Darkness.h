@@ -15,15 +15,6 @@ enum class ETrackingEnum : uint8
 	VE_Location	UMETA(DisplayName = "Location")
 };
 
-// Darkness states
-UENUM(BlueprintType)
-enum class EDarkStateEnum : uint8
-{
-	VE_Passive 	UMETA(DisplayName = "Passive"),
-	VE_Hunting 	UMETA(DisplayName = "Hunting"),
-	VE_Retreating	UMETA(DisplayName = "Retreating")
-};
-
 // The darkness that hunts the player
 UCLASS(Blueprintable)
 class DARKLAB_API ADarkness : public APawn
@@ -39,10 +30,10 @@ public:
 	// When light is too strong goes backwards and returns true. Great for some situations and will look weird in others. Returns false if light ain't too strong
 	bool RetreatFromLight();
 
-protected:
 	// Tracks something
 	void Tracking();
 
+protected:
 	// Tracking parameters
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Tracking")
 	ETrackingEnum TrackingType = ETrackingEnum::VE_None;
@@ -67,10 +58,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
 	float LightFearK = 10.0f;
 
-	// Current state of the darkness
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: State")
-	EDarkStateEnum State = EDarkStateEnum::VE_Passive;
-
 	// The particle system, forming the main body of the darkness
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Components")
 	class UParticleSystemComponent* DarkParticles;
@@ -85,6 +72,8 @@ private:
 	// A reference to the game mode
 	UPROPERTY()
 	class AMainGameMode* GameMode;
+	UPROPERTY()
+	class ADarknessController* DarknessController;
 
 public:
 	// Used for the collision overlaps

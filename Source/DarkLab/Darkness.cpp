@@ -25,16 +25,11 @@ void ADarkness::MoveToLocation(FVector location)
 }
 void ADarkness::MoveToActor(AActor* actor)
 {
-	// TODO move somewhere
-	// Starts hunting
-	State = EDarkStateEnum::VE_Hunting;
-
 	TrackedActor = actor;
 	TrackingType = ETrackingEnum::VE_Actor;
 }
 void ADarkness::Stop()
 {
-	State = EDarkStateEnum::VE_Passive;
 	TrackingType = ETrackingEnum::VE_None;
 }
 // When light is too strong goes backwards and returns true. Great for some situations and will look weird in others. Returns false if light aint too strong
@@ -90,21 +85,17 @@ void ADarkness::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor * Oth
 	// UE_LOG(LogTemp, Warning, TEXT("Entered the darkness!"));
 	
 	// Darkness is harmless when it isn't hunting
-	if (State != EDarkStateEnum::VE_Hunting)
+	if (DarknessController->State != EDarkStateEnum::VE_Hunting)
 		return;
 
 	AMainCharacter* character = Cast<AMainCharacter>(OtherActor);
 	if (!character)
 		return;
 
-	Stop();
-
 	character->Disable();
 
 	// Tell the controller that darkness disabled player
-	ADarknessController* controller = Cast<ADarknessController>(GetController());
-	if (controller)
-		controller->OnDisabling();
+	DarknessController->OnDisabling();
 }
 void ADarkness::OnEndOverlap(UPrimitiveComponent* OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
 {
@@ -139,6 +130,9 @@ void ADarkness::BeginPlay()
 	Super::BeginPlay();
 
 	GameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
+	DarknessController = Cast<ADarknessController>(GetController());
+	if(!DarknessController)
+		UE_LOG(LogTemp, Warning, TEXT("NoController"));
 }
 
 // Called every frame
@@ -158,11 +152,4 @@ void ADarkness::Tick(float DeltaTime)
 	// Increase resistance if stuck in light
 	if (Luminosity > LightResistance)
 		LightResistance += DeltaTime * LightResSpeed;
-
-	// Darkness retreats from powerful light sources
-	bool isRetreating = RetreatFromLight();
-
-	// Tracks if isn't retreating already
-	if (!isRetreating)
-		Tracking();
 }

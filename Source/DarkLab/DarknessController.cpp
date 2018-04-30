@@ -7,6 +7,7 @@
 // Called on disabling a character
 void ADarknessController::OnDisabling()
 {
+	State = EDarkStateEnum::VE_Passive;
 	Darkness->Stop();
 
 	// Start tracking a new one after a delay
@@ -24,6 +25,7 @@ void ADarknessController::TrackPlayer()
 		ACharacter* character = controller->GetCharacter();
 		if (character)
 		{
+			State = EDarkStateEnum::VE_Hunting;
 			Darkness->MoveToActor((AActor*)character);
 			UE_LOG(LogTemp, Warning, TEXT("Following the player"));
 		}
@@ -37,6 +39,8 @@ void ADarknessController::BeginPlay()
 
 	// We first find the darkness
 	Darkness = Cast<ADarkness>(GetPawn());	
+	if (!Darkness)
+		UE_LOG(LogTemp, Warning, TEXT("NoDarkness"));
 
 	// Then we initiate the tracking
 	TrackPlayer();
@@ -45,4 +49,15 @@ void ADarknessController::BeginPlay()
 	// Can be used somewhere
 	/*FTimerHandle handler;
 	((AActor*)this)->GetWorldTimerManager().SetTimer(handler, this, &ADarknessController::TrackPlayer, 5.0f, true, 0.0f);*/
+}
+
+// Called every frame
+void ADarknessController::Tick(const float deltaTime)
+{
+	// Darkness retreats from powerful light sources
+	bool isRetreating = Darkness->RetreatFromLight();
+
+	// Tracks if isn't retreating already
+	if (!isRetreating)
+		Darkness->Tracking();
 }
