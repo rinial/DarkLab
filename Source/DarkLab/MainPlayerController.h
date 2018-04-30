@@ -31,6 +31,10 @@ protected:
 	float RespawnDelay = 4.0f;
 
 private:
+	// Stores last mouse position to check when it changes
+	// GetInputMouseDelta doesn't really work as it should
+	FVector2D LastMousePosition;
+
 	// Cotntrol where the character goes
 	void MoveUp(const float value);
 	void MoveRight(const float value);

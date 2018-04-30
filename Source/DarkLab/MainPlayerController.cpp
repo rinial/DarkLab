@@ -81,6 +81,10 @@ void AMainPlayerController::ShowHideMenu()
 	UE_LOG(LogTemp, Warning, TEXT("ShowHideMenu called"));
 
 	// TODO
+	// delete
+	FGenericPlatformMisc::RequestExit(false);
+
+	// TODO
 }
 
 // Takes one 'life' and calls CalculateLoss
@@ -137,6 +141,8 @@ void AMainPlayerController::BeginPlay()
 	Super::BeginPlay();
 
 	MainCharacter = Cast<AMainCharacter>(GetCharacter());
+
+	GetMousePosition(LastMousePosition.X, LastMousePosition.Y);
 }
 
 // Sets controls
@@ -164,6 +170,17 @@ void AMainPlayerController::SetupInputComponent()
 void AMainPlayerController::PlayerTick(const float deltaTime)
 {
 	Super::PlayerTick(deltaTime);
+
+	// We update LastMousePosition and make sure to enable mouse controls if mouse was moved
+	FVector2D newMousePosition;
+	GetMousePosition(newMousePosition.X, newMousePosition.Y);
+	if ((LastMousePosition - newMousePosition).Size() > 0.0f)
+	{	// We look with mouse again
+		bLookWithMouse = true;
+		// And we need cursor
+		bShowMouseCursor = true;
+	}
+	LastMousePosition = newMousePosition;
 
 	if (bLookWithMouse)
 		LookWithMouse();

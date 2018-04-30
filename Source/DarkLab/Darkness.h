@@ -36,14 +36,8 @@ public:
 	void MoveToLocation(FVector location);
 	void MoveToActor(AActor* actor);
 	void Stop();
-	// TODO make something different similar
-	// Like Move but it sometimes goes backwards when light is too strong, which is great for some situations and will look weird in others
-	void MoveWithFear(const FVector direction);
-
-	// TODO delete later
-	// This is only used for tests
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Darkness: Tracking")
-	bool bShouldTrack = true;
+	// When light is too strong goes backwards and returns true. Great for some situations and will look weird in others. Returns false if light ain't too strong
+	bool RetreatFromLight();
 
 protected:
 	// Tracks something

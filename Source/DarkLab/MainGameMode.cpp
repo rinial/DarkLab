@@ -68,7 +68,7 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 	// We find local results for all locations
 	for (FVector location : locations)
 	{
-		DrawDebugPoint(gameWorld, location, 5, FColor::Red);
+		// DrawDebugPoint(gameWorld, location, 5, FColor::Red);
 
 		// This will be used for the spot lights
 		FBoxSphereBounds bounds = FBoxSphereBounds(location, FVector(1, 1, 1), 1);

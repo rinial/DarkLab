@@ -90,9 +90,11 @@ AMainCharacter::AMainCharacter()
 	TopDownCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 
 	// TODO delete later: we shouldn't find blueprints from character
-	static ConstructorHelpers::FObjectFinder<UBlueprint> flashlightBP(TEXT("Blueprint'/Game/Blueprints/FlashlightBP.FlashlightBP'"));
+	// static ConstructorHelpers::FObjectFinder<UBlueprint> flashlightBP(TEXT("Blueprint'/Game/Blueprints/FlashlightBP.FlashlightBP'"));
+	static ConstructorHelpers::FObjectFinder<UClass> flashlightBP(TEXT("Class'/Game/Blueprints/FlashlightBP.FlashlightBP_C'"));
 	if (flashlightBP.Object)
-		MyFlashlightBP = (UClass*)flashlightBP.Object->GeneratedClass;
+		MyFlashlightBP = flashlightBP.Object;
+		//MyFlashlightBP = (UClass*)flashlightBP.Object->GeneratedClass;
 
  	// Set this character to call Tick() every frame
 	PrimaryActorTick.bCanEverTick = true;
@@ -107,10 +109,13 @@ void AMainCharacter::BeginPlay()
 	
 	// TODO delete later: we shouldn't spawn objects from character
 	AFlashlight* flashlight = GetWorld()->SpawnActor<AFlashlight>(MyFlashlightBP, GetActorLocation(), GetActorRotation());
-	UE_LOG(LogTemp, Warning, TEXT("Spawned a flashlight"));
-	IEquipable* toEquip = Cast<IEquipable>(flashlight);
-	if (toEquip)
-		toEquip->Execute_Equip(flashlight, this);
+	if (flashlight)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Spawned a flashlight"));
+		IEquipable* toEquip = Cast<IEquipable>(flashlight);
+		if (toEquip)
+			toEquip->Execute_Equip(flashlight, this);
+	}
 }
 
 // Called every frame

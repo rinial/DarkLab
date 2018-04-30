@@ -37,21 +37,20 @@ void ADarkness::Stop()
 	State = EDarkStateEnum::VE_Passive;
 	TrackingType = ETrackingEnum::VE_None;
 }
-// Like Move but it sometimes goes backwards when light is too strong, which is great for some situations and will look weird in others
-void ADarkness::MoveWithFear(const FVector direction)
+// When light is too strong goes backwards and returns true. Great for some situations and will look weird in others. Returns false if light aint too strong
+bool ADarkness::RetreatFromLight()
 {
-	// Moves slower in light, but light resistance helps
-	// In high luminosity the darkness can actually retreat
+	// Retreats faster in brighter light, but resistance helps
 	float temp = 1 - LightFearK * Luminosity * FMath::Max(0.0f, Luminosity - LightResistance);
-	if(temp >= 0)
-		Movement->AddInputVector(direction * temp); // same as normal Move
-	else
-	{
-		FVector fleeDirection = GetActorLocation() - BrightestLightLocation;
-		fleeDirection.Normalize();
-		Movement->AddInputVector(fleeDirection * temp * -1);
-	}
-	/*Movement->AddInputVector(direction * (1 - LightFearK * Luminosity * FMath::Max(0.0f, Luminosity - LightResistance)));*/
+	if (temp >= 0)
+		return false; // Doesn't retreat
+	
+	// Away from brightest light
+	FVector fleeDirection = GetActorLocation() - BrightestLightLocation;
+	fleeDirection.Normalize();
+	Movement->AddInputVector(fleeDirection * temp * -1); // temo is lower than 0 at this point
+	
+	return true; // Does retreat
 }
 // Track something
 void ADarkness::Tracking()
@@ -82,7 +81,7 @@ void ADarkness::Tracking()
 
 	// TODO maybe normal Move shoudld be used
 	// Move(direction);
-	MoveWithFear(direction);
+	Move(direction);
 }
 
 // Used for collision overlaps
@@ -147,7 +146,7 @@ void ADarkness::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// TODO delete from here later. we should evaluate it less often
+	// TODO delete from here later. We should evaluate it less often
 	// We check the light level	
 	Luminosity = GameMode->GetLightingAmount(BrightestLightLocation, this, true, Collision->GetScaledSphereRadius());
 	if (GEngine)
@@ -160,7 +159,10 @@ void ADarkness::Tick(float DeltaTime)
 	if (Luminosity > LightResistance)
 		LightResistance += DeltaTime * LightResSpeed;
 
-	// TODO delete the "if" part
-	if (bShouldTrack)
+	// Darkness retreats from powerful light sources
+	bool isRetreating = RetreatFromLight();
+
+	// Tracks if isn't retreating already
+	if (!isRetreating)
 		Tracking();
 }
