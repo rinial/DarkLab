@@ -7,6 +7,7 @@
 #include "Equipable.h"
 #include "Usable.h"
 #include "Activatable.h"
+#include "Informative.h"
 #include "MainPlayerController.h"
 #include "MainGameMode.h"
 // For on screen debug
@@ -179,11 +180,31 @@ void AMainCharacter::Tick(const float deltaTime)
 	// TODO delete later: used for debug
 	if (GEngine)
 	{
-		// TODO show the name of activatable
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Activatable: %s"), ActivatableObjects.Num() > 0 ? TEXT("Flashlight") : TEXT("None")), true);
+		TArray<IInformative*> informativeObjects;
+		TArray<FString> informativeNames;
 
-		// TODO show the name of equiped
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Equiped: %s"), EquipedObject ? TEXT("Flashlight") : TEXT("None")), true);
+		// Activatable in front
+		// TODO should take closest, not first
+		informativeObjects.Add(ActivatableObjects.Num() > 0 ? Cast<IInformative>(ActivatableObjects[0]->_getUObject()) : nullptr);
+		informativeNames.Add("Activatable");
+
+		// Currently equipped
+		informativeObjects.Add(EquipedObject ? Cast<IInformative>(EquipedObject->_getUObject()) : nullptr);
+		informativeNames.Add("Equipped");
+
+		for (int i = 0; i < informativeObjects.Num(); ++i)
+		{
+			IInformative* informative = informativeObjects[i];
+			FString name = informativeNames[i];
+
+			if (informative)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("    %s"), *(informative->Execute_GetBasicInfo(informative->_getUObject())).ToString()), true);
+				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("%s: %s"), *name, *(informative->Execute_GetName(informative->_getUObject())).ToString()), true);
+			}
+			else
+				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("%s: %s"), *name, TEXT("None")), true);
+		}
 
 		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT(""), true);
 	}

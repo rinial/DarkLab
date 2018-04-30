@@ -28,4 +28,7 @@ AFlashlight::AFlashlight()
 	// Create the extra light
 	ExtraLight = CreateDefaultSubobject<UPointLightComponent>(TEXT("ExtraLight"));
 	ExtraLight->SetupAttachment(RootComponent);
+
+	Name = NSLOCTEXT("LocalNS", "Flashlight name", "Flashlight");
+	BasicInfo = NSLOCTEXT("LocalNS", "Flashlight information", "Provides light in a cone");
 }

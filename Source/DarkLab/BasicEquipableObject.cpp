@@ -30,6 +30,7 @@ void ABasicEquipableObject::Unequip_Implementation(AMainCharacter* character)
 
 	UE_LOG(LogTemp, Warning, TEXT("Unequiped"));
 }
+
 // Called when the object is used (picked up in the laboratory)
 void ABasicEquipableObject::Activate_Implementation(AMainCharacter* character)
 {
@@ -38,6 +39,17 @@ void ABasicEquipableObject::Activate_Implementation(AMainCharacter* character)
 
 	// TODO this should put item into inventory, not instantly equip it
 	Execute_Equip(this, character, FName("LeftHand"));
+}
+
+// Returns object's name
+FText ABasicEquipableObject::GetName_Implementation()
+{
+	return Name;
+}
+// Returns basic infomation about the object
+FText ABasicEquipableObject::GetBasicInfo_Implementation()
+{
+	return BasicInfo;
 }
 
 // Sets default values
