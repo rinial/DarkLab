@@ -4,23 +4,26 @@
 #include "MainCharacter.h"
 
 // Called when the object is to be equiped
-void ABasicEquipableObject::Equip_Implementation(AMainCharacter* character)
+void ABasicEquipableObject::Equip_Implementation(AMainCharacter* character, FName location)
 {
-	// TODO move it to function parameters
-	FName location = FName("LeftHand");
-
-	// TOTO change later
+	// TODO change later
 	USceneComponent* mesh = Cast<USceneComponent>(character->GetMesh());
 	if (!mesh)
 		return;
-
 	AttachToComponent(mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, location);
+
 	character->EquipedObject = this;
 }
 // Called when the object is to be unequiped
 void ABasicEquipableObject::Unequip_Implementation(AMainCharacter* character)
 {
 	// TODO
+}
+// Called when the object is used (taken in the laboratory)
+void ABasicEquipableObject::Activate_Implementation(AMainCharacter* character)
+{
+	// TODO this should put item into inventory, not instantly equip it
+	Execute_Equip(this, character, FName("LeftHand"));
 }
 
 // Sets default values

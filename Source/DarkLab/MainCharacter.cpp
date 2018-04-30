@@ -108,13 +108,14 @@ void AMainCharacter::BeginPlay()
 	GameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
 	
 	// TODO delete later: we shouldn't spawn objects from character
+	// nor should we equip like this
 	AFlashlight* flashlight = GetWorld()->SpawnActor<AFlashlight>(MyFlashlightBP, GetActorLocation(), GetActorRotation());
 	if (flashlight)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Spawned a flashlight"));
 		IEquipable* toEquip = Cast<IEquipable>(flashlight);
 		if (toEquip)
-			toEquip->Execute_Equip(flashlight, this);
+			toEquip->Execute_Equip(flashlight, this, FName("LeftHand"));
 	}
 }
 
