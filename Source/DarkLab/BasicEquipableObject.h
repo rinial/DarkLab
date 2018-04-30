@@ -25,7 +25,7 @@ public:
 	void Unequip(AMainCharacter* character);
 	virtual void Unequip_Implementation(AMainCharacter* character) override;
 
-	// Called when the object is activated (taken in the laboratory)
+	// Called when the object is activated (picked up in the laboratory)
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Activatable")
 		void Activate(AMainCharacter* character);
 	virtual void Activate_Implementation(AMainCharacter* character) override;

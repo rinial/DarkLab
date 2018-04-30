@@ -19,7 +19,7 @@ void ABasicEquipableObject::Unequip_Implementation(AMainCharacter* character)
 {
 	// TODO
 }
-// Called when the object is used (taken in the laboratory)
+// Called when the object is used (picked up in the laboratory)
 void ABasicEquipableObject::Activate_Implementation(AMainCharacter* character)
 {
 	// TODO this should put item into inventory, not instantly equip it

@@ -3,6 +3,7 @@
 #include "MainCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Components/BoxComponent.h"
 #include "Equipable.h"
 #include "Usable.h"
 #include "MainPlayerController.h"
@@ -89,12 +90,14 @@ AMainCharacter::AMainCharacter()
 	TopDownCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("TopDownCamera"));
 	TopDownCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 
+	// Create an activator
+	Activator = CreateDefaultSubobject<UBoxComponent>(TEXT("Activator"));
+	CameraBoom->SetupAttachment(RootComponent);
+
 	// TODO delete later: we shouldn't find blueprints from character
-	// static ConstructorHelpers::FObjectFinder<UBlueprint> flashlightBP(TEXT("Blueprint'/Game/Blueprints/FlashlightBP.FlashlightBP'"));
 	static ConstructorHelpers::FObjectFinder<UClass> flashlightBP(TEXT("Class'/Game/Blueprints/FlashlightBP.FlashlightBP_C'"));
 	if (flashlightBP.Object)
 		MyFlashlightBP = flashlightBP.Object;
-		//MyFlashlightBP = (UClass*)flashlightBP.Object->GeneratedClass;
 
  	// Set this character to call Tick() every frame
 	PrimaryActorTick.bCanEverTick = true;

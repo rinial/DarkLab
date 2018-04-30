@@ -39,6 +39,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character: Components")
 	class UCameraComponent* TopDownCamera;
 
+	// Activator component checking for activatable objects
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character: Components")
+	class UBoxComponent* Activator;
+
 private:
 	// A reference to the game mode
 	UPROPERTY()
