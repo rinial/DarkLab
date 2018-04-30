@@ -131,8 +131,6 @@ void ADarkness::BeginPlay()
 
 	GameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
 	DarknessController = Cast<ADarknessController>(GetController());
-	if(!DarknessController)
-		UE_LOG(LogTemp, Warning, TEXT("NoController"));
 }
 
 // Called every frame
@@ -143,13 +141,16 @@ void ADarkness::Tick(float DeltaTime)
 	// TODO delete from here later. We should evaluate it less often
 	// We check the light level	
 	Luminosity = GameMode->GetLightingAmount(BrightestLightLocation, this, true, Collision->GetScaledSphereRadius());
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Light resistance: %f"), LightResistance), true);
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Darkness luminosity: %f"), Luminosity), true);
-	}
 
 	// Increase resistance if stuck in light
 	if (Luminosity > LightResistance)
 		LightResistance += DeltaTime * LightResSpeed;
+
+	// TODO delete later: used for debug
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Light resistance: %f"), LightResistance), true);
+
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Darkness luminosity: %f"), Luminosity), true);
+	}
 }

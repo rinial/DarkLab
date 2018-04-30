@@ -9,9 +9,14 @@
 #include "Activatable.h"
 #include "MainPlayerController.h"
 #include "MainGameMode.h"
+// For on screen debug
+#include "EngineGlobals.h"
+#include "Engine/Engine.h"
 // TODO delete later?
+/*
 #include "Flashlight.h"
 #include "UObject/ConstructorHelpers.h"
+*/
 #include "Components/CapsuleComponent.h"
 
 // Movement functions
@@ -56,10 +61,10 @@ void AMainCharacter::UseEquiped()
 // Activates nearby object on scene
 void AMainCharacter::Activate()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Activated"));
-
 	if (ActivatableObjects.Num() == 0)
 		return;
+
+	UE_LOG(LogTemp, Warning, TEXT("Activated"));
 
 	// TODO should take the closet one in front, not the first one
 	TScriptInterface<IActivatable> toActivate = ActivatableObjects[0];
@@ -170,4 +175,16 @@ void AMainCharacter::Tick(const float deltaTime)
 	// TODO delete
 	// We check the light level
 	// GameMode->GetLightingAmount(this, true);
+
+	// TODO delete later: used for debug
+	if (GEngine)
+	{
+		// TODO show the name of activatable
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Activatable: %s"), ActivatableObjects.Num() > 0 ? TEXT("Flashlight") : TEXT("None")), true);
+
+		// TODO show the name of equiped
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Equiped: %s"), EquipedObject ? TEXT("Flashlight") : TEXT("None")), true);
+
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT(""), true);
+	}
 }
