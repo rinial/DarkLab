@@ -31,7 +31,7 @@ void ABasicEquipableObject::Unequip_Implementation(AMainCharacter* character)
 	UE_LOG(LogTemp, Warning, TEXT("Unequiped"));
 }
 
-// Called when the object is used (picked up in the laboratory)
+// Called when the object is activated (picked up in the laboratory)
 void ABasicEquipableObject::Activate_Implementation(AMainCharacter* character)
 {
 	// It's not activatable animore
