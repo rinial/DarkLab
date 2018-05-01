@@ -41,17 +41,6 @@ void ABasicEquipableObject::Activate_Implementation(AMainCharacter* character)
 	Execute_Equip(this, character, FName("LeftHand"));
 }
 
-// Returns object's name
-FText ABasicEquipableObject::GetName_Implementation()
-{
-	return Name;
-}
-// Returns basic infomation about the object
-FText ABasicEquipableObject::GetBasicInfo_Implementation()
-{
-	return BasicInfo;
-}
-
 // Sets default values
 ABasicEquipableObject::ABasicEquipableObject()
 {
