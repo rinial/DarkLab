@@ -99,7 +99,7 @@ void AMainCharacter::OnActivatorBeginOverlap(UPrimitiveComponent * OverlappedCom
 	if (EquipedObject && otherObject == EquipedObject->_getUObject())
 		return;
 
-	UE_LOG(LogTemp, Warning, TEXT("Found activatable"));
+	// UE_LOG(LogTemp, Warning, TEXT("Found activatable"));
 
 	ActivatableObjects.AddUnique(OtherActor);
 }
@@ -110,7 +110,7 @@ void AMainCharacter::OnActivatorEndOverlap(UPrimitiveComponent * OverlappedComp,
 	if (EquipedObject && otherObject == EquipedObject->_getUObject())
 		return;
 
-	UE_LOG(LogTemp, Warning, TEXT("Lost activatable"));
+	// UE_LOG(LogTemp, Warning, TEXT("Lost activatable"));
 
 	ActivatableObjects.Remove(OtherActor);
 }
