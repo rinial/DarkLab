@@ -34,6 +34,10 @@ void ABasicEquipableObject::Unequip_Implementation(AMainCharacter* character)
 // Called when the object is activated (picked up in the laboratory)
 void ABasicEquipableObject::Activate_Implementation(AMainCharacter* character)
 {
+	// TODO add object name
+	// UE_LOG(LogTemp, Warning, FString::Printf(TEXT("Picked up %s"), *Name.ToString()));
+	UE_LOG(LogTemp, Warning, TEXT("Picked up"));
+
 	// It's not activatable animore
 	character->ActivatableObjects.Remove(this);
 

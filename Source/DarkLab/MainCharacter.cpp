@@ -65,8 +65,6 @@ void AMainCharacter::Activate()
 	if (ActivatableObjects.Num() == 0)
 		return;
 
-	UE_LOG(LogTemp, Warning, TEXT("Activated"));
-
 	// TODO should take the closet one in front, not the first one
 	TScriptInterface<IActivatable> toActivate = ActivatableObjects[0];
 	toActivate->Execute_Activate(toActivate->_getUObject(), this);

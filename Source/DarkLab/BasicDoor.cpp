@@ -9,12 +9,18 @@
 // Called when the object is activated
 void ABasicDoor::Activate_Implementation(AMainCharacter * character)
 {
-	if (DoorDriver->GetPlaybackPosition() == 0.0f 
+	if (DoorDriver->GetPlaybackPosition() == 0.0f
 		|| DoorDriver->IsReversing())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Opened door"));
 		DoorDriver->Play();
+	}
 	else if (DoorDriver->GetPlaybackPosition() == DoorDriver->GetTimelineLength()
 		|| DoorDriver->IsPlaying())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Closed door"));
 		DoorDriver->Reverse();
+	}
 }
 
 // Sets default values
