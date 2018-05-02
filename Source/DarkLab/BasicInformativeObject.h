@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BasicDeactivatableObject.h"
+#include "BasicPlaceableObject.h"
 #include "Informative.h"
 #include "BasicInformativeObject.generated.h"
 
 // Represents objects with physical representation that can provide information about themselves
 UCLASS()
-class DARKLAB_API ABasicInformativeObject : public ABasicDeactivatableObject, public IInformative
+class DARKLAB_API ABasicInformativeObject : public ABasicPlaceableObject, public IInformative
 {
 	GENERATED_BODY()
 
