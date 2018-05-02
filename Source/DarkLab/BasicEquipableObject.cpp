@@ -44,23 +44,5 @@ void ABasicEquipableObject::Activate_Implementation(AMainCharacter* character)
 // Sets default values
 ABasicEquipableObject::ABasicEquipableObject()
 {
- 	// Set this actor to NOT call Tick() every frame
-	PrimaryActorTick.bCanEverTick = false;
-	// TODO enable ticks?
-}
-
-// Called when the game starts or when spawned
-void ABasicEquipableObject::BeginPlay()
-{
-	Super::BeginPlay();
-	
-	// TODO
-}
-
-// Called every frame
-void ABasicEquipableObject::Tick(const float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	// TODO enable ticks?
+ 	
 }

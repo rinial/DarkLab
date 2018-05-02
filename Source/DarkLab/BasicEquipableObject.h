@@ -27,18 +27,10 @@ public:
 
 	// Called when the object is activated (picked up in the laboratory)
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Activatable")
-		void Activate(AMainCharacter* character);
+	void Activate(AMainCharacter* character);
 	virtual void Activate_Implementation(AMainCharacter* character) override;
 	
 public:	
 	// Sets default values
 	ABasicEquipableObject();
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void Tick(const float DeltaTime) override;
 };

@@ -16,23 +16,5 @@ FText ABasicInformativeObject::GetBasicInfo_Implementation()
 // Sets default values
 ABasicInformativeObject::ABasicInformativeObject()
 {
-	// Set this actor to NOT call Tick() every frame
-	PrimaryActorTick.bCanEverTick = false;
-	// TODO enable ticks?
-}
 
-// Called when the game starts or when spawned
-void ABasicInformativeObject::BeginPlay()
-{
-	Super::BeginPlay();
-	
-	// TODO
-}
-
-// Called every frame
-void ABasicInformativeObject::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	// TODO enable ticks?
 }

@@ -14,7 +14,7 @@ void ABasicDoor::Activate_Implementation(AMainCharacter * character)
 		DoorDriver->Play();
 	else if (DoorDriver->GetPlaybackPosition() == DoorDriver->GetTimelineLength()
 		|| DoorDriver->IsPlaying())
-		DoorDriver->Reverse();
+		DoorDriver->Reverse();*/
 }
 
 // Sets default values
