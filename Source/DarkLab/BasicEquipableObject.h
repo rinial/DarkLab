@@ -29,8 +29,4 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Activatable")
 	void Activate(AMainCharacter* character);
 	virtual void Activate_Implementation(AMainCharacter* character) override;
-	
-public:	
-	// Sets default values
-	ABasicEquipableObject();
 };

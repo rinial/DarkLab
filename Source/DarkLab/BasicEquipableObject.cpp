@@ -44,9 +44,3 @@ void ABasicEquipableObject::Activate_Implementation(AMainCharacter* character)
 	// TODO this should put item into inventory, not instantly equip it
 	Execute_Equip(this, character, FName("LeftHand"));
 }
-
-// Sets default values
-ABasicEquipableObject::ABasicEquipableObject()
-{
- 	
-}

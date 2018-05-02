@@ -30,8 +30,4 @@ protected:
 
 	UPROPERTY()
 	FText BasicInfo = FText();
-	
-public:	
-	// Sets default values
-	ABasicInformativeObject();
 };

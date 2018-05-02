@@ -41,3 +41,13 @@ ABasicDoor::ABasicDoor()
 	Name = NSLOCTEXT("LocalNS", "Basic door name", "Door");
 	BasicInfo = NSLOCTEXT("LocalNS", "Basic door information", "Can be opened and closed");
 }
+
+// Called when the game starts or when spawned
+void ABasicDoor::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Set size
+	// Gets overridden if done in constructor for some reason
+	Size = FIntVector(1, 8, 5);
+}

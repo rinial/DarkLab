@@ -12,5 +12,5 @@ FIntVector ABasicPlaceableObject::GetSize_Implementation()
 void ABasicPlaceableObject::Place_Implementation(FIntVector botLeftLoc)
 {
 	FIntVector size = Execute_GetSize(this);
-	SetActorLocation(FVector(botLeftLoc * 50) + FVector(size.X * 25, size.Y * 25, 0)); // - FVector(25, 25));
+	SetActorLocation(FVector(botLeftLoc * 50) + FVector(size.X * 25, size.Y * 25, 0)); // - FVector(25, 25, 0));
 }

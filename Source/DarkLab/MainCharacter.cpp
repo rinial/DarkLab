@@ -19,6 +19,7 @@
 #include "UObject/ConstructorHelpers.h"
 */
 #include "Components/CapsuleComponent.h"
+#include "Placeable.h"
 
 // Movement functions
 void AMainCharacter::MoveUp(const float value)

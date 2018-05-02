@@ -12,9 +12,3 @@ FText ABasicInformativeObject::GetBasicInfo_Implementation()
 {
 	return BasicInfo;
 }
-
-// Sets default values
-ABasicInformativeObject::ABasicInformativeObject()
-{
-
-}
