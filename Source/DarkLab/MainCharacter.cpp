@@ -205,6 +205,14 @@ void AMainCharacter::Tick(const float deltaTime)
 				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("%s: %s"), *name, TEXT("None")), true);
 		}
 
+		// TODO delete
+		if (ActivatableObjects.Num() > 0)
+		{
+			IPlaceable* placeable = Cast<IPlaceable>(ActivatableObjects[0]->_getUObject());
+			FIntVector size = placeable->Execute_GetSize(placeable->_getUObject());
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("%d %d %d"), size.X, size.Y, size.Z), true);
+		}
+
 		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT(""), true);
 	}
 }

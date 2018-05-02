@@ -6,6 +6,17 @@
 #include "UObject/Interface.h"
 #include "Placeable.generated.h"
 
+// TODO move somewhere else
+// Direction
+UENUM(BlueprintType)
+enum class EDirectionEnum : uint8
+{
+	VE_Up	UMETA(DisplayName = "Up"),
+	VE_Right 	UMETA(DisplayName = "Right"),
+	VE_Down	UMETA(DisplayName = "Down"),
+	VE_Left	UMETA(DisplayName = "Left")
+};
+
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
 class UPlaceable : public UInterface
@@ -25,5 +36,5 @@ public:
 
 	// Places the object on the map, using bottom left corner
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Placeable")
-	void Place(FIntVector botLeftLoc);
+	void Place(FIntVector botLeftLoc, EDirectionEnum direction);
 };

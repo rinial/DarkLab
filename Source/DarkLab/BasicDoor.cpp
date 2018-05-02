@@ -5,6 +5,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/TimelineComponent.h"
 #include "MainCharacter.h"
+//#include "Placeable.h"
 
 // Called when the object is activated
 void ABasicDoor::Activate_Implementation(AMainCharacter * character)
@@ -49,5 +50,5 @@ void ABasicDoor::BeginPlay()
 
 	// Set size
 	// Gets overridden if done in constructor for some reason
-	Size = FIntVector(1, 8, 5);
+	Size = FIntVector(8, 1, 5);
 }

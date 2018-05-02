@@ -21,10 +21,13 @@ public:
 
 	// Places the object on the map, using bottom left corner
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Placeable")
-	void Place(FIntVector botLeftLoc);
-	virtual void Place_Implementation(FIntVector botLeftLoc) override;
+	void Place(FIntVector botLeftLoc, EDirectionEnum direction);
+	virtual void Place_Implementation(FIntVector botLeftLoc, EDirectionEnum direction) override;
 
 protected:
 	UPROPERTY()
 	FIntVector Size = FIntVector(1, 1, 1);
+
+	UPROPERTY()
+	EDirectionEnum GridDirection = EDirectionEnum::VE_Up;
 };
