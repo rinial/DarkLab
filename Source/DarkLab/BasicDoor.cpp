@@ -5,7 +5,6 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/TimelineComponent.h"
 #include "MainCharacter.h"
-//#include "Placeable.h"
 
 // Called when the object is activated
 void ABasicDoor::Activate_Implementation(AMainCharacter * character)
