@@ -11,7 +11,7 @@ FIntVector ABasicPlaceableObject::GetSize_Implementation()
 	return FIntVector(Size.Y * scale.X, Size.X * scale.Y, Size.Z * scale.Z);
 }
 // Places the object on the map, using bottom left corner
-void ABasicPlaceableObject::Place_Implementation(FIntVector botLeftLoc, EDirectionEnum direction)
+void ABasicPlaceableObject::Place_Implementation(const FIntVector botLeftLoc, const EDirectionEnum direction)
 {
 	GridDirection = direction;
 	FIntVector size = Execute_GetSize(this);

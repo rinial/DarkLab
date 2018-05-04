@@ -21,8 +21,8 @@ public:
 
 	// Places the object on the map, using bottom left corner
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Placeable")
-	void Place(FIntVector botLeftLoc, EDirectionEnum direction);
-	virtual void Place_Implementation(FIntVector botLeftLoc, EDirectionEnum direction) override;
+	void Place(const FIntVector botLeftLoc, const EDirectionEnum direction);
+	virtual void Place_Implementation(const FIntVector botLeftLoc, const EDirectionEnum direction) override;
 
 protected:
 	UPROPERTY()

@@ -16,8 +16,8 @@ class DARKLAB_API ABasicDeactivatableObject : public AActor, public IDeactivatab
 public:
 	// Activates/deactivates the object (usually for pooling)
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Deactivatable")
-	void SetActive(bool active);
-	virtual void SetActive_Implementation(bool active) override;
+	void SetActive(const bool active);
+	virtual void SetActive_Implementation(const bool active) override;
 
 	// Returns true if the object is active
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Deactivatable")

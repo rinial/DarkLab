@@ -23,7 +23,7 @@ class DARKLAB_API IEquipable
 public:
 	// Called when the object is to be equiped
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Equipable")
-	void Equip(AMainCharacter* character, FName location);
+	void Equip(AMainCharacter* character, const FName location);
 
 	// Called when the object is to be unequiped
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Equipable")

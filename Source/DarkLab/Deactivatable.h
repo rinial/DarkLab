@@ -21,7 +21,7 @@ class DARKLAB_API IDeactivatable
 public:
 	// Called when the object is activated/deactivated (usually for pooling)
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Deactivatable")
-	void SetActive(bool active);	
+	void SetActive(const bool active);	
 
 	// Returns true if the object is active
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Deactivatable")

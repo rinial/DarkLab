@@ -4,7 +4,7 @@
 #include "MainCharacter.h"
 
 // Called when the object is to be equiped
-void ABasicEquipableObject::Equip_Implementation(AMainCharacter* character, FName location)
+void ABasicEquipableObject::Equip_Implementation(AMainCharacter* character, const FName location)
 {
 	// We find the mesh and attach object to it
 	USceneComponent* mesh = Cast<USceneComponent>(character->GetMesh());
