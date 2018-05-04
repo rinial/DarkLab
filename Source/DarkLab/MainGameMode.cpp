@@ -5,9 +5,11 @@
 #include "Components/PointLightComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "UObject/UObjectIterator.h"
-#include "UObject/ConstructorHelpers.h"
-#include "Flashlight.h"
 #include "DrawDebugHelpers.h"
+#include "UObject/ConstructorHelpers.h"
+#include "BasicWall.h"
+#include "BasicDoor.h"
+#include "Flashlight.h"
 
 // Returns the light level and the location of the brightest light
 float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints, const float sixPointsRadius)
@@ -125,15 +127,15 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 }
 
 // Places an object on the map (size < 1 means that we take current size for this axis)
-void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable>& object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction, const bool setSizeFirst, const int sizeX, const int sizeY, const int sizeZ)
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction, const bool setSizeFirst, const int sizeX, const int sizeY, const int sizeZ)
 {
 	PlaceObject(object, botLeftLocX, botLeftLocY, 0, direction, setSizeFirst, sizeX, sizeY, sizeZ);
 }
-void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable>& object, const int botLeftLocX, const int botLeftLocY, const int botLeftLocZ, const EDirectionEnum direction, const bool setSizeFirst, const int sizeX, const int sizeY, const int sizeZ)
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const int botLeftLocZ, const EDirectionEnum direction, const bool setSizeFirst, const int sizeX, const int sizeY, const int sizeZ)
 {
 	PlaceObject(object, FIntVector(botLeftLocX, botLeftLocY, botLeftLocZ), direction, setSizeFirst, sizeX, sizeY, sizeZ);
 }
-void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable>& object, const FIntVector botLeftLoc, const EDirectionEnum direction, const bool setSizeFirst, const int sizeX, const int sizeY, const int sizeZ)
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const EDirectionEnum direction, const bool setSizeFirst, const int sizeX, const int sizeY, const int sizeZ)
 {
 	UObject* obj = object->_getUObject();
 
@@ -148,10 +150,36 @@ void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable>& object, const FInt
 	object->Execute_Place(obj, botLeftLoc, direction);
 }
 
+// Spawn specific objects
+void AMainGameMode::SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
+{
+	ABasicWall* wall;
+	if (BasicWallPool.Num() > 0)
+	{
+		wall = BasicWallPool[0];
+		BasicWallPool.RemoveAt(0);
+	}
+	else
+		wall = GetWorld()->SpawnActor<ABasicWall>(BasicWallBP);
+	if (!wall)
+		return;
+
+	PlaceObject(wall, botLeftX, botLeftY, EDirectionEnum::VE_Up, true, sizeX, sizeY);
+	wall->Execute_SetActive(wall, true);
+
+	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic wall"));
+}
+
 // Sets default values
 AMainGameMode::AMainGameMode()
 {
 	// Find blueprints and save found class for future spawns
+	static ConstructorHelpers::FObjectFinder<UClass> basicWallBP(TEXT("Class'/Game/Blueprints/BasicWallBP.BasicWallBP_C'"));
+	if (basicWallBP.Succeeded())
+		BasicWallBP = basicWallBP.Object;
+	static ConstructorHelpers::FObjectFinder<UClass> basicDoorBP(TEXT("Class'/Game/Blueprints/BasicDoorBP.BasicDoorBP_C'"));
+	if (basicDoorBP.Succeeded())
+		BasicDoorBP = basicDoorBP.Object;
 	static ConstructorHelpers::FObjectFinder<UClass> flashlightBP(TEXT("Class'/Game/Blueprints/FlashlightBP.FlashlightBP_C'"));
 	if (flashlightBP.Succeeded())
 		FlashlightBP = flashlightBP.Object;
@@ -164,14 +192,13 @@ void AMainGameMode::BeginPlay()
 
 	// TODO shouldn't spawn directly from here
 	// Spawn stuff
-	AFlashlight* flashlight1 = GetWorld()->SpawnActor<AFlashlight>(FlashlightBP);
-	if (flashlight1)
+	AFlashlight* flashlight = GetWorld()->SpawnActor<AFlashlight>(FlashlightBP);
+	if (flashlight)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Spawned flashlight 1"));
+		//TScriptInterface<IPlaceable> placeable = flashlight1;
+		PlaceObject(flashlight);
+		UE_LOG(LogTemp, Warning, TEXT("Spawned flashlight"));
 	}
-	AFlashlight* flashlight2 = GetWorld()->SpawnActor<AFlashlight>(FlashlightBP);
-	if (flashlight2)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Spawned flashlight 2"));
-	}
+
+	SpawnBasicWall(-7, -5, 1, 10);
 }

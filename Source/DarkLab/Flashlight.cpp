@@ -32,4 +32,6 @@ AFlashlight::AFlashlight()
 	// Fill information
 	Name = NSLOCTEXT("LocalNS", "Flashlight name", "Flashlight");
 	BasicInfo = NSLOCTEXT("LocalNS", "Flashlight information", "Provides light in a cone");
+
+	ZOffset = 5.0f;
 }

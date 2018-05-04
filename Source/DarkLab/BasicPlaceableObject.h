@@ -40,4 +40,7 @@ protected:
 
 	UPROPERTY()
 	EDirectionEnum GridDirection = EDirectionEnum::VE_Up;
+
+	UPROPERTY()
+	float ZOffset = 0.0f;
 };

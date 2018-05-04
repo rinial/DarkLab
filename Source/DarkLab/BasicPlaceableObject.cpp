@@ -41,7 +41,7 @@ void ABasicPlaceableObject::Place_Implementation(const FIntVector botLeftLoc, co
 	GridDirection = direction;
 	FIntVector size = Execute_GetSize(this);
 
-	SetActorLocation(FVector(botLeftLoc * 50) + FVector(size.Y * 25, size.X * 25, 0)); // - FVector(25, 25, 0));
+	SetActorLocation(FVector(botLeftLoc.Y, botLeftLoc.X, botLeftLoc.Z) * 50 + FVector(size.Y * 25, size.X * 25, ZOffset)); // - FVector(25, 25, 0));
 
 	float rotation;
 	switch (GridDirection)

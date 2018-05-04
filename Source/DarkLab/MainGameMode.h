@@ -7,6 +7,10 @@
 #include "Placeable.h"
 #include "MainGameMode.generated.h"
 
+class ABasicWall;
+class ABasicDoor;
+class AFlashlight;
+
 // Controls the game
 UCLASS(Blueprintable)
 class DARKLAB_API AMainGameMode : public AGameModeBase
@@ -24,13 +28,23 @@ public:
 protected:
 	// Places an object on the map (size < 1 means that we take current size for this axis)
 	// TODO return false if can't place?
-	void PlaceObject(TScriptInterface<IPlaceable>& object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
-	void PlaceObject(TScriptInterface<IPlaceable>& object, const int botLeftLocX, const int botLeftLocY, const int botLeftLocZ, const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
-	void PlaceObject(TScriptInterface<IPlaceable>& object, const FIntVector botLeftLoc = FIntVector(), const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const int botLeftLocZ, const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc = FIntVector(0, 0, 0), const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
+
+	// Spawn specific objects
+	void SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
 	
 private:
 	// Classes used for spawning
-	TSubclassOf<class AFlashlight> FlashlightBP;
+	TSubclassOf<ABasicWall> BasicWallBP;
+	TSubclassOf<ABasicDoor> BasicDoorBP;
+	TSubclassOf<AFlashlight> FlashlightBP;
+
+protected:
+	// Pools
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
+	TArray<ABasicWall*> BasicWallPool;
 
 public:
 	// Sets default values
