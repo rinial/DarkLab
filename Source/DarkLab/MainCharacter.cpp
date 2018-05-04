@@ -9,16 +9,11 @@
 #include "Activatable.h"
 #include "Informative.h"
 #include "MainPlayerController.h"
-#include "MainGameMode.h"
 // For on screen debug
 #include "EngineGlobals.h"
 #include "Engine/Engine.h"
 // TODO delete later?
-/*
-#include "Flashlight.h"
-#include "UObject/ConstructorHelpers.h"
-*/
-#include "Components/CapsuleComponent.h"
+// #include "MainGameMode.h"
 #include "Placeable.h"
 
 // Movement functions
@@ -79,7 +74,7 @@ void AMainCharacter::Disable()
 	bIsDisabled = true;
 
 	// TODO destroy instead?
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
+	this->SetActorEnableCollision(false);
 	PrimaryActorTick.SetTickFunctionEnable(false);
 
 	// Tell the controller that we got disabled
@@ -131,15 +126,6 @@ AMainCharacter::AMainCharacter()
 	Activator->OnComponentBeginOverlap.AddDynamic(this, &AMainCharacter::OnActivatorBeginOverlap);
 	Activator->OnComponentEndOverlap.AddDynamic(this, &AMainCharacter::OnActivatorEndOverlap);
 
-	// TODO delete later
-	// this can be used somewhere
-	// we shouldn't find blueprints from character
-	/*
-	static ConstructorHelpers::FObjectFinder<UClass> flashlightBP(TEXT("Class'/Game/Blueprints/FlashlightBP.FlashlightBP_C'"));
-	if (flashlightBP.Object)
-		MyFlashlightBP = flashlightBP.Object;
-	*/
-
  	// Set this character to call Tick() every frame
 	PrimaryActorTick.bCanEverTick = true;
 }
@@ -149,22 +135,7 @@ void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
-	
-	// TODO delete later
-	// this can be used somewhere
-	// we shouldn't spawn objects from character
-	// nor should we equip like this
-	/*
-	AFlashlight* flashlight = GetWorld()->SpawnActor<AFlashlight>(MyFlashlightBP, GetActorLocation(), GetActorRotation());
-	if (flashlight)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Spawned a flashlight"));
-		IEquipable* toEquip = Cast<IEquipable>(flashlight);
-		if (toEquip)
-			toEquip->Execute_Equip(flashlight, this, FName("LeftHand"));
-	}
-	*/
+	// GameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
 }
 
 // Called every frame

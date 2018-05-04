@@ -5,6 +5,8 @@
 #include "Components/PointLightComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "UObject/UObjectIterator.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Flashlight.h"
 #include "DrawDebugHelpers.h"
 
 // Returns the light level and the location of the brightest light
@@ -26,7 +28,7 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 {
 	TArray<FVector> locations;
 	locations.Add(location);
-	if(sixPoints)
+	if (sixPoints)
 	{
 		// We add six locations around the point
 		locations.Add(location + FVector::UpVector * sixPointsRadius);
@@ -43,7 +45,7 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 	FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("LightTrace")), true);
 	// Add actor and all of its components as ignored
 	if (actor)
-	{		
+	{
 		params.AddIgnoredActor(actor);
 		TInlineComponentArray<UActorComponent*> components;
 		actor->GetComponents(components, true);
@@ -84,7 +86,7 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 			USpotLightComponent* spotLight = Cast<USpotLightComponent>(lightComp);
 			if (spotLight && !spotLight->AffectsBounds(bounds))
 				continue;
-			
+
 			FVector lightLocation = lightComp->GetComponentLocation();
 			float distance = FVector::Dist(location, lightLocation);
 			float lightRadius = lightComp->AttenuationRadius;
@@ -149,11 +151,27 @@ void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable>& object, const FInt
 // Sets default values
 AMainGameMode::AMainGameMode()
 {
-	// TODO
+	// Find blueprints and save found class for future spawns
+	static ConstructorHelpers::FObjectFinder<UClass> flashlightBP(TEXT("Class'/Game/Blueprints/FlashlightBP.FlashlightBP_C'"));
+	if (flashlightBP.Succeeded())
+		FlashlightBP = flashlightBP.Object;
 }
 
 // Called when the game starts or when spawned
 void AMainGameMode::BeginPlay()
 {
-	// TODO
+	Super::BeginPlay();
+
+	// TODO shouldn't spawn directly from here
+	// Spawn stuff
+	AFlashlight* flashlight1 = GetWorld()->SpawnActor<AFlashlight>(FlashlightBP);
+	if (flashlight1)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Spawned flashlight 1"));
+	}
+	AFlashlight* flashlight2 = GetWorld()->SpawnActor<AFlashlight>(FlashlightBP);
+	if (flashlight2)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Spawned flashlight 2"));
+	}
 }

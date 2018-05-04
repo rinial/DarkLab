@@ -28,6 +28,10 @@ protected:
 	void PlaceObject(TScriptInterface<IPlaceable>& object, const int botLeftLocX, const int botLeftLocY, const int botLeftLocZ, const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
 	void PlaceObject(TScriptInterface<IPlaceable>& object, const FIntVector botLeftLoc = FIntVector(), const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
 	
+private:
+	// Classes used for spawning
+	TSubclassOf<class AFlashlight> FlashlightBP;
+
 public:
 	// Sets default values
 	AMainGameMode();

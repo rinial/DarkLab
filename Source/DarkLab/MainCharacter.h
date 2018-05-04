@@ -52,12 +52,8 @@ public:
 
 private:
 	// A reference to the game mode
-	UPROPERTY()
-	class AMainGameMode* GameMode;
-
-	// TODO delete later
-	// move spawns to gamemode or somewhere else
-	// TSubclassOf<class AFlashlight> MyFlashlightBP;
+	// UPROPERTY()
+	// class AMainGameMode* GameMode;
 
 public:
 	// Is true when a character loses a life. Used for "death" animation
