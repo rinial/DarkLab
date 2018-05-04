@@ -32,6 +32,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door: Components")
 	class UTimelineComponent* DoorDriver;
 
+public:
 	// The color of panels on the door
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door: Components")
 	FLinearColor DoorColor = FLinearColor::White;

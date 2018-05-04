@@ -34,6 +34,7 @@ protected:
 
 	// Spawn specific objects
 	void SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
+	void SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White);
 	
 private:
 	// Classes used for spawning
@@ -45,6 +46,8 @@ protected:
 	// Pools
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
 	TArray<ABasicWall*> BasicWallPool;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
+	TArray<ABasicDoor*> BasicDoorPool;
 
 public:
 	// Sets default values

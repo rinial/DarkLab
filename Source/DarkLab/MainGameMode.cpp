@@ -169,6 +169,25 @@ void AMainGameMode::SpawnBasicWall(const int botLeftX, const int botLeftY, const
 
 	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic wall"));
 }
+void AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color)
+{
+	ABasicDoor* door;
+	if (BasicDoorPool.Num() > 0)
+	{
+		door = BasicDoorPool[0];
+		BasicDoorPool.RemoveAt(0);
+	}
+	else
+		door = GetWorld()->SpawnActor<ABasicDoor>(BasicDoorBP);
+	if (!door)
+		return;
+
+	PlaceObject(door, botLeftX, botLeftY, direction);
+	door->DoorColor = color;
+	door->Execute_SetActive(door, true);
+
+	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic door"));
+}
 
 // Sets default values
 AMainGameMode::AMainGameMode()
@@ -201,4 +220,5 @@ void AMainGameMode::BeginPlay()
 	}
 
 	SpawnBasicWall(-7, -5, 1, 10);
+	SpawnBasicDoor(-6, 4, EDirectionEnum::VE_Up, FLinearColor::Red);
 }
