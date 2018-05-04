@@ -49,5 +49,5 @@ void ABasicDoor::BeginPlay()
 
 	// Set size
 	// Gets overridden if done in constructor for some reason
-	Size = FIntVector(8, 1, 5);
+	BaseSize = FIntVector(8, 1, 5);
 }

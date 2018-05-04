@@ -19,6 +19,13 @@ public:
 	FIntVector GetSize();
 	virtual FIntVector GetSize_Implementation() override;
 
+	// Tries to set new size of the object in cells, returns success
+	// Actually sets not BaseSize but actor's scale, which affects GetSize
+// Assumes direction to be Up. Note: should do Place after this
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Placeable")
+	bool SetSize(const FIntVector size);
+	virtual bool SetSize_Implementation(const FIntVector size) override;
+
 	// Places the object on the map, using bottom left corner
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Placeable")
 	void Place(const FIntVector botLeftLoc, const EDirectionEnum direction);
@@ -26,7 +33,7 @@ public:
 
 protected:
 	UPROPERTY()
-	FIntVector Size = FIntVector(1, 1, 1);
+	FIntVector BaseSize = FIntVector(1, 1, 1);
 
 	UPROPERTY()
 	EDirectionEnum GridDirection = EDirectionEnum::VE_Up;
