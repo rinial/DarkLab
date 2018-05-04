@@ -122,8 +122,38 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 	return result;
 }
 
+// Places an object on the map (size < 1 means that we take current size for this axis)
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable>& object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction, const bool setSizeFirst, const int sizeX, const int sizeY, const int sizeZ)
+{
+	PlaceObject(object, botLeftLocX, botLeftLocY, 0, direction, setSizeFirst, sizeX, sizeY, sizeZ);
+}
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable>& object, const int botLeftLocX, const int botLeftLocY, const int botLeftLocZ, const EDirectionEnum direction, const bool setSizeFirst, const int sizeX, const int sizeY, const int sizeZ)
+{
+	PlaceObject(object, FIntVector(botLeftLocX, botLeftLocY, botLeftLocZ), direction, setSizeFirst, sizeX, sizeY, sizeZ);
+}
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable>& object, const FIntVector botLeftLoc, const EDirectionEnum direction, const bool setSizeFirst, const int sizeX, const int sizeY, const int sizeZ)
+{
+	UObject* obj = object->_getUObject();
+
+	if (setSizeFirst)
+	{
+		if (sizeZ < 1)
+			object->Execute_SetSizeXY(obj, sizeX, sizeY);
+		else
+			object->Execute_SetSize(obj, FIntVector(sizeX, sizeY, sizeZ));
+	}
+
+	object->Execute_Place(obj, botLeftLoc, direction);
+}
+
 // Sets default values
 AMainGameMode::AMainGameMode()
+{
+	// TODO
+}
+
+// Called when the game starts or when spawned
+void AMainGameMode::BeginPlay()
 {
 	// TODO
 }

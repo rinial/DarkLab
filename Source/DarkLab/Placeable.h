@@ -37,6 +37,8 @@ public:
 	// Tries to set new size of the object in cells, returns success
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Placeable")
 	bool SetSize(const FIntVector size);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Placeable")
+	bool SetSizeXY(const int x, const int y);
 
 	// Places the object on the map, using bottom left corner
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Placeable")

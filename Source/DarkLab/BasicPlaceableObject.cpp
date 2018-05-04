@@ -24,6 +24,17 @@ bool ABasicPlaceableObject::SetSize_Implementation(const FIntVector size)
 	SetActorScale3D(FVector(size.Y / BaseSize.Y, size.X / BaseSize.X, size.Z / BaseSize.Z));
 	return true;
 }
+bool ABasicPlaceableObject::SetSizeXY_Implementation(const int x, const int y)
+{
+	if (x < BaseSize.X || y < BaseSize.Y)
+		return false;
+
+	if (x % BaseSize.X != 0 || y % BaseSize.Y != 0)
+		return false;
+
+	SetActorScale3D(FVector(y / BaseSize.Y, x / BaseSize.X, GetActorScale3D().Z));
+	return true;
+}
 // Places the object on the map, using bottom left corner
 void ABasicPlaceableObject::Place_Implementation(const FIntVector botLeftLoc, const EDirectionEnum direction)
 {
