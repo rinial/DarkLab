@@ -10,6 +10,7 @@
 class ABasicWall;
 class ABasicDoor;
 class AFlashlight;
+class IDeactivatable;
 
 // Controls the game
 UCLASS(Blueprintable)
@@ -32,10 +33,14 @@ protected:
 	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const int botLeftLocZ, const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
 	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc = FIntVector(0, 0, 0), const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
 
+	// Tries to find a poolable object in a specified array
+	UFUNCTION()
+	UObject* TryGetPoolable(TArray<TScriptInterface<IDeactivatable>> pool);
+
 	// Spawn specific objects
-	void SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
-	void SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White);
-	void SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction = EDirectionEnum::VE_Up);
+	ABasicWall* SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
+	ABasicDoor* SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White);
+	AFlashlight* SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction = EDirectionEnum::VE_Up);
 	
 private:
 	// Classes used for spawning
@@ -46,9 +51,9 @@ private:
 protected:
 	// Pools
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
-	TArray<ABasicWall*> BasicWallPool;
+	TArray<TScriptInterface<IDeactivatable>> BasicWallPool;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
-	TArray<ABasicDoor*> BasicDoorPool;
+	TArray<TScriptInterface<IDeactivatable>> BasicDoorPool;
 
 public:
 	// Sets default values
