@@ -188,6 +188,16 @@ void AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeftY, const
 
 	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic door"));
 }
+void AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction)
+{
+	AFlashlight* flashlight = GetWorld()->SpawnActor<AFlashlight>(FlashlightBP);
+	if (!flashlight)
+		return;
+
+	PlaceObject(flashlight, botLeftX, botLeftY, direction);
+
+	UE_LOG(LogTemp, Warning, TEXT("Spawned a flashlight"));
+}
 
 // Sets default values
 AMainGameMode::AMainGameMode()
@@ -209,16 +219,7 @@ void AMainGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// TODO shouldn't spawn directly from here
-	// Spawn stuff
-	AFlashlight* flashlight = GetWorld()->SpawnActor<AFlashlight>(FlashlightBP);
-	if (flashlight)
-	{
-		//TScriptInterface<IPlaceable> placeable = flashlight1;
-		PlaceObject(flashlight);
-		UE_LOG(LogTemp, Warning, TEXT("Spawned flashlight"));
-	}
-
 	SpawnBasicWall(-7, -5, 1, 10);
 	SpawnBasicDoor(-6, 4, EDirectionEnum::VE_Up, FLinearColor::Red);
+	SpawnFlashlight(0, 0);
 }

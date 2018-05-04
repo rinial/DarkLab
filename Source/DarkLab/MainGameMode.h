@@ -35,6 +35,7 @@ protected:
 	// Spawn specific objects
 	void SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
 	void SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White);
+	void SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction = EDirectionEnum::VE_Up);
 	
 private:
 	// Classes used for spawning
