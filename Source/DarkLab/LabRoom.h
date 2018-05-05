@@ -25,11 +25,12 @@ public:
 	// Adds a passage to/from this room
 	// Returns false if it's not possible
 	bool AddPassage(LabPassage* passage);
-	bool AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* other = nullptr, bool isDoor = false, int width = 4);
+	bool AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* other = nullptr, bool isDoor = false, FLinearColor color = FLinearColor::White, int width = 4);
 
 public:
 	// Sets default values
 	LabRoom(int botLeftLocX, int botLeftLocY, int sizeX, int sizeY);
+
 	// Called on destruction
 	~LabRoom();
 };

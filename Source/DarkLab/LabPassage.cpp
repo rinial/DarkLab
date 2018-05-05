@@ -4,7 +4,7 @@
 #include "LabRoom.h"
 
 // Sets default values
-LabPassage::LabPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* from, LabRoom* to, bool isDoor, int width) : BotLeftLocX(botLeftLocX), BotLeftLocY(botLeftLocY), GridDirection(direction), From(from), To(to), bIsDoor(isDoor)
+LabPassage::LabPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* from, LabRoom* to, bool isDoor, FLinearColor color, int width) : BotLeftLocX(botLeftLocX), BotLeftLocY(botLeftLocY), GridDirection(direction), From(from), To(to), bIsDoor(isDoor), Color(color)
 {
 	if (width > 2)
 		Width = width;

@@ -16,7 +16,7 @@ bool LabRoom::AddPassage(LabPassage * passage)
 	Passages.Add(passage);
 	return true;
 }
-bool LabRoom::AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom * other, bool isDoor, int width)
+bool LabRoom::AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom * other, bool isDoor, FLinearColor color, int width)
 {
 	if (width < 3)
 		return false;
@@ -51,7 +51,7 @@ bool LabRoom::AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direct
 		(direction == EDirectionEnum::VE_Left && botLeftLocX == BotLeftLocX + SizeX - 1))
 		fromThis = false;
 
-	LabPassage* passage = new LabPassage(botLeftLocX, botLeftLocY, direction, fromThis ? this : other, fromThis ? other : this, isDoor, width);
+	LabPassage* passage = new LabPassage(botLeftLocX, botLeftLocY, direction, fromThis ? this : other, fromThis ? other : this, isDoor, color, width);
 	// We don't need to add it to Passages, it will be added from LabPassage constructor
 
 	return true;

@@ -23,6 +23,10 @@ public:
 	// True if there's a door
 	bool bIsDoor = false;
 
+	// The color of the door if it's a door. This also serves as code
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Passage")
+	FLinearColor Color = FLinearColor::White;
+
 	// What the passage connects
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Passage")
 	LabRoom* From;
@@ -31,7 +35,8 @@ public:
 
 public:
 	// Sets default values
-	LabPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* from = nullptr, LabRoom* to = nullptr, bool isDoor = false, int width = 4);
+	LabPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* from = nullptr, LabRoom* to = nullptr, bool isDoor = false, FLinearColor color = FLinearColor::White, int width = 4);
+
 	// Called on destruction
 	~LabPassage();
 };

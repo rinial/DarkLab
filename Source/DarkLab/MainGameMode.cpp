@@ -280,7 +280,7 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 
 		// Spawn door if needed
 		if (passage->bIsDoor)
-			SpawnBasicDoor(passage->BotLeftLocX, passage->BotLeftLocY, passage->GridDirection); // TODO add color here for special doors
+			SpawnBasicDoor(passage->BotLeftLocX, passage->BotLeftLocY, passage->GridDirection, passage->Color);
 	}
 
 	leftWallPositions.Sort();
@@ -343,7 +343,7 @@ void AMainGameMode::BeginPlay()
 	LabRoom* room2 = new LabRoom(-10, -5, 15, 12);
 	room2->AddPassage(-10, -3, EDirectionEnum::VE_Left, nullptr, true);
 	room2->AddPassage(4, 0, EDirectionEnum::VE_Left, nullptr, true);
-	room2->AddPassage(-6, 6, EDirectionEnum::VE_Up, nullptr, true);
+	room2->AddPassage(-6, 6, EDirectionEnum::VE_Up, nullptr, true, FLinearColor::Red);
 
 	// Testing pooling
 	ABasicWall* temp = SpawnBasicWall(2, 3, 5, 1);
@@ -352,11 +352,11 @@ void AMainGameMode::BeginPlay()
 	SpawnRoom(room1);
 	SpawnRoom(room2);
 
+	SpawnFlashlight(0, 0);
+
 	// SpawnBasicFloor(-20, -20, 40, 40);
 	// SpawnBasicWall(-7, -5, 1, 9);
 	// SpawnBasicDoor(-6, 3, EDirectionEnum::VE_Up, FLinearColor::Red);
-
-	SpawnFlashlight(0, 0);
 
 	delete room1;
 	delete room2;
