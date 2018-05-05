@@ -14,11 +14,11 @@ class DARKLAB_API ABasicWall : public ABasicPlaceableObject
 	
 protected:
 	// Wall's direction and root object
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door: Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wall: Components")
 	class UArrowComponent* Direction;
 
 	// Wall's shape
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door: Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wall: Components")
 	class UStaticMeshComponent* Wall;
 
 public:
