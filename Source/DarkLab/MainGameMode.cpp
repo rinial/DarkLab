@@ -76,7 +76,7 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 	// We find local results for all locations
 	for (FVector location : locations)
 	{
-		// DrawDebugPoint(gameWorld, location, 5, FColor::Red);
+		DrawDebugPoint(gameWorld, location, 5, FColor::Red);
 
 		// This will be used for the spot lights
 		FBoxSphereBounds bounds = FBoxSphereBounds(location, FVector(1, 1, 1), 1);
@@ -104,7 +104,7 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 			// If location could be lit
 			if (!bHit)
 			{
-				// DrawDebugLine(gameWorld, location, lightLocation, FColor::Cyan);
+				DrawDebugLine(gameWorld, location, lightLocation, FColor::Cyan);
 
 				// 1 if near the edge of light, 0 if in center
 				float temp = distance / lightRadius;
