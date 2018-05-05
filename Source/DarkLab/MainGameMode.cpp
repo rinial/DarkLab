@@ -11,8 +11,9 @@
 #include "BasicWall.h"
 #include "BasicDoor.h"
 #include "Flashlight.h"
-#include "LabRoom.h"
 #include "LabPassage.h"
+#include "LabRoom.h"
+#include "LabHallway.h"
 
 // Returns the light level and the location of the brightest light
 float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints, const float sixPointsRadius)
@@ -345,14 +346,17 @@ void AMainGameMode::BeginPlay()
 	room2->AddPassage(4, 0, EDirectionEnum::VE_Left, nullptr, true);
 	room2->AddPassage(-6, 6, EDirectionEnum::VE_Up, nullptr, true, FLinearColor::Red);
 
-	// Testing pooling
-	ABasicWall* temp = SpawnBasicWall(2, 3, 5, 1);
-	PoolObject(temp, BasicWallPool);
+	LabHallway* hallway1 = new LabHallway(-5, -25, EDirectionEnum::VE_Right, 100, 8, nullptr, nullptr, false, true, FLinearColor::White, FLinearColor::Black, 6);
 
 	SpawnRoom(room1);
 	SpawnRoom(room2);
+	SpawnRoom(hallway1);
 
 	SpawnFlashlight(0, 0);
+
+	// Testing pooling
+	ABasicWall* temp = SpawnBasicWall(2, 3, 5, 1);
+	PoolObject(temp, BasicWallPool);
 
 	// SpawnBasicFloor(-20, -20, 40, 40);
 	// SpawnBasicWall(-7, -5, 1, 9);
