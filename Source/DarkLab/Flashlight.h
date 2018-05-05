@@ -19,6 +19,11 @@ public:
 	void Use();
 	virtual void Use_Implementation() override;
 
+	// TODO let some interface define it?
+	// Resets to initial state
+	UFUNCTION(BlueprintCallable, Category = "Flashlight")
+	void Reset();
+
 protected:
 	// Flashlight's direction and root object
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flashlight: Components")

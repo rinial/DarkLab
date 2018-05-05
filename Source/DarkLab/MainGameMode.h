@@ -33,9 +33,13 @@ protected:
 	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const int botLeftLocZ, const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
 	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc = FIntVector(0, 0, 0), const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
 
+	// Deactivates and adds to a pool
+	UFUNCTION(BlueprintCallable, Category = "Pools")
+	void PoolObject(TScriptInterface<IDeactivatable> object, TArray<TScriptInterface<IDeactivatable>>& pool);
+
 	// Tries to find a poolable object in a specified array
-	UFUNCTION()
-	UObject* TryGetPoolable(TArray<TScriptInterface<IDeactivatable>> pool);
+	UFUNCTION(BlueprintCallable, Category = "Pools")
+	UObject* TryGetPoolable(TArray<TScriptInterface<IDeactivatable>>& pool);
 
 	// Spawn specific objects
 	ABasicWall* SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
@@ -54,6 +58,8 @@ protected:
 	TArray<TScriptInterface<IDeactivatable>> BasicWallPool;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
 	TArray<TScriptInterface<IDeactivatable>> BasicDoorPool;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
+	TArray<TScriptInterface<IDeactivatable>> FlashlightPool;
 
 public:
 	// Sets default values

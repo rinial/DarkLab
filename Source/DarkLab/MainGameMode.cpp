@@ -150,16 +150,21 @@ void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const FIntV
 	object->Execute_Place(obj, botLeftLoc, direction);
 }
 
-// Tries to find a poolable object in a specified array
-UObject* AMainGameMode::TryGetPoolable(TArray<TScriptInterface<IDeactivatable>> pool)
+// Deactivates and adds to a pool
+void AMainGameMode::PoolObject(TScriptInterface<IDeactivatable> object, TArray<TScriptInterface<IDeactivatable>>& pool)
 {
-	for (int i = 0; i < pool.Num(); ++i)
-	{
-		TScriptInterface<IDeactivatable> temp = pool[i];
-		if (temp && temp->Execute_IsActive(temp->_getUObject()))
-			continue;
+	object->Execute_SetActive(object->_getUObject(), false);
+	pool.Add(object);
+}
 
+// Tries to find a poolable object in a specified array
+UObject* AMainGameMode::TryGetPoolable(TArray<TScriptInterface<IDeactivatable>>& pool)
+{
+	if (pool.Num() > 0)
+	{
+		TScriptInterface<IDeactivatable> temp = pool[0];
 		temp->Execute_SetActive(temp->_getUObject(), true);
+		pool.RemoveAt(0);
 		return temp->_getUObject();
 	}
 
@@ -171,10 +176,7 @@ ABasicWall* AMainGameMode::SpawnBasicWall(const int botLeftX, const int botLeftY
 {
 	ABasicWall* wall = Cast<ABasicWall>(TryGetPoolable(BasicWallPool));
 	if (!wall)
-	{
 		wall = GetWorld()->SpawnActor<ABasicWall>(BasicWallBP);
-		BasicWallPool.Add(wall);
-	}
 
 	PlaceObject(wall, botLeftX, botLeftY, EDirectionEnum::VE_Up, true, sizeX, sizeY);
 
@@ -186,13 +188,10 @@ ABasicDoor* AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeftY
 {
 	ABasicDoor* door = Cast<ABasicDoor>(TryGetPoolable(BasicDoorPool));
 	if (!door)
-	{
 		door = GetWorld()->SpawnActor<ABasicDoor>(BasicDoorBP);
-		BasicDoorPool.Add(door);
-	}
 
-	PlaceObject(door, botLeftX, botLeftY, direction);
 	door->DoorColor = color;
+	PlaceObject(door, botLeftX, botLeftY, direction);
 
 	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic door"));
 
@@ -200,8 +199,11 @@ ABasicDoor* AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeftY
 }
 AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction)
 {
-	AFlashlight* flashlight = GetWorld()->SpawnActor<AFlashlight>(FlashlightBP);
+	AFlashlight* flashlight = Cast<AFlashlight>((TryGetPoolable(FlashlightPool)));
+	if (!flashlight)
+		flashlight = GetWorld()->SpawnActor<AFlashlight>(FlashlightBP);
 
+	flashlight->Reset(); // Disables light if it was on
 	PlaceObject(flashlight, botLeftX, botLeftY, direction);
 
 	UE_LOG(LogTemp, Warning, TEXT("Spawned a flashlight"));
@@ -232,7 +234,7 @@ void AMainGameMode::BeginPlay()
 	SpawnBasicWall(-7, -5, 1, 9);
 	SpawnBasicDoor(-6, 3, EDirectionEnum::VE_Up, FLinearColor::Red);
 	ABasicWall* temp = SpawnBasicWall(2, 3, 5, 1);
-	temp->Execute_SetActive(temp, false);
+	PoolObject(temp, BasicWallPool);
 	SpawnBasicWall(2, 3, 5, 1); // Testing pooling
 	SpawnBasicDoor(6, -5, EDirectionEnum::VE_Right);
 	SpawnFlashlight(0, 0);

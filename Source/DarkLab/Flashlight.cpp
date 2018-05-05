@@ -14,6 +14,13 @@ void AFlashlight::Use_Implementation()
 	ExtraLight->ToggleVisibility();
 }
 
+// Resets to initial state
+void AFlashlight::Reset()
+{
+	MainLight->SetVisibility(false);
+	ExtraLight->SetVisibility(false);
+}
+
 // Sets default values
 AFlashlight::AFlashlight()
 {
