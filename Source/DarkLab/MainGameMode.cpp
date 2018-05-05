@@ -11,6 +11,8 @@
 #include "BasicWall.h"
 #include "BasicDoor.h"
 #include "Flashlight.h"
+#include "LabRoom.h"
+#include "LabPassage.h"
 
 // Returns the light level and the location of the brightest light
 float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints, const float sixPointsRadius)
@@ -224,6 +226,94 @@ AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLef
 	return flashlight;
 }
 
+// Spawn full parts of the lab
+// TODO make it return success or actual room's parts
+void AMainGameMode::SpawnRoom(LabRoom * room)
+{
+	// Spawning floor
+	SpawnBasicFloor(room->BotLeftLocX, room->BotLeftLocY, room->SizeX, room->SizeY);
+
+	// For spawning walls 
+	TArray<int> leftWallPositions;
+	TArray<int> topWallPositions;
+	TArray<int> rightWallPositions;
+	TArray<int> bottomWallPositions;
+
+	leftWallPositions.Add(0);
+	leftWallPositions.Add(room->SizeY - 1);
+
+	topWallPositions.Add(0);
+	topWallPositions.Add(room->SizeX - 1);
+
+	rightWallPositions.Add(0);
+	rightWallPositions.Add(room->SizeY - 1);
+
+	bottomWallPositions.Add(0);
+	bottomWallPositions.Add(room->SizeX - 1);
+
+	for (LabPassage* passage : room->Passages)
+	{
+		// Left wall
+		if (passage->BotLeftLocX == room->BotLeftLocX)
+		{
+			leftWallPositions.Add(passage->BotLeftLocY - 1 - room->BotLeftLocY);
+			leftWallPositions.Add(passage->BotLeftLocY + passage->Width - room->BotLeftLocY);
+		}
+		// Top wall
+		else if (passage->BotLeftLocY == room->BotLeftLocY + room->SizeY - 1)
+		{
+			topWallPositions.Add(passage->BotLeftLocX - 1 - room->BotLeftLocX);
+			topWallPositions.Add(passage->BotLeftLocX + passage->Width - room->BotLeftLocX);
+		}
+		// Right wall
+		else if (passage->BotLeftLocX == room->BotLeftLocX + room->SizeX - 1)
+		{
+			rightWallPositions.Add(passage->BotLeftLocY - 1 - room->BotLeftLocY);
+			rightWallPositions.Add(passage->BotLeftLocY + passage->Width - room->BotLeftLocY);
+		}
+		// Bottom wall
+		else if (passage->BotLeftLocY == room->BotLeftLocY)
+		{
+			bottomWallPositions.Add(passage->BotLeftLocX - 1 - room->BotLeftLocX);
+			bottomWallPositions.Add(passage->BotLeftLocX + passage->Width - room->BotLeftLocX);
+		}
+
+		// Spawn door if needed
+		if (passage->bIsDoor)
+			SpawnBasicDoor(passage->BotLeftLocX, passage->BotLeftLocY, passage->GridDirection); // TODO add color here for special doors
+	}
+
+	leftWallPositions.Sort();
+	topWallPositions.Sort();
+	rightWallPositions.Sort();
+	bottomWallPositions.Sort();
+
+	// Spawning left walls
+	for (int i = 0; i + 1 < leftWallPositions.Num(); i += 2)
+	{
+		int wallLength = leftWallPositions[i + 1] - leftWallPositions[i] + 1;
+		SpawnBasicWall(room->BotLeftLocX, room->BotLeftLocY + leftWallPositions[i], 1, wallLength);
+	}
+	// Spawning top walls
+	for (int i = 0; i + 1 < topWallPositions.Num(); i += 2)
+	{
+		int wallLength = topWallPositions[i + 1] - topWallPositions[i] + 1;
+		SpawnBasicWall(room->BotLeftLocX + topWallPositions[i], room->BotLeftLocY + room->SizeY - 1, wallLength, 1);
+	}
+	// Spawning right walls
+	for (int i = 0; i + 1 < rightWallPositions.Num(); i += 2)
+	{
+		int wallLength = rightWallPositions[i + 1] - rightWallPositions[i] + 1;
+		SpawnBasicWall(room->BotLeftLocX + room->SizeX - 1, room->BotLeftLocY + rightWallPositions[i], 1, wallLength);
+	}
+	// Spawning bottom walls
+	for (int i = 0; i + 1 < bottomWallPositions.Num(); i += 2)
+	{
+		int wallLength = bottomWallPositions[i + 1] - bottomWallPositions[i] + 1;
+		SpawnBasicWall(room->BotLeftLocX + bottomWallPositions[i], room->BotLeftLocY, wallLength, 1);
+	}
+}
+
 // Sets default values
 AMainGameMode::AMainGameMode()
 {
@@ -246,13 +336,28 @@ AMainGameMode::AMainGameMode()
 void AMainGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	// TODO shouldn't create rooms from here
+	LabRoom* room1 = new LabRoom(-15, -10, 30, 22);
+	room1->AddPassage(9, -10, EDirectionEnum::VE_Down, nullptr, true);
+	LabRoom* room2 = new LabRoom(-10, -5, 15, 12);
+	room2->AddPassage(-10, -3, EDirectionEnum::VE_Left, nullptr, true);
+	room2->AddPassage(4, 0, EDirectionEnum::VE_Left, nullptr, true);
+	room2->AddPassage(-6, 6, EDirectionEnum::VE_Up, nullptr, true);
 
-	SpawnBasicFloor(-20, -20, 40, 40);
-	SpawnBasicWall(-7, -5, 1, 9);
-	SpawnBasicDoor(-6, 3, EDirectionEnum::VE_Up, FLinearColor::Red);
+	// Testing pooling
 	ABasicWall* temp = SpawnBasicWall(2, 3, 5, 1);
 	PoolObject(temp, BasicWallPool);
-	SpawnBasicWall(2, 3, 5, 1); // Testing pooling
-	SpawnBasicDoor(6, -5, EDirectionEnum::VE_Right);
+
+	SpawnRoom(room1);
+	SpawnRoom(room2);
+
+	// SpawnBasicFloor(-20, -20, 40, 40);
+	// SpawnBasicWall(-7, -5, 1, 9);
+	// SpawnBasicDoor(-6, 3, EDirectionEnum::VE_Up, FLinearColor::Red);
+
 	SpawnFlashlight(0, 0);
+
+	delete room1;
+	delete room2;
 }

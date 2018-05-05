@@ -47,6 +47,10 @@ protected:
 	ABasicWall* SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
 	ABasicDoor* SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White);
 	AFlashlight* SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction = EDirectionEnum::VE_Up);
+
+	// Spawn full parts of the lab
+	// TODO make it return success or actual room's parts
+	void SpawnRoom(class LabRoom* room);
 	
 private:
 	// Classes used for spawning
