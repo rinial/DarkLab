@@ -14,7 +14,7 @@ public:
 	// Passage's location and width
 	int BotLeftLocX = 0;
 	int BotLeftLocY = 0;
-	int Width = 4;
+	int Width = 3;
 
 	// Direction of the passage (not along its width but along player's path)
 	EDirectionEnum GridDirection;
