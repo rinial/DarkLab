@@ -7,10 +7,11 @@
 #include "Placeable.h"
 #include "MainGameMode.generated.h"
 
+class IDeactivatable;
+class ABasicFloor;
 class ABasicWall;
 class ABasicDoor;
 class AFlashlight;
-class IDeactivatable;
 
 // Controls the game
 UCLASS(Blueprintable)
@@ -42,18 +43,22 @@ protected:
 	UObject* TryGetPoolable(TArray<TScriptInterface<IDeactivatable>>& pool);
 
 	// Spawn specific objects
+	ABasicFloor* SpawnBasicFloor(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
 	ABasicWall* SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
 	ABasicDoor* SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White);
 	AFlashlight* SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction = EDirectionEnum::VE_Up);
 	
 private:
 	// Classes used for spawning
+	TSubclassOf<ABasicFloor> BasicFloorBP;
 	TSubclassOf<ABasicWall> BasicWallBP;
 	TSubclassOf<ABasicDoor> BasicDoorBP;
 	TSubclassOf<AFlashlight> FlashlightBP;
 
 protected:
 	// Pools
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
+	TArray<TScriptInterface<IDeactivatable>> BasicFloorPool;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
 	TArray<TScriptInterface<IDeactivatable>> BasicWallPool;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")

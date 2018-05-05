@@ -7,6 +7,7 @@
 #include "UObject/UObjectIterator.h"
 #include "DrawDebugHelpers.h"
 #include "UObject/ConstructorHelpers.h"
+#include "BasicFloor.h"
 #include "BasicWall.h"
 #include "BasicDoor.h"
 #include "Flashlight.h"
@@ -172,6 +173,18 @@ UObject* AMainGameMode::TryGetPoolable(TArray<TScriptInterface<IDeactivatable>>&
 }
 
 // Spawn specific objects
+ABasicFloor * AMainGameMode::SpawnBasicFloor(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
+{
+	ABasicFloor* floor = Cast<ABasicFloor>(TryGetPoolable(BasicFloorPool));
+	if (!floor)
+		floor = GetWorld()->SpawnActor<ABasicFloor>(BasicFloorBP);
+
+	PlaceObject(floor, botLeftX, botLeftY, EDirectionEnum::VE_Up, true, sizeX, sizeY);
+
+	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic floor"));
+
+	return floor;
+}
 ABasicWall* AMainGameMode::SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
 {
 	ABasicWall* wall = Cast<ABasicWall>(TryGetPoolable(BasicWallPool));
@@ -215,6 +228,9 @@ AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLef
 AMainGameMode::AMainGameMode()
 {
 	// Find blueprints and save found class for future spawns
+	static ConstructorHelpers::FObjectFinder<UClass> basicFloorBP(TEXT("Class'/Game/Blueprints/BasicFloorBP.BasicFloorBP_C'"));
+	if (basicFloorBP.Succeeded())
+		BasicFloorBP = basicFloorBP.Object;
 	static ConstructorHelpers::FObjectFinder<UClass> basicWallBP(TEXT("Class'/Game/Blueprints/BasicWallBP.BasicWallBP_C'"));
 	if (basicWallBP.Succeeded())
 		BasicWallBP = basicWallBP.Object;
@@ -231,6 +247,7 @@ void AMainGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
+	SpawnBasicFloor(-20, -20, 40, 40);
 	SpawnBasicWall(-7, -5, 1, 9);
 	SpawnBasicDoor(-6, 3, EDirectionEnum::VE_Up, FLinearColor::Red);
 	ABasicWall* temp = SpawnBasicWall(2, 3, 5, 1);
