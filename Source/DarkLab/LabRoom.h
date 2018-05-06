@@ -18,6 +18,9 @@ public:
 	int SizeX = 5;
 	int SizeY = 5;
 
+	// Used for rooms inside rooms
+	bool bIsInner = false;
+
 	// Passages from this room
 	TArray<LabPassage*> Passages;
 
@@ -29,7 +32,7 @@ public:
 
 public:
 	// Sets default values
-	LabRoom(int botLeftLocX, int botLeftLocY, int sizeX, int sizeY);
+	LabRoom(int botLeftLocX, int botLeftLocY, int sizeX, int sizeY, bool isInner = false);
 
 	// Called on destruction
 	~LabRoom();

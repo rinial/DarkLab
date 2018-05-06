@@ -232,7 +232,8 @@ AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLef
 void AMainGameMode::SpawnRoom(LabRoom * room)
 {
 	// Spawning floor
-	SpawnBasicFloor(room->BotLeftLocX, room->BotLeftLocY, room->SizeX, room->SizeY);
+	if(!room->bIsInner)
+		SpawnBasicFloor(room->BotLeftLocX, room->BotLeftLocY, room->SizeX, room->SizeY);
 
 	// For spawning walls 
 	TArray<int> leftWallPositions;
@@ -252,6 +253,8 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 	bottomWallPositions.Add(0);
 	bottomWallPositions.Add(room->SizeX - 1);
 
+	// Add positions for spawning walls based on passages in walls
+	// Also spawn doors
 	for (LabPassage* passage : room->Passages)
 	{
 		// Left wall
@@ -318,7 +321,7 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 // Sets default values
 AMainGameMode::AMainGameMode()
 {
-	// Find blueprints and save found class for future spawns
+	// Find blueprints and save found classes for future spawns
 	static ConstructorHelpers::FObjectFinder<UClass> basicFloorBP(TEXT("Class'/Game/Blueprints/BasicFloorBP.BasicFloorBP_C'"));
 	if (basicFloorBP.Succeeded())
 		BasicFloorBP = basicFloorBP.Object;
@@ -338,10 +341,10 @@ void AMainGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	// TODO shouldn't create rooms from here
-	LabRoom* room1 = new LabRoom(-15, -10, 30, 22);
-	room1->AddPassage(9, -10, EDirectionEnum::VE_Down, nullptr, true);
-	LabRoom* room2 = new LabRoom(-10, -5, 15, 12);
+	// TODO shouldn't create and spawn rooms from here
+	LabRoom* room1 = new LabRoom(-50, -50, 100, 100);
+	room1->AddPassage(9, -50, EDirectionEnum::VE_Down, nullptr, true);
+	LabRoom* room2 = new LabRoom(-10, -5, 15, 12, true);
 	room2->AddPassage(-10, -3, EDirectionEnum::VE_Left, nullptr, true);
 	room2->AddPassage(4, 0, EDirectionEnum::VE_Left, nullptr, true);
 	room2->AddPassage(-6, 6, EDirectionEnum::VE_Up, nullptr, true, FLinearColor::Red);
@@ -364,4 +367,5 @@ void AMainGameMode::BeginPlay()
 
 	delete room1;
 	delete room2;
+	delete hallway1;
 }
