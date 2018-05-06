@@ -16,27 +16,25 @@
 // #include "MainGameMode.h"
 
 // Movement functions
-void AMainCharacter::MoveUp(const float value)
+void AMainCharacter::Move(FVector direction, const float value)
 {
+	direction.Normalize();
 	FRotator rotation = GetActorRotation();
-	FVector direction = rotation.Vector();
-	FVector v2 = FVector(1.0f, 0.0f, 0.0f) * value;
+	FVector lookDirection = rotation.Vector();
+	FVector v2 = direction * (value >= 0 ? 1 : -1);
 	// Angle between applied movement and view direction
-	float angle = FMath::RadiansToDegrees(acosf(FVector::DotProduct(direction, v2)));
+	float angle = FMath::RadiansToDegrees(acosf(FVector::DotProduct(lookDirection, v2)));
 
 	// Movement is slower when looking in the opposite direction of movement
-	AddMovementInput(FVector(1.0f - (1.0f - BackMoveCoeff) * angle / 180.0f, 0.0f, 0.0f), value);
+	AddMovementInput(direction, value * (1.0f - (1.0f - BackMoveCoeff) * angle / 180.0f));
+}
+void AMainCharacter::MoveUp(const float value)
+{
+	Move(FVector(1.0f, 0.0f, 0.0f), value);
 }
 void AMainCharacter::MoveRight(const float value)
 {
-	FRotator rotation = GetActorRotation();
-	FVector direction = rotation.Vector();
-	FVector v2 = FVector(0.0f, 1.0f, 0.0f) * value;
-	// Angle between applied movement and view direction
-	float angle = FMath::RadiansToDegrees(acosf(FVector::DotProduct(direction, v2)));
-
-	// Movement is slower when looking in the opposite direction of movement
-	AddMovementInput(FVector(0.0f, 1.0f - (1.0f - BackMoveCoeff) * angle / 180.0f, 0.0f), value);
+	Move(FVector(0.0f, 1.0f, 0.0f), value);
 }
 void AMainCharacter::Look(const FVector direction)
 {

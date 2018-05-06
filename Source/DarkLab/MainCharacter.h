@@ -14,6 +14,7 @@ class DARKLAB_API AMainCharacter : public ACharacter
 
 public:
 	// Movement 
+	void Move(FVector direction, const float value);
 	void MoveUp(const float value);
 	void MoveRight(const float value);
 	void Look(const FVector direction);
