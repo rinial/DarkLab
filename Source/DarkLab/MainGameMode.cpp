@@ -354,6 +354,7 @@ void AMainGameMode::BeginPlay()
 	room2->AddPassage(-10, -3, EDirectionEnum::VE_Left, nullptr, true);
 	room2->AddPassage(4, 0, EDirectionEnum::VE_Left, nullptr, true);
 	room2->AddPassage(-6, 6, EDirectionEnum::VE_Up, nullptr, true, FLinearColor::Red);
+	room2->AddPassage(0, -5, EDirectionEnum::VE_Up, nullptr, 2);
 
 	LabHallway* hallway1 = new LabHallway(-5, -25, EDirectionEnum::VE_Right, 100, 8, nullptr, nullptr, false, true, FLinearColor::White, FLinearColor::Black, 6);
 
