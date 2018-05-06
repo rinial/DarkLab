@@ -15,8 +15,8 @@ public:
 	// Room's location and size
 	int BotLeftLocX = 0;
 	int BotLeftLocY = 0;
-	int SizeX = 5;
-	int SizeY = 5;
+	int SizeX = 4;
+	int SizeY = 4;
 
 	// Used for rooms inside rooms
 	bool bIsInner = false;
@@ -28,7 +28,8 @@ public:
 	// Adds a passage to/from this room
 	// Returns false if it's not possible
 	bool AddPassage(LabPassage* passage);
-	bool AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* other = nullptr, bool isDoor = false, FLinearColor color = FLinearColor::White, int width = 4);
+	bool AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* other = nullptr, int width = 4);
+	bool AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* other, bool isDoor, FLinearColor color = FLinearColor::White, int width = 4); 
 
 public:
 	// Sets default values

@@ -16,9 +16,13 @@ bool LabRoom::AddPassage(LabPassage * passage)
 	Passages.Add(passage);
 	return true;
 }
+bool LabRoom::AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom * other, int width)
+{
+	return AddPassage(botLeftLocX, botLeftLocY, direction, other, false, FLinearColor::White, width);
+}
 bool LabRoom::AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom * other, bool isDoor, FLinearColor color, int width)
 {
-	if (width < 3)
+	if (width < 2)
 		return false;
 
 	if (direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down)
