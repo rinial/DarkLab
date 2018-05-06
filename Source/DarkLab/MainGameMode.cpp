@@ -70,6 +70,10 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 		if (Itr->GetWorld() != gameWorld)
 			continue;
 
+		// We don't care about invisible lights
+		if ((!Itr->IsVisible()) || Itr->bHiddenInGame)
+			continue;
+
 		pointLights.Add(*Itr);
 	}
 
@@ -84,10 +88,6 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 		// We take the highest local result among lights
 		for (UPointLightComponent* lightComp : pointLights)
 		{
-			// We don't care about invisible lights
-			if (!lightComp->IsVisible())
-				continue;
-
 			// First we check if it's a spotlight and whether location is in the cone
 			USpotLightComponent* spotLight = Cast<USpotLightComponent>(lightComp);
 			if (spotLight && !spotLight->AffectsBounds(bounds))
