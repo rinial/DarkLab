@@ -18,10 +18,10 @@ bool ABasicPlaceableObject::SetSize_Implementation(const FIntVector size)
 	if (size.X < BaseSize.X || size.Y < BaseSize.Y || size.Z < BaseSize.Z)
 		return false;
 
-	if (size.X % BaseSize.X != 0 || size.Y % BaseSize.Y != 0 || size.Z % BaseSize.Z != 0)
-		return false;
+	// if (size.X % BaseSize.X != 0 || size.Y % BaseSize.Y != 0 || size.Z % BaseSize.Z != 0)
+	//	return false;
 
-	SetActorScale3D(FVector(size.Y / BaseSize.Y, size.X / BaseSize.X, size.Z / BaseSize.Z));
+	SetActorScale3D(FVector(size.Y * 1.0f / BaseSize.Y, size.X * 1.0f / BaseSize.X, size.Z * 1.0f / BaseSize.Z));
 	return true;
 }
 bool ABasicPlaceableObject::SetSizeXY_Implementation(const int x, const int y)
@@ -29,10 +29,10 @@ bool ABasicPlaceableObject::SetSizeXY_Implementation(const int x, const int y)
 	if (x < BaseSize.X || y < BaseSize.Y)
 		return false;
 
-	if (x % BaseSize.X != 0 || y % BaseSize.Y != 0)
-		return false;
+	// if (x % BaseSize.X != 0 || y % BaseSize.Y != 0)
+	// 	return false;
 
-	SetActorScale3D(FVector(y / BaseSize.Y, x / BaseSize.X, GetActorScale3D().Z));
+	SetActorScale3D(FVector(y * 1.0f / BaseSize.Y, x * 1.0f / BaseSize.X, GetActorScale3D().Z));
 	return true;
 }
 // Places the object on the map, using bottom left corner

@@ -4,14 +4,12 @@
 #include "LabPassage.h"
 
 // Sets default values
-LabHallway::LabHallway(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, int length, int width, LabRoom * from, LabRoom * to, int enterWidth, int exitWidth) : LabHallway(botLeftLocX, botLeftLocY, direction, length, width, from, to, false, false, FLinearColor::White, FLinearColor::White, enterWidth, exitWidth)
+LabHallway::LabHallway(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, int length, int width, LabRoom * from, LabRoom * to, int enterWidth, int exitWidth, bool isInner) : LabHallway(botLeftLocX, botLeftLocY, direction, length, width, from, to, false, false, FLinearColor::White, FLinearColor::White, enterWidth, exitWidth, isInner)
 { }
-LabHallway::LabHallway(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, int length, int width, LabRoom * from, LabRoom * to, bool enterIsDoor, bool exitIsDoor, FLinearColor enterColor, FLinearColor exitColor, int enterWidth, int exitWidth) : LabRoom(botLeftLocX, botLeftLocY, (direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down) ? width : length, (direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down) ? length : width), From(from), To(to), bEnterIsDoor(enterIsDoor), bExitIsDoor(exitIsDoor), EnterColor(enterColor), ExitColor(exitColor)
+LabHallway::LabHallway(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, int length, int width, LabRoom * from, LabRoom * to, bool enterIsDoor, bool exitIsDoor, FLinearColor enterColor, FLinearColor exitColor, int enterWidth, int exitWidth, bool isInner) : LabRoom(botLeftLocX, botLeftLocY, (direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down) ? width : length, (direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down) ? length : width, isInner), From(from), To(to), bEnterIsDoor(enterIsDoor), bExitIsDoor(exitIsDoor), EnterColor(enterColor), ExitColor(exitColor)
 {
-	if (enterWidth > 2)
-		EnterWidth = enterWidth;
-	if (exitWidth > 2)
-		ExitWidth = exitWidth;
+	EnterWidth = enterWidth;
+	ExitWidth = exitWidth;
 
 	switch(direction)
 	{

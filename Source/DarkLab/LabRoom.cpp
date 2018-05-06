@@ -77,6 +77,9 @@ LabRoom::~LabRoom()
 	{
 		LabPassage* temp = Passages[i];
 		Passages.RemoveAt(i);
+		if (!temp)
+			continue;
+
 		// We delete passage if it isn't connected to some other room
 		// We delete passage's pointer to this room otherwise
 		if (temp->From == this)

@@ -206,14 +206,14 @@ ABasicWall* AMainGameMode::SpawnBasicWall(const int botLeftX, const int botLeftY
 
 	return wall;
 }
-ABasicDoor* AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color)
+ABasicDoor * AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color, const int width)
 {
 	ABasicDoor* door = Cast<ABasicDoor>(TryGetPoolable(BasicDoorPool));
 	if (!door)
 		door = GetWorld()->SpawnActor<ABasicDoor>(BasicDoorBP);
 
 	door->DoorColor = color;
-	PlaceObject(door, botLeftX, botLeftY, direction);
+	PlaceObject(door, botLeftX, botLeftY, direction, true, width);
 
 	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic door"));
 
@@ -290,7 +290,7 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 
 		// Spawn door if needed
 		if (passage->bIsDoor)
-			SpawnBasicDoor(passage->BotLeftLocX, passage->BotLeftLocY, passage->GridDirection, passage->Color);
+			SpawnBasicDoor(passage->BotLeftLocX, passage->BotLeftLocY, passage->GridDirection, passage->Color, passage->Width);
 	}
 
 	leftWallPositions.Sort();
@@ -347,20 +347,26 @@ void AMainGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 	
+
 	// TODO shouldn't create and spawn rooms from here
+
 	LabRoom* room1 = new LabRoom(-50, -50, 100, 100);
 	room1->AddPassage(9, -50, EDirectionEnum::VE_Down, nullptr, true);
+
 	LabRoom* room2 = new LabRoom(-10, -5, 15, 12, true);
 	room2->AddPassage(-10, -3, EDirectionEnum::VE_Left, nullptr, true);
-	room2->AddPassage(4, 0, EDirectionEnum::VE_Left, nullptr, true);
+	room2->AddPassage(4, 1, EDirectionEnum::VE_Left, nullptr, true);
 	room2->AddPassage(-6, 6, EDirectionEnum::VE_Up, nullptr, true, FLinearColor::Red);
 	room2->AddPassage(0, -5, EDirectionEnum::VE_Up, nullptr, 2);
 
-	LabHallway* hallway1 = new LabHallway(-5, -25, EDirectionEnum::VE_Right, 100, 8, nullptr, nullptr, false, true, FLinearColor::White, FLinearColor::Black, 6);
+	LabHallway* hallway1 = new LabHallway(4, -4, EDirectionEnum::VE_Right, 46, 4, room2, room1, 2, 2, true);
+
+	LabHallway* hallway2 = new LabHallway(-5, -25, EDirectionEnum::VE_Right, 50, 12, nullptr, nullptr, false, true, FLinearColor::White, FLinearColor::Black, 10, 6, true);
 
 	SpawnRoom(room1);
 	SpawnRoom(room2);
 	SpawnRoom(hallway1);
+	SpawnRoom(hallway2);
 
 	SpawnFlashlight(0, 0);
 
@@ -375,4 +381,5 @@ void AMainGameMode::BeginPlay()
 	delete room1;
 	delete room2;
 	delete hallway1;
+	delete hallway2;
 }

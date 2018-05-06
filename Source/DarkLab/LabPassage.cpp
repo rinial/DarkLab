@@ -6,12 +6,14 @@
 // Sets default values
 LabPassage::LabPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* from, LabRoom* to, bool isDoor, FLinearColor color, int width) : BotLeftLocX(botLeftLocX), BotLeftLocY(botLeftLocY), GridDirection(direction), From(from), To(to), bIsDoor(isDoor), Color(color)
 {
-	if (width > 2)
+	if (width > 1)
+	{
 		Width = width;
-	if (from)
-		from->AddPassage(this);
-	if (to)
-		to->AddPassage(this);
+		if (from)
+			from->AddPassage(this);
+		if (to)
+			to->AddPassage(this);
+	}
 }
 
 // Called on destruction

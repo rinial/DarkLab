@@ -9,6 +9,7 @@
 class DARKLAB_API LabHallway : public LabRoom
 {
 public:
+	// TODO change into getters
 	// Passages' properties
 	int EnterWidth = 2;
 	int ExitWidth = 2;
@@ -25,8 +26,8 @@ public:
 
 public:
 	// Sets default values
-	LabHallway(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, int length, int width = 8, LabRoom* from = nullptr, LabRoom* to = nullptr, int enterWidth = 4, int exitWidth = 4);
-	LabHallway(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, int length, int width, LabRoom* from, LabRoom* to, bool enterIsDoor, bool exitIsDoor, FLinearColor enterColor = FLinearColor::White, FLinearColor exitColor = FLinearColor::White, int enterWidth = 4, int exitWidth = 4);
+	LabHallway(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, int length, int width = 8, LabRoom* from = nullptr, LabRoom* to = nullptr, int enterWidth = 4, int exitWidth = 4, bool isInner = false);
+	LabHallway(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, int length, int width, LabRoom* from, LabRoom* to, bool enterIsDoor, bool exitIsDoor, FLinearColor enterColor = FLinearColor::White, FLinearColor exitColor = FLinearColor::White, int enterWidth = 4, int exitWidth = 4, bool isInner = false);
 
 	// Called on destruction
 	~LabHallway();
