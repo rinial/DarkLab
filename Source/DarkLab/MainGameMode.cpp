@@ -49,6 +49,7 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations)
 {
 	FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("LightTrace")), true);
+	// TODO delete? we already set up visibility channel
 	// Add actor and all of its components as ignored
 	if (actor)
 	{
@@ -100,6 +101,11 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 			if (distance > lightRadius)
 				continue;
 			bool bHit = GetWorld()->LineTraceTestByChannel(lightLocation, location, ECC_Visibility, params);
+
+			// TODO delete if affects performance too much
+			// This is a line trace in a different direction helpful in cases when light is positioned inside something like a wall which is ignored by the line trace
+			if(!bHit)
+				bHit =  GetWorld()->LineTraceTestByChannel(location, lightLocation, ECC_Visibility, params);
 
 			// If location could be lit
 			if (!bHit)
