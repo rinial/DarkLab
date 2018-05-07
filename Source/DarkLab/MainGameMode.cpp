@@ -136,27 +136,51 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 	return result;
 }
 
-// Places an object on the map (size < 1 means that we take current size for this axis)
-void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction, const bool setSizeFirst, const int sizeX, const int sizeY, const int sizeZ)
+// Places an object on the map
+// TODO return false if can't place?
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction)
 {
-	PlaceObject(object, botLeftLocX, botLeftLocY, 0, direction, setSizeFirst, sizeX, sizeY, sizeZ);
+	PlaceObject(object, FIntVector(botLeftLocX, botLeftLocY, 0), direction);
 }
-void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const int botLeftLocZ, const EDirectionEnum direction, const bool setSizeFirst, const int sizeX, const int sizeY, const int sizeZ)
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const int sizeX, const int sizeY)
 {
-	PlaceObject(object, FIntVector(botLeftLocX, botLeftLocY, botLeftLocZ), direction, setSizeFirst, sizeX, sizeY, sizeZ);
+	PlaceObject(object, FIntVector(botLeftLocX, botLeftLocY, 0), EDirectionEnum::VE_Up, sizeX, sizeY);
 }
-void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const EDirectionEnum direction, const bool setSizeFirst, const int sizeX, const int sizeY, const int sizeZ)
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const int sizeX, const int sizeY, const int sizeZ)
+{
+	PlaceObject(object, FIntVector(botLeftLocX, botLeftLocY, 0), EDirectionEnum::VE_Up, sizeX, sizeY, sizeZ);
+}
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction, const int sizeX, const int sizeY)
+{
+	PlaceObject(object, FIntVector(botLeftLocX, botLeftLocY, 0), direction, sizeX, sizeY);
+}
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction, const int sizeX, const int sizeY, const int sizeZ)
+{
+	PlaceObject(object, FIntVector(botLeftLocX, botLeftLocY, 0), direction, sizeX, sizeY, sizeZ);
+}
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const EDirectionEnum direction)
 {
 	UObject* obj = object->_getUObject();
-
-	if (setSizeFirst)
-	{
-		if (sizeZ < 1)
-			object->Execute_SetSizeXY(obj, sizeX, sizeY);
-		else
-			object->Execute_SetSize(obj, FIntVector(sizeX, sizeY, sizeZ));
-	}
-
+	object->Execute_Place(obj, botLeftLoc, direction);
+}
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const int sizeX, const int sizeY)
+{
+	PlaceObject(object, botLeftLoc, EDirectionEnum::VE_Up, sizeX, sizeY);
+}
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const int sizeX, const int sizeY, const int sizeZ)
+{
+	PlaceObject(object, botLeftLoc, EDirectionEnum::VE_Up, sizeX, sizeY, sizeZ);
+}
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const EDirectionEnum direction, const int sizeX, const int sizeY)
+{
+	UObject* obj = object->_getUObject();
+	object->Execute_SetSizeXY(obj, sizeX, sizeY);
+	object->Execute_Place(obj, botLeftLoc, direction);
+}
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const EDirectionEnum direction, const int sizeX, const int sizeY, const int sizeZ)
+{
+	UObject* obj = object->_getUObject();
+	object->Execute_SetSize(obj, FIntVector(sizeX, sizeY, sizeZ));
 	object->Execute_Place(obj, botLeftLoc, direction);
 }
 
@@ -234,7 +258,7 @@ ABasicFloor * AMainGameMode::SpawnBasicFloor(const int botLeftX, const int botLe
 	if (!floor)
 		floor = GetWorld()->SpawnActor<ABasicFloor>(BasicFloorBP);
 
-	PlaceObject(floor, botLeftX, botLeftY, EDirectionEnum::VE_Up, true, sizeX, sizeY);
+	PlaceObject(floor, botLeftX, botLeftY, sizeX, sizeY);
 
 	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic floor"));
 
@@ -246,7 +270,7 @@ ABasicWall* AMainGameMode::SpawnBasicWall(const int botLeftX, const int botLeftY
 	if (!wall)
 		wall = GetWorld()->SpawnActor<ABasicWall>(BasicWallBP);
 
-	PlaceObject(wall, botLeftX, botLeftY, EDirectionEnum::VE_Up, true, sizeX, sizeY);
+	PlaceObject(wall, botLeftX, botLeftY, sizeX, sizeY);
 
 	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic wall"));
 
@@ -258,8 +282,8 @@ ABasicDoor * AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeft
 	if (!door)
 		door = GetWorld()->SpawnActor<ABasicDoor>(BasicDoorBP);
 
-	door->DoorColor = color;
-	PlaceObject(door, botLeftX, botLeftY, direction, true, width);
+	door->DoorColor = color; // Sets wall's color
+	PlaceObject(door, botLeftX, botLeftY, direction, width);
 
 	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic door"));
 
@@ -438,7 +462,7 @@ void AMainGameMode::BeginPlay()
 	LabHallway* hallway2 = new LabHallway(-5, -25, EDirectionEnum::VE_Right, 50, 12, nullptr, nullptr, false, true, FLinearColor::White, FLinearColor::Black, 10, 6); // , room1);
 
 	// Testing pooling
-	PoolObject(SpawnBasicWall(2, 3, 5, 1));
+	PoolObject(SpawnBasicWall(2, 3, 5, 1)); // This makes no sense except for testing
 
 	// TArray<TScriptInterface<IDeactivatable>> temp = SpawnRoom(room1);
 	// PoolObjects(temp);

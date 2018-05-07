@@ -29,11 +29,18 @@ public:
 	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations);
 
 protected:
-	// Places an object on the map (size < 1 means that we take current size for this axis)
+	// Places an object on the map
 	// TODO return false if can't place?
-	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
-	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const int botLeftLocZ, const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
-	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc = FIntVector(0, 0, 0), const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction = EDirectionEnum::VE_Up);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const int sizeX, const int sizeY = 1);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const int sizeX, const int sizeY, const int sizeZ);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction, const int sizeX, const int sizeY = 1);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction, const int sizeX, const int sizeY, const int sizeZ);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc = FIntVector(0, 0, 0), const EDirectionEnum direction = EDirectionEnum::VE_Up);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const int sizeX, const int sizeY = 1);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const int sizeX, const int sizeY, const int sizeZ);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const EDirectionEnum direction, const int sizeX, const int sizeY = 1);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const EDirectionEnum direction, const int sizeX, const int sizeY, const int sizeZ);
 
 	// Gets the pool for the object/class
 	TArray<TScriptInterface<IDeactivatable>>& GetCorrectPool(TScriptInterface<IDeactivatable> object);
