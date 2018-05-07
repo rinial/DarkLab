@@ -336,7 +336,18 @@ TArray<TScriptInterface<IDeactivatable>> AMainGameMode::SpawnRoom(LabRoom * room
 			bottomWallPositions.Add(passage->BotLeftLocX + passage->Width - room->BotLeftLocX);
 		}
 
-		// TODO only spawn floor and door once for each passage
+		// Only spawn floor and door once for each passage
+		bool passageWasSpawned = false;
+		for (LabRoom* r : SpawnedRooms)
+		{
+			if (passage->From != r && passage->To != r)
+				continue;
+
+			passageWasSpawned = true;
+			break;
+		}
+		if (passageWasSpawned)
+			continue;
 
 		// Spawns floor under the passage
 		if (!room->OuterRoom || passage->From == room->OuterRoom || passage->To == room->OuterRoom)
@@ -384,6 +395,7 @@ TArray<TScriptInterface<IDeactivatable>> AMainGameMode::SpawnRoom(LabRoom * room
 		spawned.Add(SpawnBasicWall(room->BotLeftLocX + bottomWallPositions[i], room->BotLeftLocY, wallLength, 1));
 	}
 
+	SpawnedRooms.Add(room);
 	return spawned;
 }
 

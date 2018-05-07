@@ -12,6 +12,7 @@ class ABasicFloor;
 class ABasicWall;
 class ABasicDoor;
 class AFlashlight;
+class LabRoom;
 
 // Controls the game
 UCLASS(Blueprintable)
@@ -59,7 +60,7 @@ protected:
 	AFlashlight* SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction = EDirectionEnum::VE_Up);
 
 	// Spawn full parts of the lab
-	TArray<TScriptInterface<IDeactivatable>> SpawnRoom(class LabRoom* room);
+	TArray<TScriptInterface<IDeactivatable>> SpawnRoom(LabRoom* room);
 	
 private:
 	// Classes used for spawning
@@ -69,6 +70,9 @@ private:
 	TSubclassOf<AFlashlight> FlashlightBP;
 
 protected:
+	// Saved map parts
+	TArray<LabRoom*> SpawnedRooms;
+
 	// Pools
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
 	TArray<TScriptInterface<IDeactivatable>> DefaultPool;
