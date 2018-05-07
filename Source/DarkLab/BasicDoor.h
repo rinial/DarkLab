@@ -32,7 +32,7 @@ protected:
 
 public:
 	// The color of panels on the door
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door: Components")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
 	FLinearColor DoorColor = FLinearColor::White;
 	
 public:
