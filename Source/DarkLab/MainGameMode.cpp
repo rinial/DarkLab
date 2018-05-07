@@ -511,7 +511,7 @@ void AMainGameMode::BeginPlay()
 	SpawnRoom(hallway1);
 	SpawnRoom(hallway2);
 
-	AWallLamp* lamp = SpawnWallLamp(-3, -5, EDirectionEnum::VE_Up, FLinearColor::White);
+	AWallLamp* lamp = SpawnWallLamp(-3, -5, EDirectionEnum::VE_Up, FLinearColor::White, 2);
 	lamp->Execute_ActivateIndirectly(lamp);
 
 	SpawnFlashlight(0, 0);
