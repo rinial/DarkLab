@@ -41,20 +41,25 @@ protected:
 	// Deactivates and adds to a pool
 	UFUNCTION(BlueprintCallable, Category = "Pools")
 	void PoolObject(TScriptInterface<IDeactivatable> object);
+	UFUNCTION(BlueprintCallable, Category = "Pools")
+	void PoolObjects(TArray<TScriptInterface<IDeactivatable>>& objects);
 
 	// Tries to find a poolable object in a specified array
 	UFUNCTION(BlueprintCallable, Category = "Pools")
 	UObject* TryGetPoolable(UClass* cl);
 
 	// Spawn specific objects
+	UFUNCTION(BlueprintCallable, Category = "Spawns")
 	ABasicFloor* SpawnBasicFloor(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
+	UFUNCTION(BlueprintCallable, Category = "Spawns")
 	ABasicWall* SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
+	UFUNCTION(BlueprintCallable, Category = "Spawns")
 	ABasicDoor* SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White, const int width = 4);
+	UFUNCTION(BlueprintCallable, Category = "Spawns")
 	AFlashlight* SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction = EDirectionEnum::VE_Up);
 
 	// Spawn full parts of the lab
-	// TODO make it return success or actual room's parts
-	void SpawnRoom(class LabRoom* room);
+	TArray<TScriptInterface<IDeactivatable>> SpawnRoom(class LabRoom* room);
 	
 private:
 	// Classes used for spawning

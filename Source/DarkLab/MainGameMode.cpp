@@ -184,8 +184,12 @@ TArray<TScriptInterface<IDeactivatable>>& AMainGameMode::GetCorrectPool(UClass *
 void AMainGameMode::PoolObject(TScriptInterface<IDeactivatable> object)
 {
 	object->Execute_SetActive(object->_getUObject(), false);
-	TArray<TScriptInterface<IDeactivatable>>& pool = GetCorrectPool(object);
-	pool.Add(object);
+	GetCorrectPool(object).Add(object);
+}
+void AMainGameMode::PoolObjects(TArray<TScriptInterface<IDeactivatable>>& objects)
+{
+	for (TScriptInterface<IDeactivatable> object : objects)
+		PoolObject(object);
 }
 
 // Tries to find a poolable object in a specified array
@@ -276,12 +280,13 @@ AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLef
 }
 
 // Spawn full parts of the lab
-// TODO make it return success or actual room's parts
-void AMainGameMode::SpawnRoom(LabRoom * room)
+TArray<TScriptInterface<IDeactivatable>> AMainGameMode::SpawnRoom(LabRoom * room)
 {
+	TArray<TScriptInterface<IDeactivatable>> spawned;
+
 	// Spawning floor
 	if(!room->bIsInner)
-		SpawnBasicFloor(room->BotLeftLocX, room->BotLeftLocY, room->SizeX, room->SizeY);
+		spawned.Add(SpawnBasicFloor(room->BotLeftLocX, room->BotLeftLocY, room->SizeX, room->SizeY));
 
 	// For spawning walls 
 	TArray<int> leftWallPositions;
@@ -332,7 +337,7 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 
 		// Spawn door if needed
 		if (passage->bIsDoor)
-			SpawnBasicDoor(passage->BotLeftLocX, passage->BotLeftLocY, passage->GridDirection, passage->Color, passage->Width);
+			spawned.Add(SpawnBasicDoor(passage->BotLeftLocX, passage->BotLeftLocY, passage->GridDirection, passage->Color, passage->Width));
 	}
 
 	leftWallPositions.Sort();
@@ -344,26 +349,28 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 	for (int i = 0; i + 1 < leftWallPositions.Num(); i += 2)
 	{
 		int wallLength = leftWallPositions[i + 1] - leftWallPositions[i] + 1;
-		SpawnBasicWall(room->BotLeftLocX, room->BotLeftLocY + leftWallPositions[i], 1, wallLength);
+		spawned.Add(SpawnBasicWall(room->BotLeftLocX, room->BotLeftLocY + leftWallPositions[i], 1, wallLength));
 	}
 	// Spawning top walls
 	for (int i = 0; i + 1 < topWallPositions.Num(); i += 2)
 	{
 		int wallLength = topWallPositions[i + 1] - topWallPositions[i] + 1;
-		SpawnBasicWall(room->BotLeftLocX + topWallPositions[i], room->BotLeftLocY + room->SizeY - 1, wallLength, 1);
+		spawned.Add(SpawnBasicWall(room->BotLeftLocX + topWallPositions[i], room->BotLeftLocY + room->SizeY - 1, wallLength, 1));
 	}
 	// Spawning right walls
 	for (int i = 0; i + 1 < rightWallPositions.Num(); i += 2)
 	{
 		int wallLength = rightWallPositions[i + 1] - rightWallPositions[i] + 1;
-		SpawnBasicWall(room->BotLeftLocX + room->SizeX - 1, room->BotLeftLocY + rightWallPositions[i], 1, wallLength);
+		spawned.Add(SpawnBasicWall(room->BotLeftLocX + room->SizeX - 1, room->BotLeftLocY + rightWallPositions[i], 1, wallLength));
 	}
 	// Spawning bottom walls
 	for (int i = 0; i + 1 < bottomWallPositions.Num(); i += 2)
 	{
 		int wallLength = bottomWallPositions[i + 1] - bottomWallPositions[i] + 1;
-		SpawnBasicWall(room->BotLeftLocX + bottomWallPositions[i], room->BotLeftLocY, wallLength, 1);
+		spawned.Add(SpawnBasicWall(room->BotLeftLocX + bottomWallPositions[i], room->BotLeftLocY, wallLength, 1));
 	}
+
+	return spawned;
 }
 
 // Sets default values
@@ -405,8 +412,10 @@ void AMainGameMode::BeginPlay()
 	LabHallway* hallway2 = new LabHallway(-5, -25, EDirectionEnum::VE_Right, 50, 12, nullptr, nullptr, false, true, FLinearColor::White, FLinearColor::Black, 10, 6, true);
 
 	// Testing pooling
-	ABasicWall* temp = SpawnBasicWall(2, 3, 5, 1);
-	 PoolObject(temp);
+	PoolObject(SpawnBasicWall(2, 3, 5, 1));
+
+	TArray<TScriptInterface<IDeactivatable>> temp = SpawnRoom(room1);
+	PoolObjects(temp);
 
 	// Spawning stuff
 	SpawnRoom(room1);
