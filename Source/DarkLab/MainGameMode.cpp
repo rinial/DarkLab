@@ -101,8 +101,8 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 			// UE_LOG(LogTemp, Warning, TEXT("dist: %f, rad: %f"), distance, lightRadius);
 			if (distance > lightRadius)
 				continue;
-			bool bHit = GetWorld()->LineTraceTestByChannel(lightLocation, location, ECC_Visibility, params);
 
+			bool bHit = GetWorld()->LineTraceTestByChannel(lightLocation, location, ECC_Visibility, params);
 			// TODO delete if affects performance too much
 			// This is a line trace in a different direction helpful in cases when light is positioned inside something like a wall which is ignored by the line trace
 			if(!bHit)
@@ -121,6 +121,10 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 				temp = 1 - temp;
 				// Finally we take intensity into account
 				// temp *= lightComp->Intensity * spotK;
+
+				// We also take color into account
+				FLinearColor lightColor = lightComp->GetLightColor();
+				temp *= FMath::Pow(lightColor.R * lightColor.R + lightColor.G * lightColor.G + lightColor.B * lightColor.B / 3.0f, 0.5f);
 
 				// UE_LOG(LogTemp, Warning, TEXT("%f"), temp);
 				// It always counts the brightest light
@@ -507,7 +511,7 @@ void AMainGameMode::BeginPlay()
 	SpawnRoom(hallway1);
 	SpawnRoom(hallway2);
 
-	AWallLamp* lamp = SpawnWallLamp(-3, -5, EDirectionEnum::VE_Up, FLinearColor::Green);
+	AWallLamp* lamp = SpawnWallLamp(-3, -5, EDirectionEnum::VE_Up, FLinearColor::White);
 	lamp->Execute_ActivateIndirectly(lamp);
 
 	SpawnFlashlight(0, 0);
