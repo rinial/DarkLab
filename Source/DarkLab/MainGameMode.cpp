@@ -160,31 +160,73 @@ void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const FIntV
 	object->Execute_Place(obj, botLeftLoc, direction);
 }
 
+// Gets the pool for the object/class
+TArray<TScriptInterface<IDeactivatable>>& AMainGameMode::GetCorrectPool(TScriptInterface<IDeactivatable> object)
+{
+	UClass* cl = object->_getUObject()->GetClass();
+
+	return GetCorrectPool(cl);
+}
+TArray<TScriptInterface<IDeactivatable>>& AMainGameMode::GetCorrectPool(UClass * cl)
+{
+	if (cl == BasicFloorBP)
+		return BasicFloorPool;
+	if (cl == BasicWallBP)
+		return BasicWallPool;
+	if (cl == BasicDoorBP)
+		return BasicDoorPool;
+	if (cl == FlashlightBP)
+		return FlashlightPool;
+	return DefaultPool;
+}
+
 // Deactivates and adds to a pool
-void AMainGameMode::PoolObject(TScriptInterface<IDeactivatable> object, TArray<TScriptInterface<IDeactivatable>>& pool)
+void AMainGameMode::PoolObject(TScriptInterface<IDeactivatable> object)
 {
 	object->Execute_SetActive(object->_getUObject(), false);
+	TArray<TScriptInterface<IDeactivatable>>& pool = GetCorrectPool(object);
 	pool.Add(object);
 }
 
 // Tries to find a poolable object in a specified array
-UObject* AMainGameMode::TryGetPoolable(TArray<TScriptInterface<IDeactivatable>>& pool)
+UObject* AMainGameMode::TryGetPoolable(UClass* cl)
 {
-	if (pool.Num() > 0)
+	TArray<TScriptInterface<IDeactivatable>>& pool = GetCorrectPool(cl);
+
+	if (pool.Num() == 0)
+		return nullptr;
+
+	int index = -1;
+	TScriptInterface<IDeactivatable> object;
+	if (pool != DefaultPool)
+		index = 0;
+	else
 	{
-		TScriptInterface<IDeactivatable> temp = pool[0];
-		temp->Execute_SetActive(temp->_getUObject(), true);
-		pool.RemoveAt(0);
-		return temp->_getUObject();
+		for (int i = 0; i < pool.Num(); ++i)
+		{
+			TScriptInterface<IDeactivatable> temp = pool[i];
+			if (temp->_getUObject()->GetClass() == cl)
+			{
+				index = i;
+				break;
+			}
+		}
 	}
 
-	return nullptr;
+	if(index < 0)
+		return nullptr;
+
+	object = pool[index];
+	UObject* obj = object->_getUObject();
+	object->Execute_SetActive(obj, true);
+	pool.RemoveAt(index);
+	return obj;
 }
 
 // Spawn specific objects
 ABasicFloor * AMainGameMode::SpawnBasicFloor(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
 {
-	ABasicFloor* floor = Cast<ABasicFloor>(TryGetPoolable(BasicFloorPool));
+	ABasicFloor* floor = Cast<ABasicFloor>(TryGetPoolable(BasicFloorBP));
 	if (!floor)
 		floor = GetWorld()->SpawnActor<ABasicFloor>(BasicFloorBP);
 
@@ -196,7 +238,7 @@ ABasicFloor * AMainGameMode::SpawnBasicFloor(const int botLeftX, const int botLe
 }
 ABasicWall* AMainGameMode::SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
 {
-	ABasicWall* wall = Cast<ABasicWall>(TryGetPoolable(BasicWallPool));
+	ABasicWall* wall = Cast<ABasicWall>(TryGetPoolable(BasicWallBP));
 	if (!wall)
 		wall = GetWorld()->SpawnActor<ABasicWall>(BasicWallBP);
 
@@ -208,7 +250,7 @@ ABasicWall* AMainGameMode::SpawnBasicWall(const int botLeftX, const int botLeftY
 }
 ABasicDoor * AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color, const int width)
 {
-	ABasicDoor* door = Cast<ABasicDoor>(TryGetPoolable(BasicDoorPool));
+	ABasicDoor* door = Cast<ABasicDoor>(TryGetPoolable(BasicDoorBP));
 	if (!door)
 		door = GetWorld()->SpawnActor<ABasicDoor>(BasicDoorBP);
 
@@ -221,7 +263,7 @@ ABasicDoor * AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeft
 }
 AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction)
 {
-	AFlashlight* flashlight = Cast<AFlashlight>((TryGetPoolable(FlashlightPool)));
+	AFlashlight* flashlight = Cast<AFlashlight>((TryGetPoolable(FlashlightBP)));
 	if (!flashlight)
 		flashlight = GetWorld()->SpawnActor<AFlashlight>(FlashlightBP);
 
@@ -346,7 +388,6 @@ AMainGameMode::AMainGameMode()
 void AMainGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-	
 
 	// TODO shouldn't create and spawn rooms from here
 
@@ -363,17 +404,18 @@ void AMainGameMode::BeginPlay()
 
 	LabHallway* hallway2 = new LabHallway(-5, -25, EDirectionEnum::VE_Right, 50, 12, nullptr, nullptr, false, true, FLinearColor::White, FLinearColor::Black, 10, 6, true);
 
+	// Testing pooling
+	ABasicWall* temp = SpawnBasicWall(2, 3, 5, 1);
+	 PoolObject(temp);
+
+	// Spawning stuff
 	SpawnRoom(room1);
 	SpawnRoom(room2);
 	SpawnRoom(hallway1);
 	SpawnRoom(hallway2);
 
 	SpawnFlashlight(0, 0);
-
-	// Testing pooling
-	ABasicWall* temp = SpawnBasicWall(2, 3, 5, 1);
-	PoolObject(temp, BasicWallPool);
-
+	
 	// SpawnBasicFloor(-20, -20, 40, 40);
 	// SpawnBasicWall(-7, -5, 1, 9);
 	// SpawnBasicDoor(-6, 3, EDirectionEnum::VE_Up, FLinearColor::Red);

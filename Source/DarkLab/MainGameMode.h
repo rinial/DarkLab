@@ -34,13 +34,17 @@ protected:
 	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const int botLeftLocZ, const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
 	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc = FIntVector(0, 0, 0), const EDirectionEnum direction = EDirectionEnum::VE_Up, const bool setSizeFirst = false, const int sizeX = 1, const int sizeY = 1, const int sizeZ = 0);
 
+	// Gets the pool for the object/class
+	TArray<TScriptInterface<IDeactivatable>>& GetCorrectPool(TScriptInterface<IDeactivatable> object);
+	TArray<TScriptInterface<IDeactivatable>>& GetCorrectPool(UClass* cl);
+
 	// Deactivates and adds to a pool
 	UFUNCTION(BlueprintCallable, Category = "Pools")
-	void PoolObject(TScriptInterface<IDeactivatable> object, TArray<TScriptInterface<IDeactivatable>>& pool);
+	void PoolObject(TScriptInterface<IDeactivatable> object);
 
 	// Tries to find a poolable object in a specified array
 	UFUNCTION(BlueprintCallable, Category = "Pools")
-	UObject* TryGetPoolable(TArray<TScriptInterface<IDeactivatable>>& pool);
+	UObject* TryGetPoolable(UClass* cl);
 
 	// Spawn specific objects
 	ABasicFloor* SpawnBasicFloor(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
@@ -61,6 +65,8 @@ private:
 
 protected:
 	// Pools
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
+	TArray<TScriptInterface<IDeactivatable>> DefaultPool;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
 	TArray<TScriptInterface<IDeactivatable>> BasicFloorPool;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
