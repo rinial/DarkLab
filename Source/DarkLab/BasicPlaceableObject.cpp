@@ -15,8 +15,11 @@ FIntVector ABasicPlaceableObject::GetSize_Implementation()
 // Assumes direction to be Up. Note: should do Place after this
 bool ABasicPlaceableObject::SetSize_Implementation(const FIntVector size)
 {
-	if (size.X < BaseSize.X || size.Y < BaseSize.Y || size.Z < BaseSize.Z)
+	if (size.X < 1 || size.Y < 1 || size.Z < 1)
 		return false;
+
+	// if (size.X < BaseSize.X || size.Y < BaseSize.Y || size.Z < BaseSize.Z)
+	// 	return false;
 
 	// if (size.X % BaseSize.X != 0 || size.Y % BaseSize.Y != 0 || size.Z % BaseSize.Z != 0)
 	//	return false;
@@ -26,8 +29,11 @@ bool ABasicPlaceableObject::SetSize_Implementation(const FIntVector size)
 }
 bool ABasicPlaceableObject::SetSizeXY_Implementation(const int x, const int y)
 {
-	if (x < BaseSize.X || y < BaseSize.Y)
+	if (x < 1 || y < 1)
 		return false;
+
+	// if (x < BaseSize.X || y < BaseSize.Y)
+	// 	return false;
 
 	// if (x % BaseSize.X != 0 || y % BaseSize.Y != 0)
 	// 	return false;

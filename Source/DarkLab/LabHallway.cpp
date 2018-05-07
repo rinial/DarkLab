@@ -4,9 +4,9 @@
 #include "LabPassage.h"
 
 // Sets default values
-LabHallway::LabHallway(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, int length, int width, LabRoom * from, LabRoom * to, int enterWidth, int exitWidth, bool isInner) : LabHallway(botLeftLocX, botLeftLocY, direction, length, width, from, to, false, false, FLinearColor::White, FLinearColor::White, enterWidth, exitWidth, isInner)
+LabHallway::LabHallway(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, int length, int width, LabRoom * from, LabRoom * to, int enterWidth, int exitWidth, LabRoom* outer) : LabHallway(botLeftLocX, botLeftLocY, direction, length, width, from, to, false, false, FLinearColor::White, FLinearColor::White, enterWidth, exitWidth, outer)
 { }
-LabHallway::LabHallway(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, int length, int width, LabRoom * from, LabRoom * to, bool enterIsDoor, bool exitIsDoor, FLinearColor enterColor, FLinearColor exitColor, int enterWidth, int exitWidth, bool isInner) : LabRoom(botLeftLocX, botLeftLocY, (direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down) ? width : length, (direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down) ? length : width, isInner), From(from), To(to), bEnterIsDoor(enterIsDoor), bExitIsDoor(exitIsDoor), EnterColor(enterColor), ExitColor(exitColor)
+LabHallway::LabHallway(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, int length, int width, LabRoom * from, LabRoom * to, bool enterIsDoor, bool exitIsDoor, FLinearColor enterColor, FLinearColor exitColor, int enterWidth, int exitWidth, LabRoom* outer) : LabRoom(botLeftLocX, botLeftLocY, (direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down) ? width : length, (direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down) ? length : width, outer), From(from), To(to), bEnterIsDoor(enterIsDoor), bExitIsDoor(exitIsDoor), EnterColor(enterColor), ExitColor(exitColor)
 {
 	EnterWidth = enterWidth;
 	ExitWidth = exitWidth;

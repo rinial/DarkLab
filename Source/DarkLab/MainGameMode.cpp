@@ -285,8 +285,9 @@ TArray<TScriptInterface<IDeactivatable>> AMainGameMode::SpawnRoom(LabRoom * room
 	TArray<TScriptInterface<IDeactivatable>> spawned;
 
 	// Spawning floor
-	if(!room->bIsInner)
-		spawned.Add(SpawnBasicFloor(room->BotLeftLocX, room->BotLeftLocY, room->SizeX, room->SizeY));
+	// Doesn't include walls and passages
+	if(!room->OuterRoom)
+		spawned.Add(SpawnBasicFloor(room->BotLeftLocX + 1, room->BotLeftLocY + 1, room->SizeX - 2, room->SizeY - 2));
 
 	// For spawning walls 
 	TArray<int> leftWallPositions;
@@ -335,9 +336,22 @@ TArray<TScriptInterface<IDeactivatable>> AMainGameMode::SpawnRoom(LabRoom * room
 			bottomWallPositions.Add(passage->BotLeftLocX + passage->Width - room->BotLeftLocX);
 		}
 
+		// TODO only spawn floor and door once for each passage
+
+		// Spawns floor under the passage
+		if (!room->OuterRoom || passage->From == room->OuterRoom || passage->To == room->OuterRoom)
+		{
+			if (passage->GridDirection == EDirectionEnum::VE_Up || passage->GridDirection == EDirectionEnum::VE_Down)
+				spawned.Add(SpawnBasicFloor(passage->BotLeftLocX, passage->BotLeftLocY, passage->Width, 1));
+			else
+				spawned.Add(SpawnBasicFloor(passage->BotLeftLocX, passage->BotLeftLocY, 1, passage->Width));
+		}
+
 		// Spawn door if needed
 		if (passage->bIsDoor)
+		{
 			spawned.Add(SpawnBasicDoor(passage->BotLeftLocX, passage->BotLeftLocY, passage->GridDirection, passage->Color, passage->Width));
+		}
 	}
 
 	leftWallPositions.Sort();
@@ -398,27 +412,27 @@ void AMainGameMode::BeginPlay()
 
 	// TODO shouldn't create and spawn rooms from here
 
-	LabRoom* room1 = new LabRoom(-50, -50, 100, 100);
-	room1->AddPassage(9, -50, EDirectionEnum::VE_Down, nullptr, true);
+	/*LabRoom* room1 = new LabRoom(-50, -50, 100, 100);
+	room1->AddPassage(9, -50, EDirectionEnum::VE_Down, nullptr, true);*/
 
-	LabRoom* room2 = new LabRoom(-10, -5, 15, 12, true);
+	LabRoom* room2 = new LabRoom(-10, -5, 15, 12); // , room1);
 	room2->AddPassage(-10, -3, EDirectionEnum::VE_Left, nullptr, true);
 	room2->AddPassage(4, 1, EDirectionEnum::VE_Left, nullptr, true);
 	room2->AddPassage(-6, 6, EDirectionEnum::VE_Up, nullptr, true, FLinearColor::Red);
 	room2->AddPassage(0, -5, EDirectionEnum::VE_Up, nullptr, 2);
 
-	LabHallway* hallway1 = new LabHallway(4, -4, EDirectionEnum::VE_Right, 46, 4, room2, room1, 2, 2, true);
+	LabHallway* hallway1 = new LabHallway(4, -4, EDirectionEnum::VE_Right, 46, 4, room2, nullptr, 2, 2); // room1, 2, 2, room1);
 
-	LabHallway* hallway2 = new LabHallway(-5, -25, EDirectionEnum::VE_Right, 50, 12, nullptr, nullptr, false, true, FLinearColor::White, FLinearColor::Black, 10, 6, true);
+	LabHallway* hallway2 = new LabHallway(-5, -25, EDirectionEnum::VE_Right, 50, 12, nullptr, nullptr, false, true, FLinearColor::White, FLinearColor::Black, 10, 6); // , room1);
 
 	// Testing pooling
 	PoolObject(SpawnBasicWall(2, 3, 5, 1));
 
-	TArray<TScriptInterface<IDeactivatable>> temp = SpawnRoom(room1);
-	PoolObjects(temp);
+	// TArray<TScriptInterface<IDeactivatable>> temp = SpawnRoom(room1);
+	// PoolObjects(temp);
 
 	// Spawning stuff
-	SpawnRoom(room1);
+	// SpawnRoom(room1);
 	SpawnRoom(room2);
 	SpawnRoom(hallway1);
 	SpawnRoom(hallway2);
@@ -429,7 +443,7 @@ void AMainGameMode::BeginPlay()
 	// SpawnBasicWall(-7, -5, 1, 9);
 	// SpawnBasicDoor(-6, 3, EDirectionEnum::VE_Up, FLinearColor::Red);
 
-	delete room1;
+	// delete room1;
 	delete room2;
 	delete hallway1;
 	delete hallway2;

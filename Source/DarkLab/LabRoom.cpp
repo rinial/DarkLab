@@ -62,7 +62,7 @@ bool LabRoom::AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direct
 }
 
 // Sets default values
-LabRoom::LabRoom(int botLeftLocX, int botLeftLocY, int sizeX, int sizeY, bool isInner) : BotLeftLocX(botLeftLocX), BotLeftLocY(botLeftLocY), bIsInner(isInner)
+LabRoom::LabRoom(int botLeftLocX, int botLeftLocY, int sizeX, int sizeY, LabRoom* outer) : BotLeftLocX(botLeftLocX), BotLeftLocY(botLeftLocY), OuterRoom(outer)
 {
 	if (sizeX > 4)
 		SizeX = sizeX;
