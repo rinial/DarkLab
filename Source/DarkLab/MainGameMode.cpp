@@ -492,11 +492,6 @@ void AMainGameMode::BeginPlay()
 	// SpawnBasicFloor(-20, -20, 40, 40);
 	// SpawnBasicWall(-7, -5, 1, 9);
 	// SpawnBasicDoor(-6, 3, EDirectionEnum::VE_Up, FLinearColor::Red);
-
-	// delete room1; (deleted from pooler)
-	delete room2;
-	delete hallway1;
-	delete hallway2;
 }
 
 // Called when actor is being removed from the play
@@ -505,6 +500,17 @@ void AMainGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 
 	UE_LOG(LogTemp, Warning, TEXT("EndPlay called"));
+
+	TArray<LabRoom*> spawnedRooms;
+	SpawnedRoomObjects.GetKeys(spawnedRooms);
+	SpawnedRoomObjects.Empty();
+
+	// Clear all saved rooms
+	for (int i = spawnedRooms.Num() - 1; i >= 0; --i)
+	{
+		delete spawnedRooms[i];
+		spawnedRooms.RemoveAt(i);
+	}
 }
 
 // Called at start of seamless travel, or right before map change for hard travel
