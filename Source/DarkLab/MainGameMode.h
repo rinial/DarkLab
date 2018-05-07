@@ -52,6 +52,9 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Pools")
 	void PoolObjects(TArray<TScriptInterface<IDeactivatable>>& objects);
 
+	// Pool full parts of the lab
+	void PoolRoom(LabRoom* room);
+
 	// Tries to find a poolable object in a specified array
 	UFUNCTION(BlueprintCallable, Category = "Pools")
 	UObject* TryGetPoolable(UClass* cl);
@@ -67,7 +70,7 @@ protected:
 	AFlashlight* SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction = EDirectionEnum::VE_Up);
 
 	// Spawn full parts of the lab
-	TArray<TScriptInterface<IDeactivatable>> SpawnRoom(LabRoom* room);
+	void SpawnRoom(LabRoom* room);
 	
 private:
 	// Classes used for spawning
@@ -77,8 +80,8 @@ private:
 	TSubclassOf<AFlashlight> FlashlightBP;
 
 protected:
-	// Saved map parts
-	TArray<LabRoom*> SpawnedRooms;
+	// Spawned map parts
+	TMap<LabRoom*, TArray<TScriptInterface<IDeactivatable>>> SpawnedRoomObjects;
 
 	// Pools
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
@@ -99,4 +102,8 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	// Called when actor is being removed from the play
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	// Called at start of seamless travel, or right before map change for hard travel
+	virtual void StartToLeaveMap() override;
 };

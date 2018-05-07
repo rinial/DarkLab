@@ -19,9 +19,11 @@ public:
 	int SizeY = 4;
 
 	// Used for rooms inside rooms
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Room")
 	LabRoom* OuterRoom = nullptr;
 
 	// Passages from this room
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Room")
 	TArray<LabPassage*> Passages;
 
 public:

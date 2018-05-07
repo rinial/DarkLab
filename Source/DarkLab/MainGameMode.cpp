@@ -216,6 +216,14 @@ void AMainGameMode::PoolObjects(TArray<TScriptInterface<IDeactivatable>>& object
 		PoolObject(object);
 }
 
+// Pool full parts of the lab
+void AMainGameMode::PoolRoom(LabRoom * room)
+{
+	PoolObjects(SpawnedRoomObjects[room]);
+	SpawnedRoomObjects.Remove(room);
+	delete room;
+}
+
 // Tries to find a poolable object in a specified array
 UObject* AMainGameMode::TryGetPoolable(UClass* cl)
 {
@@ -304,8 +312,12 @@ AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLef
 }
 
 // Spawn full parts of the lab
-TArray<TScriptInterface<IDeactivatable>> AMainGameMode::SpawnRoom(LabRoom * room)
+void AMainGameMode::SpawnRoom(LabRoom * room)
 {
+	// We don't spawn one room twice
+	if (SpawnedRoomObjects.Contains(room))
+		return;
+
 	TArray<TScriptInterface<IDeactivatable>> spawned;
 
 	// Spawning floor
@@ -362,7 +374,9 @@ TArray<TScriptInterface<IDeactivatable>> AMainGameMode::SpawnRoom(LabRoom * room
 
 		// Only spawn floor and door once for each passage
 		bool passageWasSpawned = false;
-		for (LabRoom* r : SpawnedRooms)
+		TArray<LabRoom*> spawnedRooms;
+		SpawnedRoomObjects.GetKeys(spawnedRooms);
+		for (LabRoom* r : spawnedRooms)
 		{
 			if (passage->From != r && passage->To != r)
 				continue;
@@ -419,8 +433,7 @@ TArray<TScriptInterface<IDeactivatable>> AMainGameMode::SpawnRoom(LabRoom * room
 		spawned.Add(SpawnBasicWall(room->BotLeftLocX + bottomWallPositions[i], room->BotLeftLocY, wallLength, 1));
 	}
 
-	SpawnedRooms.Add(room);
-	return spawned;
+	SpawnedRoomObjects.Add(room, spawned);
 }
 
 // Sets default values
@@ -446,10 +459,11 @@ void AMainGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
+
 	// TODO shouldn't create and spawn rooms from here
 
-	/*LabRoom* room1 = new LabRoom(-50, -50, 100, 100);
-	room1->AddPassage(9, -50, EDirectionEnum::VE_Down, nullptr, true);*/
+	LabRoom* room1 = new LabRoom(-50, -50, 100, 100);
+	room1->AddPassage(9, -50, EDirectionEnum::VE_Down, nullptr, true);
 
 	LabRoom* room2 = new LabRoom(-10, -5, 15, 12); // , room1);
 	room2->AddPassage(-10, -3, EDirectionEnum::VE_Left, nullptr, true);
@@ -464,8 +478,8 @@ void AMainGameMode::BeginPlay()
 	// Testing pooling
 	PoolObject(SpawnBasicWall(2, 3, 5, 1)); // This makes no sense except for testing
 
-	// TArray<TScriptInterface<IDeactivatable>> temp = SpawnRoom(room1);
-	// PoolObjects(temp);
+	SpawnRoom(room1);
+	PoolRoom(room1);
 
 	// Spawning stuff
 	// SpawnRoom(room1);
@@ -479,8 +493,24 @@ void AMainGameMode::BeginPlay()
 	// SpawnBasicWall(-7, -5, 1, 9);
 	// SpawnBasicDoor(-6, 3, EDirectionEnum::VE_Up, FLinearColor::Red);
 
-	// delete room1;
+	// delete room1; (deleted from pooler)
 	delete room2;
 	delete hallway1;
 	delete hallway2;
+}
+
+// Called when actor is being removed from the play
+void AMainGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	UE_LOG(LogTemp, Warning, TEXT("EndPlay called"));
+}
+
+// Called at start of seamless travel, or right before map change for hard travel
+void AMainGameMode::StartToLeaveMap()
+{
+	Super::StartToLeaveMap();
+
+	UE_LOG(LogTemp, Warning, TEXT("StartToLeaveMap called"));
 }
