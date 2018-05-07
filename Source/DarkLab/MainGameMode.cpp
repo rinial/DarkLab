@@ -10,6 +10,7 @@
 #include "BasicFloor.h"
 #include "BasicWall.h"
 #include "BasicDoor.h"
+#include "WallLamp.h"
 #include "Flashlight.h"
 #include "LabPassage.h"
 #include "LabRoom.h"
@@ -199,6 +200,8 @@ TArray<TScriptInterface<IDeactivatable>>& AMainGameMode::GetCorrectPool(UClass *
 		return BasicWallPool;
 	if (cl == BasicDoorBP)
 		return BasicDoorPool;
+	if (cl == WallLampBP)
+		return WallLampPool;
 	if (cl == FlashlightBP)
 		return FlashlightPool;
 	return DefaultPool;
@@ -296,6 +299,20 @@ ABasicDoor * AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeft
 	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic door"));
 
 	return door;
+}
+AWallLamp * AMainGameMode::SpawnWallLamp(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color, const int width)
+{
+	AWallLamp* lamp = Cast<AWallLamp>(TryGetPoolable(WallLampBP));
+	if (!lamp)
+		lamp = GetWorld()->SpawnActor<AWallLamp>(WallLampBP);
+
+	lamp->Reset(); // Disables light if it was on
+	lamp->SetColor(color); // Sets correct color
+	PlaceObject(lamp, botLeftX, botLeftY, direction, width);
+
+	UE_LOG(LogTemp, Warning, TEXT("Spawned a wall lamp"));
+
+	return lamp;
 }
 AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction)
 {
@@ -449,6 +466,9 @@ AMainGameMode::AMainGameMode()
 	static ConstructorHelpers::FObjectFinder<UClass> basicDoorBP(TEXT("Class'/Game/Blueprints/BasicDoorBP.BasicDoorBP_C'"));
 	if (basicDoorBP.Succeeded())
 		BasicDoorBP = basicDoorBP.Object;
+	static ConstructorHelpers::FObjectFinder<UClass> wallLampBP(TEXT("Class'/Game/Blueprints/WallLampBP.WallLampBP_C'"));
+	if (wallLampBP.Succeeded())
+		WallLampBP = wallLampBP.Object;
 	static ConstructorHelpers::FObjectFinder<UClass> flashlightBP(TEXT("Class'/Game/Blueprints/FlashlightBP.FlashlightBP_C'"));
 	if (flashlightBP.Succeeded())
 		FlashlightBP = flashlightBP.Object;
@@ -460,7 +480,7 @@ void AMainGameMode::BeginPlay()
 	Super::BeginPlay();
 
 
-	// TODO shouldn't create and spawn rooms from here
+	// TODO shouldn't create, spawn or activate from here
 
 	LabRoom* room1 = new LabRoom(-50, -50, 100, 100);
 	room1->AddPassage(9, -50, EDirectionEnum::VE_Down, nullptr, true);
@@ -486,6 +506,9 @@ void AMainGameMode::BeginPlay()
 	SpawnRoom(room2);
 	SpawnRoom(hallway1);
 	SpawnRoom(hallway2);
+
+	AWallLamp* lamp = SpawnWallLamp(-3, -5, EDirectionEnum::VE_Up, FLinearColor::Green);
+	lamp->Execute_ActivateIndirectly(lamp);
 
 	SpawnFlashlight(0, 0);
 	

@@ -11,6 +11,7 @@ class IDeactivatable;
 class ABasicFloor;
 class ABasicWall;
 class ABasicDoor;
+class AWallLamp;
 class AFlashlight;
 class LabRoom;
 
@@ -67,6 +68,8 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Spawns")
 	ABasicDoor* SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White, const int width = 4);
 	UFUNCTION(BlueprintCallable, Category = "Spawns")
+	AWallLamp* SpawnWallLamp(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White, const int width = 1);
+	UFUNCTION(BlueprintCallable, Category = "Spawns")
 	AFlashlight* SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction = EDirectionEnum::VE_Up);
 
 	// Spawn full parts of the lab
@@ -77,6 +80,7 @@ private:
 	TSubclassOf<ABasicFloor> BasicFloorBP;
 	TSubclassOf<ABasicWall> BasicWallBP;
 	TSubclassOf<ABasicDoor> BasicDoorBP;
+	TSubclassOf<AWallLamp> WallLampBP;
 	TSubclassOf<AFlashlight> FlashlightBP;
 
 protected:
@@ -92,6 +96,8 @@ protected:
 	TArray<TScriptInterface<IDeactivatable>> BasicWallPool;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
 	TArray<TScriptInterface<IDeactivatable>> BasicDoorPool;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
+	TArray<TScriptInterface<IDeactivatable>> WallLampPool;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
 	TArray<TScriptInterface<IDeactivatable>> FlashlightPool;
 

@@ -73,8 +73,4 @@ void AWallLamp::BeginPlay()
 
 	// Set mesh color
 	UpdateMeshColor(FLinearColor::Black); // Lamp is disabled
-
-	// TODO delete from here
-	SetColor(FLinearColor::Red);
-	this->Execute_ActivateIndirectly(this);
 }
