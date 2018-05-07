@@ -65,3 +65,16 @@ AWallLamp::AWallLamp()
 	bActivatableDirectly = false;
 	bActivatableIndirectly = true;
 }
+
+// Called when the game starts or when spawned
+void AWallLamp::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Set mesh color
+	UpdateMeshColor(FLinearColor::Black); // Lamp is disabled
+
+	// TODO delete from here
+	SetColor(FLinearColor::Red);
+	this->Execute_ActivateIndirectly(this);
+}
