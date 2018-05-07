@@ -32,8 +32,11 @@ void ABasicEquipableObject::Unequip_Implementation(AMainCharacter* character)
 }
 
 // Called when the object is activated (picked up in the laboratory)
-void ABasicEquipableObject::Activate_Implementation(AMainCharacter* character)
+void ABasicEquipableObject::ActivateObject(AMainCharacter* character)
 {
+	if (!character)
+		return;
+
 	// TODO add object name
 	// UE_LOG(LogTemp, Warning, FString::Printf(TEXT("Picked up %s"), *Name.ToString()));
 	UE_LOG(LogTemp, Warning, TEXT("Picked up"));
@@ -43,4 +46,12 @@ void ABasicEquipableObject::Activate_Implementation(AMainCharacter* character)
 
 	// TODO this should put item into inventory, not instantly equip it
 	Execute_Equip(this, character, FName("LeftHand"));
+}
+
+// Sets default values
+ABasicEquipableObject::ABasicEquipableObject()
+{
+	// Set activatable parameters
+	bActivatableDirectly = true;
+	bActivatableIndirectly = false;
 }

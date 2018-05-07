@@ -19,7 +19,19 @@ class DARKLAB_API IActivatable
 	GENERATED_BODY()
 
 public:
-	// Called when the object is activated
+	// Called when the object is activated by character
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Activatable")
 	void Activate(class AMainCharacter* character);
+
+	// Called when the object is activated indirectly
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Activatable")
+	void ActivateIndirectly();
+
+	// Returns true if activatable directly
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Activatable")
+	bool IsActivatableDirectly();
+
+	// Returns true if activatable indirectly
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Activatable")
+	bool IsActivatableIndirectly();
 };

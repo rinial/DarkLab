@@ -3,14 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BasicInformativeObject.h"
+#include "BasicActivatableObject.h"
 #include "Equipable.h"
-#include "Activatable.h"
 #include "BasicEquipableObject.generated.h"
 
 // Represents objects with physical representation that can be equiped by the main character
 UCLASS()
-class DARKLAB_API ABasicEquipableObject : public ABasicInformativeObject, public IEquipable, public IActivatable
+class DARKLAB_API ABasicEquipableObject : public ABasicActivatableObject, public IEquipable
 {
 	GENERATED_BODY()
 
@@ -26,7 +25,10 @@ public:
 	virtual void Unequip_Implementation(AMainCharacter* character) override;
 
 	// Called when the object is activated (picked up in the laboratory)
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Activatable")
-	void Activate(AMainCharacter* character);
-	virtual void Activate_Implementation(AMainCharacter* character) override;
+	UFUNCTION(BlueprintCallable, Category = "Activatable")
+	virtual void ActivateObject(AMainCharacter* character) override;
+
+public:
+	// Sets default values
+	ABasicEquipableObject();
 };

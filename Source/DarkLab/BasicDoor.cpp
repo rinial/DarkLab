@@ -7,7 +7,7 @@
 #include "MainCharacter.h"
 
 // Called when the object is activated
-void ABasicDoor::Activate_Implementation(AMainCharacter * character)
+void ABasicDoor::ActivateObject(AMainCharacter * character)
 {
 	if (DoorDriver->GetPlaybackPosition() == 0.0f
 		|| DoorDriver->IsReversing())
@@ -40,6 +40,10 @@ ABasicDoor::ABasicDoor()
 	// Fill information
 	Name = NSLOCTEXT("LocalNS", "Basic door name", "Door");
 	BasicInfo = NSLOCTEXT("LocalNS", "Basic door information", "Can be opened and closed");
+
+	// Set activatable parameters
+	bActivatableDirectly = true;
+	bActivatableIndirectly = true;
 }
 
 // Called when the game starts or when spawned

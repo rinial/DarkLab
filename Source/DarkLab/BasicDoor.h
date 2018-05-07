@@ -3,21 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BasicInformativeObject.h"
-#include "Activatable.h"
+#include "BasicActivatableObject.h"
 #include "BasicDoor.generated.h"
 
 // A openable simple door
 UCLASS()
-class DARKLAB_API ABasicDoor : public ABasicInformativeObject, public IActivatable
+class DARKLAB_API ABasicDoor : public ABasicActivatableObject
 {
 	GENERATED_BODY()
 
 public:
 	// Called when the object is activated
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Activatable")
-	void Activate(AMainCharacter* character);
-	virtual void Activate_Implementation(AMainCharacter* character) override;
+	UFUNCTION(BlueprintCallable, Category = "Activatable")
+	virtual void ActivateObject(AMainCharacter* character) override;
 	
 protected:
 	// Door's direction and root object
