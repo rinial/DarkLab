@@ -29,9 +29,13 @@ public:
 public:
 	// Adds a passage to/from this room
 	// Returns false if it's not possible
-	bool AddPassage(LabPassage* passage);
-	bool AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* other = nullptr, int width = 4);
-	bool AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* other, bool isDoor, FLinearColor color = FLinearColor::White, int width = 4); 
+	LabPassage * AddPassage(LabPassage* passage);
+	LabPassage* AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* other = nullptr, int width = 4);
+	LabPassage* AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* other, bool isDoor, FLinearColor color = FLinearColor::White, int width = 4);
+
+private:
+	// Returns true if passage is from this room, not into it
+	bool LeadsFromThisRoom(int botLeftLocX, int botLeftLocY, EDirectionEnum direction);
 
 public:
 	// Sets default values

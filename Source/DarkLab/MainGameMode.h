@@ -14,6 +14,7 @@ class ABasicDoor;
 class AWallLamp;
 class AFlashlight;
 class LabRoom;
+class LabPassage;
 
 // Controls the game
 UCLASS(Blueprintable)
@@ -55,21 +56,18 @@ protected:
 
 	// Pool full parts of the lab
 	void PoolRoom(LabRoom* room);
+	void PoolPassage(LabPassage* passage);
 
 	// Tries to find a poolable object in a specified array
 	UFUNCTION(BlueprintCallable, Category = "Pools")
 	UObject* TryGetPoolable(UClass* cl);
 
 	// Spawn specific objects
-	UFUNCTION(BlueprintCallable, Category = "Spawns")
-	ABasicFloor* SpawnBasicFloor(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
-	UFUNCTION(BlueprintCallable, Category = "Spawns")
-	ABasicWall* SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
-	UFUNCTION(BlueprintCallable, Category = "Spawns")
-	ABasicDoor* SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White, const int width = 4);
-	UFUNCTION(BlueprintCallable, Category = "Spawns")
-	AWallLamp* SpawnWallLamp(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White, const int width = 1);
-	UFUNCTION(BlueprintCallable, Category = "Spawns")
+	ABasicFloor* SpawnBasicFloor(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, LabRoom* room = nullptr);
+	ABasicFloor* SpawnBasicFloor(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, LabPassage* passage);
+	ABasicWall* SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, LabRoom* room = nullptr);
+	ABasicDoor* SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White, const int width = 4, LabPassage* passage = nullptr);
+	AWallLamp* SpawnWallLamp(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White, const int width = 1, LabRoom* room = nullptr);
 	AFlashlight* SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction = EDirectionEnum::VE_Up);
 
 	// Spawn full parts of the lab
@@ -85,7 +83,9 @@ private:
 
 protected:
 	// Spawned map parts
+	// Does not include pickupable objects
 	TMap<LabRoom*, TArray<TScriptInterface<IDeactivatable>>> SpawnedRoomObjects;
+	TMap<LabPassage*, TArray<TScriptInterface<IDeactivatable>>> SpawnedPassageObjects;
 
 	// Pools
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")

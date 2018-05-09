@@ -226,9 +226,41 @@ void AMainGameMode::PoolObjects(TArray<TScriptInterface<IDeactivatable>>& object
 // Pool full parts of the lab
 void AMainGameMode::PoolRoom(LabRoom * room)
 {
+	if (!SpawnedRoomObjects.Contains(room))
+		return;
+
 	PoolObjects(SpawnedRoomObjects[room]);
 	SpawnedRoomObjects.Remove(room);
+	for (LabPassage* passage : room->Passages)
+	{
+		if (!passage)
+			continue;
+
+		// We pool passage if it isn't connected to some other room
+		if (passage->From == room)
+		{
+			if (!passage->To)
+				PoolPassage(passage);
+		}
+		else if (passage->To == room)
+		{
+			if (!passage->From)
+				PoolPassage(passage);
+		}
+		// else
+		// This is a weird case that should never happen
+		// Room is not responsible for the passage pooling is this DOES happen somehow
+	}
 	delete room;
+}
+void AMainGameMode::PoolPassage(LabPassage* passage)
+{
+	if (!SpawnedPassageObjects.Contains(passage))
+		return;
+
+	PoolObjects(SpawnedPassageObjects[passage]);
+	SpawnedPassageObjects.Remove(passage);
+	// We don't delete passage from here as it's deleted during room's destruction
 }
 
 // Tries to find a poolable object in a specified array
@@ -267,7 +299,7 @@ UObject* AMainGameMode::TryGetPoolable(UClass* cl)
 }
 
 // Spawn specific objects
-ABasicFloor * AMainGameMode::SpawnBasicFloor(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
+ABasicFloor* AMainGameMode::SpawnBasicFloor(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, LabRoom* room)
 {
 	ABasicFloor* floor = Cast<ABasicFloor>(TryGetPoolable(BasicFloorBP));
 	if (!floor)
@@ -275,11 +307,22 @@ ABasicFloor * AMainGameMode::SpawnBasicFloor(const int botLeftX, const int botLe
 
 	PlaceObject(floor, botLeftX, botLeftY, sizeX, sizeY);
 
+	if (room && SpawnedRoomObjects.Contains(room))
+		SpawnedRoomObjects[room].Add(floor);
+
 	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic floor"));
 
 	return floor;
 }
-ABasicWall* AMainGameMode::SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
+ABasicFloor* AMainGameMode::SpawnBasicFloor(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, LabPassage* passage)
+{
+	ABasicFloor* floor = SpawnBasicFloor(botLeftX, botLeftY, sizeX, sizeY);
+	if (passage && SpawnedPassageObjects.Contains(passage))
+		SpawnedPassageObjects[passage].Add(floor);
+
+	return floor;
+}
+ABasicWall* AMainGameMode::SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, LabRoom* room)
 {
 	ABasicWall* wall = Cast<ABasicWall>(TryGetPoolable(BasicWallBP));
 	if (!wall)
@@ -287,11 +330,14 @@ ABasicWall* AMainGameMode::SpawnBasicWall(const int botLeftX, const int botLeftY
 
 	PlaceObject(wall, botLeftX, botLeftY, sizeX, sizeY);
 
+	if (room && SpawnedRoomObjects.Contains(room))
+		SpawnedRoomObjects[room].Add(wall);
+
 	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic wall"));
 
 	return wall;
 }
-ABasicDoor * AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color, const int width)
+ABasicDoor * AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color, const int width, LabPassage* passage)
 {
 	ABasicDoor* door = Cast<ABasicDoor>(TryGetPoolable(BasicDoorBP));
 	if (!door)
@@ -300,11 +346,14 @@ ABasicDoor * AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeft
 	door->DoorColor = color; // Sets wall's color
 	PlaceObject(door, botLeftX, botLeftY, direction, width);
 
+	if (passage && SpawnedPassageObjects.Contains(passage))
+		SpawnedPassageObjects[passage].Add(door);
+
 	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic door"));
 
 	return door;
 }
-AWallLamp * AMainGameMode::SpawnWallLamp(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color, const int width)
+AWallLamp * AMainGameMode::SpawnWallLamp(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color, const int width, LabRoom* room)
 {
 	AWallLamp* lamp = Cast<AWallLamp>(TryGetPoolable(WallLampBP));
 	if (!lamp)
@@ -313,6 +362,9 @@ AWallLamp * AMainGameMode::SpawnWallLamp(const int botLeftX, const int botLeftY,
 	lamp->Reset(); // Disables light if it was on
 	lamp->SetColor(color); // Sets correct color
 	PlaceObject(lamp, botLeftX, botLeftY, direction, width);
+
+	if (room && SpawnedRoomObjects.Contains(room))
+		SpawnedRoomObjects[room].Add(lamp);
 
 	UE_LOG(LogTemp, Warning, TEXT("Spawned a wall lamp"));
 
@@ -339,12 +391,12 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 	if (SpawnedRoomObjects.Contains(room))
 		return;
 
-	TArray<TScriptInterface<IDeactivatable>> spawned;
+	SpawnedRoomObjects.Add(room);
 
 	// Spawning floor
 	// Doesn't include walls and passages
 	if(!room->OuterRoom)
-		spawned.Add(SpawnBasicFloor(room->BotLeftLocX + 1, room->BotLeftLocY + 1, room->SizeX - 2, room->SizeY - 2));
+		SpawnBasicFloor(room->BotLeftLocX + 1, room->BotLeftLocY + 1, room->SizeX - 2, room->SizeY - 2, room);
 
 	// For spawning walls 
 	TArray<int> leftWallPositions;
@@ -394,33 +446,24 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 		}
 
 		// Only spawn floor and door once for each passage
-		bool passageWasSpawned = false;
-		TArray<LabRoom*> spawnedRooms;
-		SpawnedRoomObjects.GetKeys(spawnedRooms);
-		for (LabRoom* r : spawnedRooms)
-		{
-			if (passage->From != r && passage->To != r)
-				continue;
-
-			passageWasSpawned = true;
-			break;
-		}
-		if (passageWasSpawned)
+		if (SpawnedPassageObjects.Contains(passage))
 			continue;
+
+		SpawnedPassageObjects.Add(passage);
 
 		// Spawns floor under the passage
 		if (!room->OuterRoom || passage->From == room->OuterRoom || passage->To == room->OuterRoom)
 		{
 			if (passage->GridDirection == EDirectionEnum::VE_Up || passage->GridDirection == EDirectionEnum::VE_Down)
-				spawned.Add(SpawnBasicFloor(passage->BotLeftLocX, passage->BotLeftLocY, passage->Width, 1));
+				SpawnBasicFloor(passage->BotLeftLocX, passage->BotLeftLocY, passage->Width, 1, passage);
 			else
-				spawned.Add(SpawnBasicFloor(passage->BotLeftLocX, passage->BotLeftLocY, 1, passage->Width));
+				SpawnBasicFloor(passage->BotLeftLocX, passage->BotLeftLocY, 1, passage->Width, passage);
 		}
 
 		// Spawn door if needed
 		if (passage->bIsDoor)
 		{
-			spawned.Add(SpawnBasicDoor(passage->BotLeftLocX, passage->BotLeftLocY, passage->GridDirection, passage->Color, passage->Width));
+			SpawnBasicDoor(passage->BotLeftLocX, passage->BotLeftLocY, passage->GridDirection, passage->Color, passage->Width, passage);
 		}
 	}
 
@@ -433,28 +476,26 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 	for (int i = 0; i + 1 < leftWallPositions.Num(); i += 2)
 	{
 		int wallLength = leftWallPositions[i + 1] - leftWallPositions[i] + 1;
-		spawned.Add(SpawnBasicWall(room->BotLeftLocX, room->BotLeftLocY + leftWallPositions[i], 1, wallLength));
+		SpawnBasicWall(room->BotLeftLocX, room->BotLeftLocY + leftWallPositions[i], 1, wallLength, room);
 	}
 	// Spawning top walls
 	for (int i = 0; i + 1 < topWallPositions.Num(); i += 2)
 	{
 		int wallLength = topWallPositions[i + 1] - topWallPositions[i] + 1;
-		spawned.Add(SpawnBasicWall(room->BotLeftLocX + topWallPositions[i], room->BotLeftLocY + room->SizeY - 1, wallLength, 1));
+		SpawnBasicWall(room->BotLeftLocX + topWallPositions[i], room->BotLeftLocY + room->SizeY - 1, wallLength, 1, room);
 	}
 	// Spawning right walls
 	for (int i = 0; i + 1 < rightWallPositions.Num(); i += 2)
 	{
 		int wallLength = rightWallPositions[i + 1] - rightWallPositions[i] + 1;
-		spawned.Add(SpawnBasicWall(room->BotLeftLocX + room->SizeX - 1, room->BotLeftLocY + rightWallPositions[i], 1, wallLength));
+		SpawnBasicWall(room->BotLeftLocX + room->SizeX - 1, room->BotLeftLocY + rightWallPositions[i], 1, wallLength, room);
 	}
 	// Spawning bottom walls
 	for (int i = 0; i + 1 < bottomWallPositions.Num(); i += 2)
 	{
 		int wallLength = bottomWallPositions[i + 1] - bottomWallPositions[i] + 1;
-		spawned.Add(SpawnBasicWall(room->BotLeftLocX + bottomWallPositions[i], room->BotLeftLocY, wallLength, 1));
+		SpawnBasicWall(room->BotLeftLocX + bottomWallPositions[i], room->BotLeftLocY, wallLength, 1, room);
 	}
-
-	SpawnedRoomObjects.Add(room, spawned);
 }
 
 // Sets default values
@@ -530,14 +571,10 @@ void AMainGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	TArray<LabRoom*> spawnedRooms;
 	SpawnedRoomObjects.GetKeys(spawnedRooms);
-	SpawnedRoomObjects.Empty();
 
 	// Clear all saved rooms
 	for (int i = spawnedRooms.Num() - 1; i >= 0; --i)
-	{
 		delete spawnedRooms[i];
-		spawnedRooms.RemoveAt(i);
-	}
 }
 
 // Called at start of seamless travel, or right before map change for hard travel
