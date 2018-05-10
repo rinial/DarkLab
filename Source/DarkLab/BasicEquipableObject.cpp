@@ -17,6 +17,7 @@ void ABasicEquipableObject::Equip_Implementation(AMainCharacter* character, cons
 		currentlyEquiped->Execute_Unequip(currentlyEquiped->_getUObject(), character);
 
 	character->EquipedObject = this;
+	character->SetOutline(this, false);
 
 	UE_LOG(LogTemp, Warning, TEXT("Equiped"));
 }

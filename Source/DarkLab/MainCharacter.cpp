@@ -55,11 +55,9 @@ void AMainCharacter::UseEquiped()
 // Activates nearby object on scene
 void AMainCharacter::Activate()
 {
-	if (ActivatableObjects.Num() == 0)
+	TScriptInterface<IActivatable> toActivate = GetActivatable();
+	if (!toActivate)
 		return;
-
-	// TODO should take the closet one in front, not the first one
-	TScriptInterface<IActivatable> toActivate = ActivatableObjects[0];
 	toActivate->Execute_Activate(toActivate->_getUObject(), this);
 }
 
@@ -91,16 +89,65 @@ void AMainCharacter::OnActivatorBeginOverlap(UPrimitiveComponent * OverlappedCom
 		return;
 
 	IActivatable* activatable = Cast<IActivatable>(OtherActor);
-	if (!activatable->Execute_IsActivatableDirectly(otherObject))
+	if (!activatable || !activatable->Execute_IsActivatableDirectly(otherObject))
 		return;
 
 	// UE_LOG(LogTemp, Warning, TEXT("Found activatable"));
+
+	TScriptInterface<IActivatable> oldA = GetActivatable();
 	ActivatableObjects.AddUnique(OtherActor);
+	TScriptInterface<IActivatable> newA = GetActivatable();
+
+	if (oldA == newA)
+		return;
+
+	if(oldA)
+		SetOutline(oldA->_getUObject(), false);
+	if(newA)
+		SetOutline(newA->_getUObject(), true);
 }
 void AMainCharacter::OnActivatorEndOverlap(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
 {
 	// UE_LOG(LogTemp, Warning, TEXT("Lost activatable"));
 	ActivatableObjects.Remove(OtherActor);
+
+	SetOutline(OtherActor, false);
+}
+
+// Returns an activatable object in front of the character
+TScriptInterface<class IActivatable> AMainCharacter::GetActivatable()
+{
+	if(ActivatableObjects.Num() == 0)
+		return nullptr;
+
+	// TODO should take the closest one in front, not the first one
+	return ActivatableObjects[0];
+}
+
+// TODO move somewhere, its not bound to character
+// Sets outline for an actor
+void AMainCharacter::SetOutline(UObject * object, bool showOutline) const
+{
+	if (!object)
+		return;
+
+	AActor* actor = Cast<AActor>(object);
+
+	if (!actor)
+		return;
+
+	SetOutline(actor, showOutline);
+}
+void AMainCharacter::SetOutline(AActor* actor, bool showOutline) const
+{
+	if (!actor)
+		return;
+
+	TArray<UStaticMeshComponent*> components;
+	actor->GetComponents<UStaticMeshComponent>(components);
+	for (UStaticMeshComponent* component : components)
+		//if(component->ComponentHasTag("Outline"))
+			component->SetRenderCustomDepth(showOutline);
 }
 
 // Sets default values
@@ -148,8 +195,7 @@ void AMainCharacter::Tick(const float deltaTime)
 		TArray<FString> informativeNames;
 
 		// Activatable in front
-		// TODO should take closest, not first
-		informativeObjects.Add(ActivatableObjects.Num() > 0 ? Cast<IInformative>(ActivatableObjects[0]->_getUObject()) : nullptr);
+		informativeObjects.Add(ActivatableObjects.Num() > 0 ? Cast<IInformative>(GetActivatable()->_getUObject()) : nullptr);
 		informativeNames.Add("Activatable");
 
 		// Currently equipped
