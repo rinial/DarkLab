@@ -13,8 +13,8 @@ class DARKLAB_API LabRoom
 {
 public:
 	// Room's location and size
-	int BotLeftLocX = 0;
-	int BotLeftLocY = 0;
+	int BotLeftX = 0;
+	int BotLeftY = 0;
 	int SizeX = 4;
 	int SizeY = 4;
 
@@ -30,16 +30,17 @@ public:
 	// Adds a passage to/from this room
 	// Returns false if it's not possible
 	LabPassage * AddPassage(LabPassage* passage);
-	LabPassage* AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* other = nullptr, int width = 4);
-	LabPassage* AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* other, bool isDoor, FLinearColor color = FLinearColor::White, int width = 4);
+	LabPassage* AddPassage(int botLeftX, int botLeftY, EDirectionEnum direction, LabRoom* other = nullptr, int width = 4);
+	LabPassage* AddPassage(int botLeftX, int botLeftY, EDirectionEnum direction, LabRoom* other, bool isDoor, FLinearColor color = FLinearColor::White, int width = 4);
 
 private:
 	// Returns true if passage is from this room, not into it
-	bool LeadsFromThisRoom(int botLeftLocX, int botLeftLocY, EDirectionEnum direction);
+	bool LeadsFromThisRoom(int botLeftX, int botLeftY, EDirectionEnum direction);
 
 public:
 	// Sets default values
-	LabRoom(int botLeftLocX, int botLeftLocY, int sizeX, int sizeY, LabRoom* outer = nullptr);
+	LabRoom(int botLeftX, int botLeftY, int sizeX, int sizeY, LabRoom* outer = nullptr);
+	LabRoom(FRectSpaceStruct locSize, LabRoom* outer = nullptr);
 
 	// Called on destruction
 	~LabRoom();

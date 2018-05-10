@@ -4,9 +4,9 @@
 #include "LabPassage.h"
 
 // Sets default values
-LabHallway::LabHallway(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, int length, int width, LabRoom * from, LabRoom * to, int enterWidth, int exitWidth, LabRoom* outer) : LabHallway(botLeftLocX, botLeftLocY, direction, length, width, from, to, false, false, FLinearColor::White, FLinearColor::White, enterWidth, exitWidth, outer)
+LabHallway::LabHallway(int botLeftX, int botLeftY, EDirectionEnum direction, int length, int width, LabRoom * from, LabRoom * to, int enterWidth, int exitWidth, LabRoom* outer) : LabHallway(botLeftX, botLeftY, direction, length, width, from, to, false, false, FLinearColor::White, FLinearColor::White, enterWidth, exitWidth, outer)
 { }
-LabHallway::LabHallway(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, int length, int width, LabRoom * from, LabRoom * to, bool enterIsDoor, bool exitIsDoor, FLinearColor enterColor, FLinearColor exitColor, int enterWidth, int exitWidth, LabRoom* outer) : LabRoom(botLeftLocX, botLeftLocY, (direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down) ? width : length, (direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down) ? length : width, outer), From(from), To(to), bEnterIsDoor(enterIsDoor), bExitIsDoor(exitIsDoor), EnterColor(enterColor), ExitColor(exitColor)
+LabHallway::LabHallway(int botLeftX, int botLeftY, EDirectionEnum direction, int length, int width, LabRoom * from, LabRoom * to, bool enterIsDoor, bool exitIsDoor, FLinearColor enterColor, FLinearColor exitColor, int enterWidth, int exitWidth, LabRoom* outer) : LabRoom(botLeftX, botLeftY, (direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down) ? width : length, (direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down) ? length : width, outer), From(from), To(to), bEnterIsDoor(enterIsDoor), bExitIsDoor(exitIsDoor), EnterColor(enterColor), ExitColor(exitColor)
 {
 	EnterWidth = enterWidth;
 	ExitWidth = exitWidth;
@@ -14,20 +14,20 @@ LabHallway::LabHallway(int botLeftLocX, int botLeftLocY, EDirectionEnum directio
 	switch(direction)
 	{
 	case EDirectionEnum::VE_Up:
-		AddPassage(BotLeftLocX + (width - EnterWidth) / 2, BotLeftLocY, direction, from, enterIsDoor, enterColor, enterWidth);
-		AddPassage(BotLeftLocX + (width - ExitWidth) / 2, BotLeftLocY + length - 1, direction, to, exitIsDoor, exitColor, exitWidth);
+		AddPassage(BotLeftX + (width - EnterWidth) / 2, BotLeftY, direction, from, enterIsDoor, enterColor, enterWidth);
+		AddPassage(BotLeftX + (width - ExitWidth) / 2, BotLeftY + length - 1, direction, to, exitIsDoor, exitColor, exitWidth);
 		break;
 	case EDirectionEnum::VE_Down:
-		AddPassage(BotLeftLocX + (width - EnterWidth) / 2, BotLeftLocY + length - 1, direction, from, enterIsDoor, enterColor, enterWidth);
-		AddPassage(BotLeftLocX + (width - ExitWidth) / 2, BotLeftLocY, direction, to, exitIsDoor, exitColor, exitWidth);
+		AddPassage(BotLeftX + (width - EnterWidth) / 2, BotLeftY + length - 1, direction, from, enterIsDoor, enterColor, enterWidth);
+		AddPassage(BotLeftX + (width - ExitWidth) / 2, BotLeftY, direction, to, exitIsDoor, exitColor, exitWidth);
 		break;
 	case EDirectionEnum::VE_Right:
-		AddPassage(BotLeftLocX, BotLeftLocY + (width - EnterWidth) / 2, direction, from, enterIsDoor, enterColor, enterWidth);
-		AddPassage(BotLeftLocX + length - 1, BotLeftLocY + (width - ExitWidth) / 2, direction, to, exitIsDoor, exitColor, exitWidth);
+		AddPassage(BotLeftX, BotLeftY + (width - EnterWidth) / 2, direction, from, enterIsDoor, enterColor, enterWidth);
+		AddPassage(BotLeftX + length - 1, BotLeftY + (width - ExitWidth) / 2, direction, to, exitIsDoor, exitColor, exitWidth);
 		break;
 	case EDirectionEnum::VE_Left:
-		AddPassage(BotLeftLocX + length - 1, BotLeftLocY + (width - EnterWidth) / 2, direction, from, enterIsDoor, enterColor, enterWidth);
-		AddPassage(BotLeftLocX, BotLeftLocY + (width - ExitWidth) / 2, direction, to, exitIsDoor, exitColor, exitWidth);
+		AddPassage(BotLeftX + length - 1, BotLeftY + (width - EnterWidth) / 2, direction, from, enterIsDoor, enterColor, enterWidth);
+		AddPassage(BotLeftX, BotLeftY + (width - ExitWidth) / 2, direction, to, exitIsDoor, exitColor, exitWidth);
 		break;
 	}
 }

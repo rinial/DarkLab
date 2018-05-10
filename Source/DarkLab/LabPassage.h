@@ -12,8 +12,8 @@ class DARKLAB_API LabPassage
 {
 public:
 	// Passage's location and width
-	int BotLeftLocX = 0;
-	int BotLeftLocY = 0;
+	int BotLeftX = 0;
+	int BotLeftY = 0;
 	int Width = 2;
 
 	// Direction of the passage (not along its width but along player's path)
@@ -35,7 +35,7 @@ public:
 
 public:
 	// Sets default values
-	LabPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom* from = nullptr, LabRoom* to = nullptr, bool isDoor = false, FLinearColor color = FLinearColor::White, int width = 4);
+	LabPassage(int botLeftX, int botLeftY, EDirectionEnum direction, LabRoom* from = nullptr, LabRoom* to = nullptr, bool isDoor = false, FLinearColor color = FLinearColor::White, int width = 4);
 
 	// Called on destruction
 	~LabPassage();

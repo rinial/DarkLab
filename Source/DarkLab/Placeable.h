@@ -17,6 +17,42 @@ enum class EDirectionEnum : uint8
 	VE_Left	UMETA(DisplayName = "Left")
 };
 
+// TODO move somewhere else
+// Represents a rectangular space on the grid
+USTRUCT()
+struct FRectSpaceStruct
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int BotLeftX;
+
+	UPROPERTY()
+	int BotLeftY;
+
+	UPROPERTY()
+	int SizeX;
+
+	UPROPERTY()
+	int SizeY;
+
+	bool operator==(const FRectSpaceStruct& other)
+	{
+		return BotLeftX == other.BotLeftX && BotLeftY == other.BotLeftY && SizeX == other.SizeX && SizeY == other.SizeY;
+	}
+
+	FRectSpaceStruct()
+	{
+		SizeX = 1;
+		SizeY = 1;
+	}
+	FRectSpaceStruct(int botLeftX, int botLeftY, int sizeX, int sizeY) : BotLeftX(botLeftX), BotLeftY(botLeftY)
+	{
+		SizeX = sizeX > 0 ? sizeX : 1;
+		SizeY = sizeY > 0 ? sizeY : 1;
+	}
+};
+
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
 class UPlaceable : public UInterface

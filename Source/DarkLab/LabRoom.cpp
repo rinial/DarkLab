@@ -29,7 +29,7 @@ LabPassage* LabRoom::AddPassage(LabPassage * passage)
 		// We need to understand if this passage leads from or to this room
 		if (passage->From == nullptr && passage->To == nullptr)
 		{
-			bool fromThis = LeadsFromThisRoom(passage->BotLeftLocX, passage->BotLeftLocY, passage->GridDirection);
+			bool fromThis = LeadsFromThisRoom(passage->BotLeftX, passage->BotLeftY, passage->GridDirection);
 			if (fromThis)
 				passage->From = this;
 			else
@@ -47,11 +47,11 @@ LabPassage* LabRoom::AddPassage(LabPassage * passage)
 		return passage;
 	}
 }
-LabPassage* LabRoom::AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom * other, int width)
+LabPassage* LabRoom::AddPassage(int botLeftX, int botLeftY, EDirectionEnum direction, LabRoom * other, int width)
 {
-	return AddPassage(botLeftLocX, botLeftLocY, direction, other, false, FLinearColor::White, width);
+	return AddPassage(botLeftX, botLeftY, direction, other, false, FLinearColor::White, width);
 }
-LabPassage* LabRoom::AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum direction, LabRoom * other, bool isDoor, FLinearColor color, int width)
+LabPassage* LabRoom::AddPassage(int botLeftX, int botLeftY, EDirectionEnum direction, LabRoom * other, bool isDoor, FLinearColor color, int width)
 {
 	if (width < 2)
 		return nullptr;
@@ -59,52 +59,54 @@ LabPassage* LabRoom::AddPassage(int botLeftLocX, int botLeftLocY, EDirectionEnum
 	if (direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down)
 	{
 		// if it's not in bottom or top wall of the room
-		if (botLeftLocY != BotLeftLocY && botLeftLocY != BotLeftLocY + SizeY - 1)
+		if (botLeftY != BotLeftY && botLeftY != BotLeftY + SizeY - 1)
 			return nullptr;
 
 		// if it goes outside the wall or includes room corners
-		if (botLeftLocX < BotLeftLocX + 1 || botLeftLocX + width - 1 > BotLeftLocX + SizeX - 2)
+		if (botLeftX < BotLeftX + 1 || botLeftX + width - 1 > BotLeftX + SizeX - 2)
 			return nullptr;
 	}
 	else
 	{
 		// if it's not in left or right wall of the room
-		if (botLeftLocX != BotLeftLocX && botLeftLocX != BotLeftLocX + SizeX - 1)
+		if (botLeftX != BotLeftX && botLeftX != BotLeftX + SizeX - 1)
 			return nullptr;
 
 		// if it goes outside the wall or includes room corners
-		if (botLeftLocY < BotLeftLocY + 1 || botLeftLocY + width - 1 > BotLeftLocY + SizeY - 2)
+		if (botLeftY < BotLeftY + 1 || botLeftY + width - 1 > BotLeftY + SizeY - 2)
 			return nullptr;
 	}
 	// At this point passage should be considered ok
 
 	// We find out if it leads out of this room or into it
-	bool fromThis = LeadsFromThisRoom(botLeftLocX, botLeftLocY, direction);
+	bool fromThis = LeadsFromThisRoom(botLeftX, botLeftY, direction);
 
-	LabPassage* passage = new LabPassage(botLeftLocX, botLeftLocY, direction, fromThis ? this : other, fromThis ? other : this, isDoor, color, width);
+	LabPassage* passage = new LabPassage(botLeftX, botLeftY, direction, fromThis ? this : other, fromThis ? other : this, isDoor, color, width);
 	// We don't need to add it to Passages, it will be added from LabPassage constructor
 
 	return passage;
 }
 
 // Returns true if direction is from this room, not into it
-bool LabRoom::LeadsFromThisRoom(int botLeftLocX, int botLeftLocY, EDirectionEnum direction)
+bool LabRoom::LeadsFromThisRoom(int botLeftX, int botLeftY, EDirectionEnum direction)
 {
 	bool fromThis = true;
-	if ((direction == EDirectionEnum::VE_Up && botLeftLocY == BotLeftLocY) ||
-		(direction == EDirectionEnum::VE_Down && botLeftLocY == BotLeftLocY + SizeY - 1) ||
-		(direction == EDirectionEnum::VE_Right && botLeftLocX == BotLeftLocX) ||
-		(direction == EDirectionEnum::VE_Left && botLeftLocX == BotLeftLocX + SizeX - 1))
+	if ((direction == EDirectionEnum::VE_Up && botLeftY == BotLeftY) ||
+		(direction == EDirectionEnum::VE_Down && botLeftY == BotLeftY + SizeY - 1) ||
+		(direction == EDirectionEnum::VE_Right && botLeftX == BotLeftX) ||
+		(direction == EDirectionEnum::VE_Left && botLeftX == BotLeftX + SizeX - 1))
 		fromThis = false;
 	return fromThis;
 }
 
 // Sets default values
-LabRoom::LabRoom(int botLeftLocX, int botLeftLocY, int sizeX, int sizeY, LabRoom* outer) : BotLeftLocX(botLeftLocX), BotLeftLocY(botLeftLocY), OuterRoom(outer)
+LabRoom::LabRoom(int botLeftX, int botLeftY, int sizeX, int sizeY, LabRoom* outer) : BotLeftX(botLeftX), BotLeftY(botLeftY), OuterRoom(outer)
 {
 	SizeX = sizeX > 4 ? sizeX : 4;
 	SizeY = sizeY > 4 ? sizeY : 4;
 }
+LabRoom::LabRoom(FRectSpaceStruct locSize, LabRoom * outer) : LabRoom(locSize.BotLeftX, locSize.BotLeftY, locSize.SizeX, locSize.SizeY, outer)
+{ }
 
 // Called on destruction
 LabRoom::~LabRoom()
