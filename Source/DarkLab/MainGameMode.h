@@ -33,11 +33,11 @@ public:
 protected:
 	// Places an object on the map
 	// TODO return false if can't place?
-	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction = EDirectionEnum::VE_Up);
-	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const int sizeX, const int sizeY = 1);
-	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const int sizeX, const int sizeY, const int sizeZ);
-	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction, const int sizeX, const int sizeY = 1);
-	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction, const int sizeX, const int sizeY, const int sizeZ);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftX, const int botLeftY, const EDirectionEnum direction = EDirectionEnum::VE_Up);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftX, const int botLeftY, const int sizeX, const int sizeY = 1);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, const int sizeZ);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftX, const int botLeftY, const EDirectionEnum direction, const int sizeX, const int sizeY = 1);
+	void PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftX, const int botLeftY, const EDirectionEnum direction, const int sizeX, const int sizeY, const int sizeZ);
 	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc = FIntVector(0, 0, 0), const EDirectionEnum direction = EDirectionEnum::VE_Up);
 	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const int sizeX, const int sizeY = 1);
 	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const int sizeX, const int sizeY, const int sizeZ);
@@ -72,16 +72,39 @@ protected:
 
 	// Spawn full parts of the lab
 	void SpawnRoom(LabRoom* room);
-	
-private:
-	// Classes used for spawning
-	TSubclassOf<ABasicFloor> BasicFloorBP;
-	TSubclassOf<ABasicWall> BasicWallBP;
-	TSubclassOf<ABasicDoor> BasicDoorBP;
-	TSubclassOf<AWallLamp> WallLampBP;
-	TSubclassOf<AFlashlight> FlashlightBP;
+	void SpawnPassage(LabPassage* passage, LabRoom* room = nullptr);
 
-protected:
+	// Space is allocated and can't be allocated again
+	FRectSpaceStruct* AllocateSpace(LabRoom* room);
+	FRectSpaceStruct* AllocateSpace(int botLeftX, int botLeftY, int sizeX = 1, int sizeY = 1);
+	FRectSpaceStruct* AllocateSpace(FRectSpaceStruct& space);
+	// Space is not allocated anymore
+	void DeallocateSpace(FRectSpaceStruct& space);
+	void DeallocateSpace(LabRoom* room);
+	void DeallocateSpace(int botLeftX, int botLeftY, int sizeX = 1, int sizeY = 1);
+	// Returns true if there is free rectangular space
+	bool RectSpaceIsFree(FRectSpaceStruct& space);
+	bool RectSpaceIsFree(int botLeftX, int botLeftY, int sizeX = 1, int sizeY = 1);
+
+	// All space in use
+	TArray<FRectSpaceStruct> AllocatedSpace;
+	TMap<LabRoom*, FRectSpaceStruct*> AllocatedRoomSpace;
+	//// Left and right (bottom and top) sorted coordinates of rectangles
+	//TArray<int> AllocatedX1Indices;
+	//TArray<int> AllocatedX2Indices;
+	//TArray<int> AllocatedY1Indices;
+	//TArray<int> AllocatedY2Indices;
+	//// Indices that are not used anymore and can be used again
+	//// We don't just delete from AllocatedSpace, cause we would have to decrement a lot of indices in indices arrays
+	//TArray<int> DeallocatedIndices;
+
+	// Constants used for generation
+	static const int MinRoomSize = 4; // Can't be lower than 4
+	static const int MaxRoomSize = 50;
+	static const int MaxRoomArea = 300;
+	static const int MinPassageWidth = 2; // Can't be lower than 2
+	static const int MaxPassageWidth = 8; 
+
 	// Spawned map parts
 	// Does not include pickupable objects
 	TMap<LabRoom*, TArray<TScriptInterface<IDeactivatable>>> SpawnedRoomObjects;
@@ -100,6 +123,14 @@ protected:
 	TArray<TScriptInterface<IDeactivatable>> WallLampPool;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
 	TArray<TScriptInterface<IDeactivatable>> FlashlightPool;
+	
+private:
+	// Classes used for spawning
+	TSubclassOf<ABasicFloor> BasicFloorBP;
+	TSubclassOf<ABasicWall> BasicWallBP;
+	TSubclassOf<ABasicDoor> BasicDoorBP;
+	TSubclassOf<AWallLamp> WallLampBP;
+	TSubclassOf<AFlashlight> FlashlightBP;
 
 public:
 	// Sets default values

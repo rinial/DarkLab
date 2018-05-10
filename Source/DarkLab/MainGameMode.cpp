@@ -15,6 +15,7 @@
 #include "LabPassage.h"
 #include "LabRoom.h"
 #include "LabHallway.h"
+#include "Algo/BinarySearch.h"
 
 // Returns the light level and the location of the brightest light
 float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints, const float sixPointsRadius)
@@ -143,25 +144,25 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 
 // Places an object on the map
 // TODO return false if can't place?
-void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction)
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftX, const int botLeftY, const EDirectionEnum direction)
 {
-	PlaceObject(object, FIntVector(botLeftLocX, botLeftLocY, 0), direction);
+	PlaceObject(object, FIntVector(botLeftX, botLeftY, 0), direction);
 }
-void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const int sizeX, const int sizeY)
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
 {
-	PlaceObject(object, FIntVector(botLeftLocX, botLeftLocY, 0), EDirectionEnum::VE_Up, sizeX, sizeY);
+	PlaceObject(object, FIntVector(botLeftX, botLeftY, 0), EDirectionEnum::VE_Up, sizeX, sizeY);
 }
-void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const int sizeX, const int sizeY, const int sizeZ)
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, const int sizeZ)
 {
-	PlaceObject(object, FIntVector(botLeftLocX, botLeftLocY, 0), EDirectionEnum::VE_Up, sizeX, sizeY, sizeZ);
+	PlaceObject(object, FIntVector(botLeftX, botLeftY, 0), EDirectionEnum::VE_Up, sizeX, sizeY, sizeZ);
 }
-void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction, const int sizeX, const int sizeY)
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftX, const int botLeftY, const EDirectionEnum direction, const int sizeX, const int sizeY)
 {
-	PlaceObject(object, FIntVector(botLeftLocX, botLeftLocY, 0), direction, sizeX, sizeY);
+	PlaceObject(object, FIntVector(botLeftX, botLeftY, 0), direction, sizeX, sizeY);
 }
-void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftLocX, const int botLeftLocY, const EDirectionEnum direction, const int sizeX, const int sizeY, const int sizeZ)
+void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftX, const int botLeftY, const EDirectionEnum direction, const int sizeX, const int sizeY, const int sizeZ)
 {
-	PlaceObject(object, FIntVector(botLeftLocX, botLeftLocY, 0), direction, sizeX, sizeY, sizeZ);
+	PlaceObject(object, FIntVector(botLeftX, botLeftY, 0), direction, sizeX, sizeY, sizeZ);
 }
 void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const EDirectionEnum direction)
 {
@@ -310,7 +311,7 @@ ABasicFloor* AMainGameMode::SpawnBasicFloor(const int botLeftX, const int botLef
 	if (room && SpawnedRoomObjects.Contains(room))
 		SpawnedRoomObjects[room].Add(floor);
 
-	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic floor"));
+	// UE_LOG(LogTemp, Warning, TEXT("Spawned a basic floor"));
 
 	return floor;
 }
@@ -333,7 +334,7 @@ ABasicWall* AMainGameMode::SpawnBasicWall(const int botLeftX, const int botLeftY
 	if (room && SpawnedRoomObjects.Contains(room))
 		SpawnedRoomObjects[room].Add(wall);
 
-	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic wall"));
+	// UE_LOG(LogTemp, Warning, TEXT("Spawned a basic wall"));
 
 	return wall;
 }
@@ -349,7 +350,7 @@ ABasicDoor * AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeft
 	if (passage && SpawnedPassageObjects.Contains(passage))
 		SpawnedPassageObjects[passage].Add(door);
 
-	UE_LOG(LogTemp, Warning, TEXT("Spawned a basic door"));
+	// UE_LOG(LogTemp, Warning, TEXT("Spawned a basic door"));
 
 	return door;
 }
@@ -396,7 +397,7 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 	// Spawning floor
 	// Doesn't include walls and passages
 	if(!room->OuterRoom)
-		SpawnBasicFloor(room->BotLeftLocX + 1, room->BotLeftLocY + 1, room->SizeX - 2, room->SizeY - 2, room);
+		SpawnBasicFloor(room->BotLeftX + 1, room->BotLeftY + 1, room->SizeX - 2, room->SizeY - 2, room);
 
 	// For spawning walls 
 	TArray<int> leftWallPositions;
@@ -421,50 +422,32 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 	for (LabPassage* passage : room->Passages)
 	{
 		// Left wall
-		if (passage->BotLeftLocX == room->BotLeftLocX)
+		if (passage->BotLeftX == room->BotLeftX)
 		{
-			leftWallPositions.Add(passage->BotLeftLocY - 1 - room->BotLeftLocY);
-			leftWallPositions.Add(passage->BotLeftLocY + passage->Width - room->BotLeftLocY);
+			leftWallPositions.Add(passage->BotLeftY - 1 - room->BotLeftY);
+			leftWallPositions.Add(passage->BotLeftY + passage->Width - room->BotLeftY);
 		}
 		// Top wall
-		else if (passage->BotLeftLocY == room->BotLeftLocY + room->SizeY - 1)
+		else if (passage->BotLeftY == room->BotLeftY + room->SizeY - 1)
 		{
-			topWallPositions.Add(passage->BotLeftLocX - 1 - room->BotLeftLocX);
-			topWallPositions.Add(passage->BotLeftLocX + passage->Width - room->BotLeftLocX);
+			topWallPositions.Add(passage->BotLeftX - 1 - room->BotLeftX);
+			topWallPositions.Add(passage->BotLeftX + passage->Width - room->BotLeftX);
 		}
 		// Right wall
-		else if (passage->BotLeftLocX == room->BotLeftLocX + room->SizeX - 1)
+		else if (passage->BotLeftX == room->BotLeftX + room->SizeX - 1)
 		{
-			rightWallPositions.Add(passage->BotLeftLocY - 1 - room->BotLeftLocY);
-			rightWallPositions.Add(passage->BotLeftLocY + passage->Width - room->BotLeftLocY);
+			rightWallPositions.Add(passage->BotLeftY - 1 - room->BotLeftY);
+			rightWallPositions.Add(passage->BotLeftY + passage->Width - room->BotLeftY);
 		}
 		// Bottom wall
-		else if (passage->BotLeftLocY == room->BotLeftLocY)
+		else if (passage->BotLeftY == room->BotLeftY)
 		{
-			bottomWallPositions.Add(passage->BotLeftLocX - 1 - room->BotLeftLocX);
-			bottomWallPositions.Add(passage->BotLeftLocX + passage->Width - room->BotLeftLocX);
+			bottomWallPositions.Add(passage->BotLeftX - 1 - room->BotLeftX);
+			bottomWallPositions.Add(passage->BotLeftX + passage->Width - room->BotLeftX);
 		}
 
-		// Only spawn floor and door once for each passage
-		if (SpawnedPassageObjects.Contains(passage))
-			continue;
-
-		SpawnedPassageObjects.Add(passage);
-
-		// Spawns floor under the passage
-		if (!room->OuterRoom || passage->From == room->OuterRoom || passage->To == room->OuterRoom)
-		{
-			if (passage->GridDirection == EDirectionEnum::VE_Up || passage->GridDirection == EDirectionEnum::VE_Down)
-				SpawnBasicFloor(passage->BotLeftLocX, passage->BotLeftLocY, passage->Width, 1, passage);
-			else
-				SpawnBasicFloor(passage->BotLeftLocX, passage->BotLeftLocY, 1, passage->Width, passage);
-		}
-
-		// Spawn door if needed
-		if (passage->bIsDoor)
-		{
-			SpawnBasicDoor(passage->BotLeftLocX, passage->BotLeftLocY, passage->GridDirection, passage->Color, passage->Width, passage);
-		}
+		// Spawn the passage
+		SpawnPassage(passage, room);
 	}
 
 	leftWallPositions.Sort();
@@ -476,26 +459,173 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 	for (int i = 0; i + 1 < leftWallPositions.Num(); i += 2)
 	{
 		int wallLength = leftWallPositions[i + 1] - leftWallPositions[i] + 1;
-		SpawnBasicWall(room->BotLeftLocX, room->BotLeftLocY + leftWallPositions[i], 1, wallLength, room);
+		SpawnBasicWall(room->BotLeftX, room->BotLeftY + leftWallPositions[i], 1, wallLength, room);
 	}
 	// Spawning top walls
 	for (int i = 0; i + 1 < topWallPositions.Num(); i += 2)
 	{
 		int wallLength = topWallPositions[i + 1] - topWallPositions[i] + 1;
-		SpawnBasicWall(room->BotLeftLocX + topWallPositions[i], room->BotLeftLocY + room->SizeY - 1, wallLength, 1, room);
+		SpawnBasicWall(room->BotLeftX + topWallPositions[i], room->BotLeftY + room->SizeY - 1, wallLength, 1, room);
 	}
 	// Spawning right walls
 	for (int i = 0; i + 1 < rightWallPositions.Num(); i += 2)
 	{
 		int wallLength = rightWallPositions[i + 1] - rightWallPositions[i] + 1;
-		SpawnBasicWall(room->BotLeftLocX + room->SizeX - 1, room->BotLeftLocY + rightWallPositions[i], 1, wallLength, room);
+		SpawnBasicWall(room->BotLeftX + room->SizeX - 1, room->BotLeftY + rightWallPositions[i], 1, wallLength, room);
 	}
 	// Spawning bottom walls
 	for (int i = 0; i + 1 < bottomWallPositions.Num(); i += 2)
 	{
 		int wallLength = bottomWallPositions[i + 1] - bottomWallPositions[i] + 1;
-		SpawnBasicWall(room->BotLeftLocX + bottomWallPositions[i], room->BotLeftLocY, wallLength, 1, room);
+		SpawnBasicWall(room->BotLeftX + bottomWallPositions[i], room->BotLeftY, wallLength, 1, room);
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Spawned a room"));
+}
+void AMainGameMode::SpawnPassage(LabPassage* passage, LabRoom* room)
+{
+	// We don't spawn one passage twice
+	if (SpawnedPassageObjects.Contains(passage))
+		return;
+
+	SpawnedPassageObjects.Add(passage);
+
+	// Spawns floor under the passage
+	if (!room || (!room->OuterRoom || passage->From == room->OuterRoom || passage->To == room->OuterRoom))
+	{
+		if (passage->GridDirection == EDirectionEnum::VE_Up || passage->GridDirection == EDirectionEnum::VE_Down)
+			SpawnBasicFloor(passage->BotLeftX, passage->BotLeftY, passage->Width, 1, passage);
+		else
+			SpawnBasicFloor(passage->BotLeftX, passage->BotLeftY, 1, passage->Width, passage);
+	}
+
+	// Spawn door if needed
+	if (passage->bIsDoor)
+	{
+		SpawnBasicDoor(passage->BotLeftX, passage->BotLeftY, passage->GridDirection, passage->Color, passage->Width, passage);
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("> Spawned a passage"));
+}
+
+// Space is allocated and can't be allocated again
+FRectSpaceStruct* AMainGameMode::AllocateSpace(LabRoom * room)
+{
+	if (!room)
+		return nullptr;
+
+	FRectSpaceStruct* temp = AllocateSpace(room->BotLeftX, room->BotLeftY, room->SizeX, room->SizeY);
+	if (temp)
+		AllocatedRoomSpace.Add(room, temp);
+
+	return temp;
+}
+FRectSpaceStruct* AMainGameMode::AllocateSpace(int botLeftX, int botLeftY, int sizeX, int sizeY)
+{
+	FRectSpaceStruct temp = FRectSpaceStruct(botLeftX, botLeftY, sizeX, sizeY);
+	return AllocateSpace(temp);
+}
+FRectSpaceStruct* AMainGameMode::AllocateSpace(FRectSpaceStruct& space)
+{
+	if (space.SizeX < 1 || space.SizeY < 1)
+		return nullptr;
+
+	return &AllocatedSpace[AllocatedSpace.Add(space)];
+
+	//// It's index from AllocatedSpace array
+	//int index;
+	//if (DeallocatedIndices.Num() > 0)
+	//{
+	//	index = DeallocatedIndices[0];
+	//	DeallocatedIndices.RemoveAt(0);
+	//}
+	//else
+	//	index = AllocatedSpace.AddDefaulted();
+	//AllocatedSpace[index] = space;
+
+	//// Now we need to fill the indices arrays while keeping them sorted
+	//// For X1
+	//int indexWithHigherX1 = Algo::LowerBound(AllocatedX1Indices, index, [this](int ind1, int ind2) { return AllocatedSpace[ind1].BotLeftX < AllocatedSpace[ind2].BotLeftX; });
+	//if (indexWithHigherX1 == INDEX_NONE)
+	//	AllocatedX1Indices.Add(index);
+	//else
+	//	AllocatedX1Indices.Insert(index, indexWithHigherX1);
+	//// For X2
+	//int indexWithHigherX2 = Algo::LowerBound(AllocatedX2Indices, index, [this](int ind1, int ind2) { return AllocatedSpace[ind1].BotLeftX + AllocatedSpace[ind1].SizeX < AllocatedSpace[ind2].BotLeftX + AllocatedSpace[ind2].SizeX; });
+	//if (indexWithHigherX2 == INDEX_NONE)
+	//	AllocatedX2Indices.Add(index);
+	//else
+	//	AllocatedX2Indices.Insert(index, indexWithHigherX2);
+	//// For Y1
+	//int indexWithHigherY1 = Algo::LowerBound(AllocatedY1Indices, index, [this](int ind1, int ind2) { return AllocatedSpace[ind1].BotLeftY < AllocatedSpace[ind2].BotLeftY; });
+	//if (indexWithHigherY1 == INDEX_NONE)
+	//	AllocatedY1Indices.Add(index);
+	//else
+	//	AllocatedY1Indices.Insert(index, indexWithHigherY1);
+	//// For Y2
+	//int indexWithHigherY2 = Algo::LowerBound(AllocatedY2Indices, index, [this](int ind1, int ind2) { return AllocatedSpace[ind1].BotLeftY + AllocatedSpace[ind1].SizeY < AllocatedSpace[ind2].BotLeftY + AllocatedSpace[ind2].SizeY; });
+	//if (indexWithHigherY2 == INDEX_NONE)
+	//	AllocatedY2Indices.Add(index);
+	//else
+	//	AllocatedY2Indices.Insert(index, indexWithHigherY2);
+}
+// Space is not allocated anymore
+void AMainGameMode::DeallocateSpace(FRectSpaceStruct& space)
+{
+	AllocatedSpace.Remove(space);
+	// DeallocateSpace(space.BotLeftX, space.BotLeftY, space.SizeX, space.SizeY);
+}
+void AMainGameMode::DeallocateSpace(LabRoom* room)
+{
+	if (!room)
+		return;
+
+	if (AllocatedRoomSpace.Contains(room))
+	{
+		AllocatedSpace.Remove(*AllocatedRoomSpace[room]);
+		AllocatedRoomSpace.Remove(room);
+	}
+	else
+		DeallocateSpace(room->BotLeftX, room->BotLeftY, room->SizeX, room->SizeY);
+}
+void AMainGameMode::DeallocateSpace(int botLeftX, int botLeftY, int sizeX, int sizeY)
+{
+	FRectSpaceStruct* temp = AllocatedSpace.FindByPredicate([botLeftX, botLeftY, sizeX, sizeY](FRectSpaceStruct space)
+	{
+		// ==
+		return space.BotLeftX == botLeftX && space.BotLeftY == botLeftY && space.SizeX == sizeX && space.SizeY == sizeY;
+	});
+	if (!temp)
+		return;
+
+	AllocatedSpace.Remove(*temp);
+}
+// Returns true if there is free rectangular space
+bool AMainGameMode::RectSpaceIsFree(FRectSpaceStruct& space)
+{
+	return RectSpaceIsFree(space.BotLeftX, space.BotLeftY, space.SizeX, space.SizeY);
+}
+bool AMainGameMode::RectSpaceIsFree(int botLeftX, int botLeftY, int sizeX, int sizeY)
+{
+	bool intersected = AllocatedSpace.ContainsByPredicate([botLeftX, botLeftY, sizeX, sizeY](FRectSpaceStruct space)
+	{
+		// Not intersecting on X axis
+		if (space.BotLeftX + space.SizeX - 1 <= botLeftX)
+			return false;
+		if (space.BotLeftX >= botLeftX + sizeX - 1)
+			return false;
+
+		// Not intersecting on Y axis
+		if (space.BotLeftY + space.SizeY - 1 <= botLeftY)
+			return false;
+		if (space.BotLeftY >= botLeftY + sizeY - 1)
+			return false;
+
+		// Intersecting on both axis
+		return true;
+	});
+
+	return !intersected;
 }
 
 // Sets default values
@@ -560,6 +690,25 @@ void AMainGameMode::BeginPlay()
 	// SpawnBasicFloor(-20, -20, 40, 40);
 	// SpawnBasicWall(-7, -5, 1, 9);
 	// SpawnBasicDoor(-6, 3, EDirectionEnum::VE_Up, FLinearColor::Red);
+
+
+	// Testing space allocation
+	AllocateSpace(1, 1, 3, 2);
+	AllocateSpace(7, 3, 2, 2);
+	AllocateSpace(3, 2, 3, 3);
+	AllocateSpace(8, 2, 2, 2);
+	UE_LOG(LogTemp, Warning, TEXT("%d %d %d %d"), AllocatedSpace[0].BotLeftX, AllocatedSpace[0].BotLeftY, AllocatedSpace[0].SizeX, AllocatedSpace[0].SizeY);
+	UE_LOG(LogTemp, Warning, TEXT("%d %d %d %d"), AllocatedSpace[1].BotLeftX, AllocatedSpace[1].BotLeftY, AllocatedSpace[1].SizeX, AllocatedSpace[1].SizeY);
+	UE_LOG(LogTemp, Warning, TEXT("%d %d %d %d"), AllocatedSpace[2].BotLeftX, AllocatedSpace[2].BotLeftY, AllocatedSpace[2].SizeX, AllocatedSpace[2].SizeY);
+	UE_LOG(LogTemp, Warning, TEXT("%d %d %d %d"), AllocatedSpace[3].BotLeftX, AllocatedSpace[3].BotLeftY, AllocatedSpace[3].SizeX, AllocatedSpace[3].SizeY);
+	UE_LOG(LogTemp, Warning, TEXT("%s"), (RectSpaceIsFree(2, 3) ? TEXT("Free space 2 3 1 1") : TEXT("No space")));
+	UE_LOG(LogTemp, Warning, TEXT("%s"), (RectSpaceIsFree(1, 3, 2, 2) ? TEXT("Free space 1 3 2 2") : TEXT("No space")));
+	UE_LOG(LogTemp, Warning, TEXT("%s"), (RectSpaceIsFree(4, 1, 5, 1) ? TEXT("Free space 4 1 5 1") : TEXT("No space")));
+	UE_LOG(LogTemp, Warning, TEXT("%s"), (RectSpaceIsFree(6, 1, 2, 2) ? TEXT("Free space 6 1 2 2") : TEXT("No space")));
+	UE_LOG(LogTemp, Warning, TEXT("%s"), (RectSpaceIsFree(5, 2) ? TEXT("NO WAY") : TEXT("No space")));
+	UE_LOG(LogTemp, Warning, TEXT("%s"), (RectSpaceIsFree(3, 2, 1, 2) ? TEXT("NO WAY") : TEXT("No space")));
+	UE_LOG(LogTemp, Warning, TEXT("%s"), (RectSpaceIsFree(4, 1, 4, 2) ? TEXT("NO WAY") : TEXT("No space")));
+	UE_LOG(LogTemp, Warning, TEXT("%s"), (RectSpaceIsFree(6, 2, 2, 3) ? TEXT("NO WAY") : TEXT("No space")));
 }
 
 // Called when actor is being removed from the play
