@@ -146,8 +146,7 @@ void AMainCharacter::SetOutline(AActor* actor, bool showOutline) const
 	TArray<UStaticMeshComponent*> components;
 	actor->GetComponents<UStaticMeshComponent>(components);
 	for (UStaticMeshComponent* component : components)
-		//if(component->ComponentHasTag("Outline"))
-			component->SetRenderCustomDepth(showOutline);
+		component->SetRenderCustomDepth(showOutline);
 }
 
 // Sets default values
