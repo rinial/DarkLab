@@ -8,7 +8,7 @@
 LabPassage* LabRoom::AddPassage(LabPassage * passage)
 {
 	if (!passage)
-		return passage;
+		return nullptr;
 
 	// In this case passage was already created with this room as parameter before (probably from other AddPassage method) and we just finish initialization
 	if (passage->From == this || passage->To == this)
@@ -46,6 +46,14 @@ LabPassage* LabRoom::AddPassage(LabPassage * passage)
 		Passages.AddUnique(passage);
 		return passage;
 	}
+}
+LabPassage* LabRoom::AddPassage(int botLeftX, int botLeftY, EDirectionEnum direction, int width)
+{
+	return AddPassage(botLeftX, botLeftY, direction, nullptr, false, FLinearColor::White, width);
+}
+LabPassage* LabRoom::AddPassage(int botLeftX, int botLeftY, EDirectionEnum direction, bool isDoor, FLinearColor color, int width)
+{
+	return AddPassage(botLeftX, botLeftY, direction, nullptr, isDoor, color, width);
 }
 LabPassage* LabRoom::AddPassage(int botLeftX, int botLeftY, EDirectionEnum direction, LabRoom * other, int width)
 {

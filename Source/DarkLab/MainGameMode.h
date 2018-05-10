@@ -82,9 +82,22 @@ protected:
 	void DeallocateSpace(FRectSpaceStruct& space);
 	void DeallocateSpace(LabRoom* room);
 	void DeallocateSpace(int botLeftX, int botLeftY, int sizeX = 1, int sizeY = 1);
+
 	// Returns true if there is free rectangular space
 	bool RectSpaceIsFree(FRectSpaceStruct& space);
 	bool RectSpaceIsFree(int botLeftX, int botLeftY, int sizeX = 1, int sizeY = 1);
+
+	// Tries to create a room and allocate space for it
+	LabRoom* CreateRoom(int botLeftX, int botLeftY, int sizeX, int sizeY);
+	LabRoom* CreateRoom(FRectSpaceStruct& space);
+
+protected:
+	// Constants used for generation
+	static const int MinRoomSize = 4; // Can't be lower than 4
+	static const int MaxRoomSize = 50;
+	static const int MaxRoomArea = 300;
+	static const int MinPassageWidth = 2; // Can't be lower than 2
+	static const int MaxPassageWidth = 8; 
 
 	// All space in use
 	TArray<FRectSpaceStruct> AllocatedSpace;
@@ -97,13 +110,6 @@ protected:
 	//// Indices that are not used anymore and can be used again
 	//// We don't just delete from AllocatedSpace, cause we would have to decrement a lot of indices in indices arrays
 	//TArray<int> DeallocatedIndices;
-
-	// Constants used for generation
-	static const int MinRoomSize = 4; // Can't be lower than 4
-	static const int MaxRoomSize = 50;
-	static const int MaxRoomArea = 300;
-	static const int MinPassageWidth = 2; // Can't be lower than 2
-	static const int MaxPassageWidth = 8; 
 
 	// Spawned map parts
 	// Does not include pickupable objects

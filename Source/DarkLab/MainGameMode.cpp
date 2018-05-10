@@ -252,6 +252,7 @@ void AMainGameMode::PoolRoom(LabRoom * room)
 		// This is a weird case that should never happen
 		// Room is not responsible for the passage pooling is this DOES happen somehow
 	}
+	DeallocateSpace(room);
 	delete room;
 }
 void AMainGameMode::PoolPassage(LabPassage* passage)
@@ -388,6 +389,9 @@ AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLef
 // Spawn full parts of the lab
 void AMainGameMode::SpawnRoom(LabRoom * room)
 {
+	if (!room)
+		return;
+
 	// We don't spawn one room twice
 	if (SpawnedRoomObjects.Contains(room))
 		return;
@@ -484,6 +488,9 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 }
 void AMainGameMode::SpawnPassage(LabPassage* passage, LabRoom* room)
 {
+	if (!passage)
+		return;
+
 	// We don't spawn one passage twice
 	if (SpawnedPassageObjects.Contains(passage))
 		return;
@@ -600,6 +607,7 @@ void AMainGameMode::DeallocateSpace(int botLeftX, int botLeftY, int sizeX, int s
 
 	AllocatedSpace.Remove(*temp);
 }
+
 // Returns true if there is free rectangular space
 bool AMainGameMode::RectSpaceIsFree(FRectSpaceStruct& space)
 {
@@ -607,6 +615,9 @@ bool AMainGameMode::RectSpaceIsFree(FRectSpaceStruct& space)
 }
 bool AMainGameMode::RectSpaceIsFree(int botLeftX, int botLeftY, int sizeX, int sizeY)
 {
+	if (sizeX < 1 || sizeY < 1)
+		return false;
+
 	bool intersected = AllocatedSpace.ContainsByPredicate([botLeftX, botLeftY, sizeX, sizeY](FRectSpaceStruct space)
 	{
 		// Not intersecting on X axis
@@ -626,6 +637,29 @@ bool AMainGameMode::RectSpaceIsFree(int botLeftX, int botLeftY, int sizeX, int s
 	});
 
 	return !intersected;
+}
+
+// Tries to create a room and allocate space for it
+LabRoom* AMainGameMode::CreateRoom(int botLeftX, int botLeftY, int sizeX, int sizeY)
+{
+	if(sizeX < 4 || sizeY < 4 || !RectSpaceIsFree(botLeftX, botLeftY, sizeX, sizeY))
+		return nullptr;
+
+	LabRoom* room = new LabRoom(botLeftX, botLeftY, sizeX, sizeY);
+	AllocateSpace(room);
+	return room;
+}
+LabRoom* AMainGameMode::CreateRoom(FRectSpaceStruct & space)
+{
+	if (space.SizeX < 4 || space.SizeY < 4 || !RectSpaceIsFree(space))
+		return nullptr;
+
+	LabRoom* room = new LabRoom(space);
+	FRectSpaceStruct* temp = AllocateSpace(space);
+	if (!temp)
+		return nullptr;
+	AllocatedRoomSpace.Add(room, temp);
+	return room;
 }
 
 // Sets default values
@@ -655,42 +689,73 @@ void AMainGameMode::BeginPlay()
 	Super::BeginPlay();
 
 
-	// TODO shouldn't create, spawn or activate from here
+	// TODO shouldn't create, spawn or activate directly from here
 
-	LabRoom* room1 = new LabRoom(-50, -50, 100, 100);
-	room1->AddPassage(9, -50, EDirectionEnum::VE_Down, nullptr, true);
 
-	LabRoom* room2 = new LabRoom(-10, -5, 15, 12); // , room1);
-	room2->AddPassage(-10, -3, EDirectionEnum::VE_Left, nullptr, true);
-	room2->AddPassage(4, 1, EDirectionEnum::VE_Left, nullptr, true);
-	room2->AddPassage(-6, 6, EDirectionEnum::VE_Up, nullptr, true, FLinearColor::Red);
-	room2->AddPassage(0, -5, EDirectionEnum::VE_Up, nullptr, 2);
+	// Generation:
 
-	LabHallway* hallway1 = new LabHallway(4, -4, EDirectionEnum::VE_Right, 46, 4, room2, nullptr, 2, 2); // room1, 2, 2, room1);
+	// 1. Something allocates a room
+	LabRoom* startRoom = CreateRoom(-10, -5, 15, 12);
 
-	LabHallway* hallway2 = new LabHallway(-5, -25, EDirectionEnum::VE_Right, 50, 12, nullptr, nullptr, false, true, FLinearColor::White, FLinearColor::Black, 10, 6); // , room1);
+	// 2. We find positions for passages and allocate minimum size
+	LabPassage* p1 = startRoom->AddPassage(-10, -3, EDirectionEnum::VE_Left, true);
+	LabPassage* p2 = startRoom->AddPassage(-6, 6, EDirectionEnum::VE_Up, true, FLinearColor::Red);
+	LabPassage* p3 = startRoom->AddPassage(4, 1, EDirectionEnum::VE_Left, true);
+	LabPassage* p4 = startRoom->AddPassage(-3, -5, EDirectionEnum::VE_Up, 7);
 
-	// Testing pooling
-	PoolObject(SpawnBasicWall(2, 3, 5, 1)); // This makes no sense except for testing
+	// 2*. We should already find passages between this room and other allocated but not spawn rooms
 
+	// 3. For each passage we find maximum possible distance in three directions
+	// TODO
+
+	// 4. For each passage we allocate new rooms (1. may be happening here)
+	LabRoom* r1 = CreateRoom(-20, -16, 11, 25);
+	LabRoom* r2 = CreateRoom(-8, 6, 10, 10);
+	LabRoom* r3 = CreateRoom(4, -2, 10, 20);
+	LabRoom* r4 = CreateRoom(-4, -11, 18, 7);
+
+	// 5. We add passages to our new rooms
+	if (r1) r1->AddPassage(p1);
+	if (r2) r2->AddPassage(p2);
+	if (r3) r3->AddPassage(p3);
+	if (r4) r4->AddPassage(p4);
+
+	// 6. We spawn our initial room
+	SpawnRoom(startRoom);
+
+	// 7. We initialize and spawn other parts of the initial room
+	AWallLamp* lamp = SpawnWallLamp(-5, -5, EDirectionEnum::VE_Up, FLinearColor::White, 2, startRoom);
+	if (lamp) lamp->Execute_ActivateIndirectly(lamp); // TODO this shouldn't be here
+	AFlashlight* flashlight = SpawnFlashlight(0, 0);
+
+	// 8+. We repeat from 1 for other rooms (rn we just spawn)
+	SpawnRoom(r1);
+	SpawnRoom(r2);
+	SpawnRoom(r3);
+	SpawnRoom(r4);
+
+	
+	// Tests
+	/*
+	// Testing room pooling
+	LabRoom* room1 = CreateRoom(-50, -50, 100, 100);
+	room1->AddPassage(9, -50, EDirectionEnum::VE_Down, true);
 	SpawnRoom(room1);
 	PoolRoom(room1);
 
-	// Spawning stuff
-	// SpawnRoom(room1);
-	SpawnRoom(room2);
+	// Testing wall pooling
+	PoolObject(SpawnBasicWall(2, 3, 5, 1)); // This makes no sense except for testing
+
+	// Testing hallways
+	LabHallway* hallway1 = new LabHallway(4, -4, EDirectionEnum::VE_Right, 46, 4, startRoom, nullptr, 2, 2);
+	LabHallway* hallway2 = new LabHallway(-5, -25, EDirectionEnum::VE_Right, 50, 12, nullptr, nullptr, false, true, FLinearColor::White, FLinearColor::Black, 10, 6);
 	SpawnRoom(hallway1);
 	SpawnRoom(hallway2);
-
-	AWallLamp* lamp = SpawnWallLamp(-3, -5, EDirectionEnum::VE_Up, FLinearColor::White, 2);
-	lamp->Execute_ActivateIndirectly(lamp);
-
-	SpawnFlashlight(0, 0);
 	
-	// SpawnBasicFloor(-20, -20, 40, 40);
-	// SpawnBasicWall(-7, -5, 1, 9);
-	// SpawnBasicDoor(-6, 3, EDirectionEnum::VE_Up, FLinearColor::Red);
-
+	// Testing basic room parts
+	SpawnBasicFloor(-20, -20, 40, 40);
+	SpawnBasicWall(-7, -5, 1, 9);
+	SpawnBasicDoor(-6, 3, EDirectionEnum::VE_Up, FLinearColor::Red);
 
 	// Testing space allocation
 	AllocateSpace(1, 1, 3, 2);
@@ -709,6 +774,7 @@ void AMainGameMode::BeginPlay()
 	UE_LOG(LogTemp, Warning, TEXT("%s"), (RectSpaceIsFree(3, 2, 1, 2) ? TEXT("NO WAY") : TEXT("No space")));
 	UE_LOG(LogTemp, Warning, TEXT("%s"), (RectSpaceIsFree(4, 1, 4, 2) ? TEXT("NO WAY") : TEXT("No space")));
 	UE_LOG(LogTemp, Warning, TEXT("%s"), (RectSpaceIsFree(6, 2, 2, 3) ? TEXT("NO WAY") : TEXT("No space")));
+	*/
 }
 
 // Called when actor is being removed from the play
