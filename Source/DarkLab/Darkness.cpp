@@ -14,6 +14,10 @@
 // Movement functions
 void ADarkness::Move(const FVector direction)
 {
+	// TODO delete, this is only used for debug to prevent darkness from moving
+	if (bIsStationary)
+		return;
+
 	// Moves slower in light, but light resistance helps
 	float temp = 1 - LightFearK * Luminosity * FMath::Max(0.0f, Luminosity - LightResistance);
 	Movement->AddInputVector(direction * FMath::Max(0.0f, temp));
@@ -140,7 +144,7 @@ void ADarkness::Tick(float DeltaTime)
 
 	// TODO delete from here later. We should evaluate it less often
 	// We check the light level	
-	Luminosity = GameMode->GetLightingAmount(BrightestLightLocation, this, true, Collision->GetScaledSphereRadius() + 10);
+	Luminosity = GameMode->GetLightingAmount(BrightestLightLocation, this, true, Collision->GetScaledSphereRadius() + 10, true);
 
 	// Increase resistance if stuck in light
 	if (Luminosity > LightResistance)

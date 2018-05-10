@@ -18,21 +18,21 @@
 #include "Algo/BinarySearch.h"
 
 // Returns the light level and the location of the brightest light
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints, const float sixPointsRadius)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints, const float sixPointsRadius, const bool fourMore)
 {
 	if (!actor)
 		return 0.0f;
-	return GetLightingAmount(lightLoc, actor, actor->GetActorLocation(), sixPoints, sixPointsRadius);
+	return GetLightingAmount(lightLoc, actor, actor->GetActorLocation(), sixPoints, sixPointsRadius, fourMore);
 }
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const FVector location, const bool sixPoints, const float sixPointsRadius)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore)
 {
-	return GetLightingAmount(lightLoc, nullptr, location, sixPoints, sixPointsRadius);
+	return GetLightingAmount(lightLoc, nullptr, location, sixPoints, sixPointsRadius, fourMore);
 }
 float AMainGameMode::GetLightingAmount(FVector& lightLoc, const TArray<FVector> locations)
 {
 	return GetLightingAmount(lightLoc, nullptr, locations);
 }
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints, const float sixPointsRadius)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore)
 {
 	TArray<FVector> locations;
 	locations.Add(location);
@@ -45,6 +45,19 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 		locations.Add(location - FVector::RightVector * sixPointsRadius);
 		locations.Add(location + FVector::ForwardVector * sixPointsRadius);
 		locations.Add(location - FVector::ForwardVector * sixPointsRadius);
+		
+		// We add four more locations around the point (diagonally)
+		if (fourMore)
+		{
+			FVector temp = FVector(1, 1, 0);
+			temp.Normalize();
+			locations.Add(location + temp * sixPointsRadius);
+			locations.Add(location - temp * sixPointsRadius);
+			temp = FVector(-1, 1, 0);
+			temp.Normalize();
+			locations.Add(location + temp * sixPointsRadius);
+			locations.Add(location - temp * sixPointsRadius);
+		}
 	}
 	return GetLightingAmount(lightLoc, actor, locations);
 }
@@ -724,7 +737,7 @@ void AMainGameMode::BeginPlay()
 	SpawnRoom(startRoom);
 
 	// 7. We initialize and spawn other parts of the initial room
-	AWallLamp* lamp = SpawnWallLamp(-5, -5, EDirectionEnum::VE_Up, FLinearColor::White, 2, startRoom);
+	AWallLamp* lamp = SpawnWallLamp(-5, -5, EDirectionEnum::VE_Up, FLinearColor::White, 1, startRoom);
 	if (lamp) lamp->Execute_ActivateIndirectly(lamp); // TODO this shouldn't be here
 	AFlashlight* flashlight = SpawnFlashlight(0, 0);
 

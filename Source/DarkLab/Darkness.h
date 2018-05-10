@@ -33,6 +33,10 @@ public:
 	// Tracks something
 	void Tracking();
 
+	// TODO delete, this is only used for debug to prevent darkness from moving
+	UPROPERTY(EditAnywhere, Category = "Darkness: Debug")
+	bool bIsStationary = false;
+
 protected:
 	// Tracking parameters
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Tracking")

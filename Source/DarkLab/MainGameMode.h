@@ -24,10 +24,10 @@ class DARKLAB_API AMainGameMode : public AGameModeBase
 
 public:
 	// Returns the light level and the location of the brightest light
-	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints = false, const float sixPointsRadius = 30.0f);
-	float GetLightingAmount(FVector& lightLoc, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f);
+	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false);
+	float GetLightingAmount(FVector& lightLoc, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false);
 	float GetLightingAmount(FVector& lightLoc, const TArray<FVector> locations);
-	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f);
+	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false);
 	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations);
 
 protected:
