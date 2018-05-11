@@ -36,7 +36,7 @@ FLinearColor AMainGameMode::RandColor()
 	// Blue
 	float temp = FMath::FRand();
 	if (temp <= BlueDoorProbability)
-		return FLinearColor::Blue;
+		return FLinearColor::FromSRGBColor(FColor(30, 144, 239));
 
 	// Green
 	temp -= BlueDoorProbability;
