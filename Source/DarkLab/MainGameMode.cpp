@@ -20,6 +20,7 @@
 // Probabilities
 const float AMainGameMode::PassageIsDoorProbability = 0.6f;
 const float AMainGameMode::DoorIsNormalProbability = 0.95f;
+const float AMainGameMode::SpawnFlashlightProbability = 0.4f; // TODO make it lower
 const float AMainGameMode::BlueProbability = 0.2f;
 const float AMainGameMode::GreenProbability = 0.15f;
 const float AMainGameMode::YellowProbability = 0.1f;
@@ -61,6 +62,19 @@ FLinearColor AMainGameMode::RandColor()
 
 	// White
 	return FLinearColor::White;
+}
+// Returns random direction 
+EDirectionEnum AMainGameMode::RandDirection()
+{
+	int direction = FMath::RandRange(0, 3);
+
+	if (direction == 0)
+		return EDirectionEnum::VE_Left;
+	if (direction == 1)
+		return EDirectionEnum::VE_Right;
+	if (direction == 2)
+		return EDirectionEnum::VE_Down;
+	return EDirectionEnum::VE_Up;
 }
 
 // Returns the light level and the location of the brightest light
@@ -875,27 +889,21 @@ FRectSpaceStruct AMainGameMode::CreateRandomPassageSpace(LabRoom * room, EDirect
 	FRectSpaceStruct space;
 
 	// Choose wall
-	int wall = FMath::RandRange(0, 3);
-
-	if (wall == 0)
+	direction = RandDirection();
+	switch (direction)
 	{
+	case EDirectionEnum::VE_Left:
 		space.BotLeftX = 0;
-		direction = EDirectionEnum::VE_Left;
-	}
-	if (wall == 1)
-	{
+		break;
+	case EDirectionEnum::VE_Right:
 		space.BotLeftX = room->SizeX - 1;
-		direction = EDirectionEnum::VE_Right;
-	}
-	if (wall == 2)
-	{
+		break;
+	case EDirectionEnum::VE_Down:
 		space.BotLeftY = 0;
-		direction = EDirectionEnum::VE_Down;
-	}
-	if (wall == 3)
-	{
+		break;
+	case EDirectionEnum::VE_Up:
 		space.BotLeftY = room->SizeY - 1;
-		direction = EDirectionEnum::VE_Up;
+		break;
 	}
 
 	int doorWidth;
@@ -904,7 +912,7 @@ FRectSpaceStruct AMainGameMode::CreateRandomPassageSpace(LabRoom * room, EDirect
 	int minPos = !forDoor ? MinDistanceBetweenPassages : FMath::Max(MinDistanceBetweenPassages, doorWidth / 2 + doorWidth % 2);
 
 	// Left or right
-	if (wall <= 1)
+	if (direction == EDirectionEnum::VE_Left || direction == EDirectionEnum::VE_Right)
 	{
 		space.SizeX = 1;
 
@@ -952,13 +960,16 @@ FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom* room, FRectSpace
 	case EDirectionEnum::VE_Up:
 		space.BotLeftY = room->BotLeftY + room->SizeY - 1;
 	}
+
+	// Left or right
 	if (direction == EDirectionEnum::VE_Left || direction == EDirectionEnum::VE_Right)
 	{
 		space.BotLeftY = room->BotLeftY + passageSpace.BotLeftY - delta;
 		space.SizeX = MinRoomSize;
 		space.SizeY = passageSpace.SizeX + 2 * delta;
 	}
-	if (direction == EDirectionEnum::VE_Down || direction == EDirectionEnum::VE_Up)
+	// Bottom or top
+	else
 	{
 		space.BotLeftX = room->BotLeftX + passageSpace.BotLeftX - delta;
 		space.SizeX = passageSpace.SizeY + 2 * delta;
@@ -1062,32 +1073,28 @@ bool AMainGameMode::CreateRandomInsideSpaceOfSize(LabRoom * room, int& xOffset, 
 bool AMainGameMode::CreateRandomInsideSpaceOfWidthNearWall(LabRoom * room, int& xOffset, int& yOffset, const int width, EDirectionEnum & direction)
 {
 	// Choose wall
-	int wall = FMath::RandRange(0, 3);
-
-	if (wall == 0) // Left wall
+	direction = RandDirection(); // Direction here are INTO room, so wall is the opposite
+	switch (direction)
 	{
+	case EDirectionEnum::VE_Right: // Left wall
 		xOffset = 1;
-		direction = EDirectionEnum::VE_Right;
-	}
-	if (wall == 1) // Right wall
-	{
+		break;
+	case EDirectionEnum::VE_Left: // Right wall
 		xOffset = room->SizeX - 2;
-		direction = EDirectionEnum::VE_Left;
-	}
-	if (wall == 2) // Bottom wall
-	{
+		break;
+	case EDirectionEnum::VE_Up: // Bottom wall
 		yOffset = 1;
-		direction = EDirectionEnum::VE_Up;
-	}
-	if (wall == 3) // Top wall
-	{
+		break;
+	case EDirectionEnum::VE_Down: // Top wall
 		yOffset = room->SizeY - 2;
-		direction = EDirectionEnum::VE_Down;
+		break;
 	}
 
-	if (wall <= 1) // Left or right
+	// Left or right
+	if (direction == EDirectionEnum::VE_Left || direction == EDirectionEnum::VE_Right) 
 		yOffset = FMath::RandRange(1, room->SizeY - 1 - width);
-	else // Bottom or top
+	// Bottom or top
+	else 
 		xOffset = FMath::RandRange(1, room->SizeX - 1 - width);
 
 	// Test if it works in the room
@@ -1098,7 +1105,7 @@ bool AMainGameMode::CreateRandomInsideSpaceOfWidthNearWall(LabRoom * room, int& 
 // Should always be called on a room that is already spawned
 TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room)
 {
-	TArray<AActor*> successfulLamps;
+	TArray<AActor*> spawnedActors;
 
 	// The number of lamps we want to have in the room
 	int desiredNumOfLamps = FMath::RandRange(MinRoomNumOfLamps, MaxRoomNumOfLampsPerHundredArea * room->SizeX * room->SizeY / 100);
@@ -1106,9 +1113,8 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room)
 	// Maximum number of tries
 	int maxTries = MaxRoomLampCreationTriesPerDesired * desiredNumOfLamps;
 
-	// Creates new passages in the room
-	// Allocates minimum room space for passages
-	for (int i = 0; successfulLamps.Num() < MinRoomNumOfLamps || (i < maxTries && successfulLamps.Num() < desiredNumOfLamps); ++i)
+	// Creates new lamps in the room
+	for (int i = 0; spawnedActors.Num() < MinRoomNumOfLamps || (i < maxTries && spawnedActors.Num() < desiredNumOfLamps); ++i)
 	{
 		int xOff;
 		int yOff;
@@ -1121,14 +1127,26 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room)
 			AWallLamp* lamp = SpawnWallLamp(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, color, width, room);
 			// TODO this shouldn't be here
 			if (lamp) lamp->Execute_ActivateIndirectly(lamp); 
-			successfulLamps.Add(lamp);
+			spawnedActors.Add(lamp);
 		}
 	}
 
-	// TODO make flashlights random too
-	AFlashlight* flashlight = SpawnFlashlight(0, 0);
+	// Creates a flashlight
+	bool shouldSpawnFlashlight = RandBool(SpawnFlashlightProbability);
+	for (int i = 0; shouldSpawnFlashlight && i < MaxGenericSpawnTries; ++i)
+	{
+		int xOff;
+		int yOff;
+		if (CreateRandomInsideSpaceOfSize(room, xOff, yOff, 1, 1))
+		{
+			EDirectionEnum direction = RandDirection();
+			AFlashlight* flashlight = SpawnFlashlight(room->BotLeftX + xOff, room->BotLeftY + yOff, direction);
+			spawnedActors.Add(flashlight);
+			break; // We only spawn once
+		}
+	}
 
-	return TArray<AActor*>(); // TODO
+	return spawnedActors;
 }
 
 // Sets default values

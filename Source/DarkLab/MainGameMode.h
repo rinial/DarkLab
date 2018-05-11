@@ -27,6 +27,8 @@ public:
 	bool RandBool(const float probability);
 	// Returns random color with certain probabilities
 	FLinearColor RandColor();
+	// Returns random direction 
+	EDirectionEnum RandDirection();
 
 	// Returns the light level and the location of the brightest light
 	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false);
@@ -149,9 +151,11 @@ protected:
 	static const int MaxRoomLampCreationTriesPerDesired = 2;
 	static const int MinLampWidth = 1;
 	static const int MaxLampWidth = 2;
+	static const int MaxGenericSpawnTries = 3;
 	// Probabilities
 	static const float PassageIsDoorProbability;
 	static const float DoorIsNormalProbability;
+	static const float SpawnFlashlightProbability;
 	static const float BlueProbability;
 	static const float GreenProbability;
 	static const float YellowProbability;
