@@ -31,11 +31,11 @@ public:
 	EDirectionEnum RandDirection();
 
 	// Returns the light level and the location of the brightest light
-	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false);
-	float GetLightingAmount(FVector& lightLoc, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false);
-	float GetLightingAmount(FVector& lightLoc, const TArray<FVector> locations);
-	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false);
-	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations);
+	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool debug = false);
+	float GetLightingAmount(FVector& lightLoc, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool debug = false);
+	float GetLightingAmount(FVector& lightLoc, const TArray<FVector> locations, const bool debug = false);
+	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool debug = false);
+	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations, const bool debug = false);
 
 protected:
 	// Places an object on the map
@@ -91,8 +91,11 @@ protected:
 	void DeallocateSpace(const int botLeftX, const int botLeftY, const int sizeX = 1, const int sizeY = 1);
 
 	// Returns true if there is free rectangular space
-	bool MapSpaceIsFree(FRectSpaceStruct& space);
+	// Returns by reference rect space that intersected the sent one
+	bool MapSpaceIsFree(FRectSpaceStruct space);
 	bool MapSpaceIsFree(const int botLeftX, const int botLeftY, const int sizeX = 1, const int sizeY = 1);
+	bool MapSpaceIsFree(FRectSpaceStruct space, FRectSpaceStruct& intersectedSpace);
+	bool MapSpaceIsFree(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, FRectSpaceStruct& intersectedSpace);
 
 	// Returns true if there is free rectangular space in a room
 	// notNearPassage means that space near passages is not free

@@ -78,21 +78,21 @@ EDirectionEnum AMainGameMode::RandDirection()
 }
 
 // Returns the light level and the location of the brightest light
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints, const float sixPointsRadius, const bool fourMore)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool debug)
 {
 	if (!actor)
 		return 0.0f;
-	return GetLightingAmount(lightLoc, actor, actor->GetActorLocation(), sixPoints, sixPointsRadius, fourMore);
+	return GetLightingAmount(lightLoc, actor, actor->GetActorLocation(), sixPoints, sixPointsRadius, fourMore, debug);
 }
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool debug)
 {
-	return GetLightingAmount(lightLoc, nullptr, location, sixPoints, sixPointsRadius, fourMore);
+	return GetLightingAmount(lightLoc, nullptr, location, sixPoints, sixPointsRadius, fourMore, debug);
 }
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const TArray<FVector> locations)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const TArray<FVector> locations, const bool debug)
 {
-	return GetLightingAmount(lightLoc, nullptr, locations);
+	return GetLightingAmount(lightLoc, nullptr, locations, debug);
 }
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool debug)
 {
 	TArray<FVector> locations;
 	locations.Add(location);
@@ -119,9 +119,9 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 			locations.Add(location - temp * sixPointsRadius);
 		}
 	}
-	return GetLightingAmount(lightLoc, actor, locations);
+	return GetLightingAmount(lightLoc, actor, locations, debug);
 }
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations, const bool debug)
 {
 	FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("LightTrace")), true);
 	// TODO delete? we already set up visibility channel
@@ -156,7 +156,8 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 	// We find local results for all locations
 	for (FVector location : locations)
 	{
-		DrawDebugPoint(gameWorld, location, 5, FColor::Red);
+		if(debug)
+			DrawDebugPoint(gameWorld, location, 5, FColor::Red);
 
 		// This will be used for the spot lights
 		FBoxSphereBounds bounds = FBoxSphereBounds(location, FVector(1, 1, 1), 1);
@@ -185,7 +186,8 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 			// If location could be lit
 			if (!bHit)
 			{
-				DrawDebugLine(gameWorld, location, lightLocation, FColor::Cyan);
+				if(debug)
+					DrawDebugLine(gameWorld, location, lightLocation, FColor::Cyan);
 
 				// 1 if near the edge of light, 0 if in center
 				float temp = distance / lightRadius;
@@ -704,16 +706,27 @@ void AMainGameMode::DeallocateSpace(const int botLeftX, const int botLeftY, cons
 }
 
 // Returns true if there is free rectangular space
-bool AMainGameMode::MapSpaceIsFree(FRectSpaceStruct& space)
+// Returns by reference rect space that intersected the sent one
+bool AMainGameMode::MapSpaceIsFree(FRectSpaceStruct space)
 {
-	return MapSpaceIsFree(space.BotLeftX, space.BotLeftY, space.SizeX, space.SizeY);
+	FRectSpaceStruct intersected;
+	return MapSpaceIsFree(space, intersected);
 }
 bool AMainGameMode::MapSpaceIsFree(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
 {
-	if (sizeX < 1 || sizeY < 1)
-		return false;
+	FRectSpaceStruct intersected;
+	return MapSpaceIsFree(botLeftX, botLeftY, sizeX, sizeY, intersected);
+}
+bool AMainGameMode::MapSpaceIsFree(FRectSpaceStruct space, FRectSpaceStruct & intersectedSpace)
+{
+	return MapSpaceIsFree(space.BotLeftX, space.BotLeftY, space.SizeX, space.SizeY, intersectedSpace);
+}
+bool AMainGameMode::MapSpaceIsFree(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, FRectSpaceStruct& intersectedSpace)
+{
+	/*if (sizeX < 1 || sizeY < 1)
+		return false;*/
 
-	bool intersected = AllocatedSpace.ContainsByPredicate([botLeftX, botLeftY, sizeX, sizeY](FRectSpaceStruct space)
+	bool intersected = AllocatedSpace.ContainsByPredicate([botLeftX, botLeftY, sizeX, sizeY, &intersectedSpace](FRectSpaceStruct space)
 	{
 		// Not intersecting on X axis
 		if (space.BotLeftX + space.SizeX - 1 <= botLeftX)
@@ -728,6 +741,7 @@ bool AMainGameMode::MapSpaceIsFree(const int botLeftX, const int botLeftY, const
 			return false;
 
 		// Intersecting on both axis
+		intersectedSpace = space;
 		return true;
 	});
 
