@@ -80,6 +80,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character")
 	TArray<TScriptInterface<class IActivatable>> ActivatableObjects;
 
+protected:
+	// Object currently selected for activation
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character")
+	TScriptInterface<IActivatable> SelectedForActivation;
+
 public:
 	// Sets default values
 	AMainCharacter();

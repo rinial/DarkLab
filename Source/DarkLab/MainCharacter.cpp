@@ -94,24 +94,13 @@ void AMainCharacter::OnActivatorBeginOverlap(UPrimitiveComponent * OverlappedCom
 
 	// UE_LOG(LogTemp, Warning, TEXT("Found activatable"));
 
-	TScriptInterface<IActivatable> oldA = GetActivatable();
 	ActivatableObjects.AddUnique(OtherActor);
-	TScriptInterface<IActivatable> newA = GetActivatable();
-
-	if (oldA == newA)
-		return;
-
-	if(oldA)
-		SetOutline(oldA->_getUObject(), false);
-	if(newA)
-		SetOutline(newA->_getUObject(), true);
 }
 void AMainCharacter::OnActivatorEndOverlap(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
 {
 	// UE_LOG(LogTemp, Warning, TEXT("Lost activatable"));
-	ActivatableObjects.Remove(OtherActor);
 
-	SetOutline(OtherActor, false);
+	ActivatableObjects.Remove(OtherActor);
 }
 
 // Returns an activatable object in front of the character
@@ -120,8 +109,24 @@ TScriptInterface<class IActivatable> AMainCharacter::GetActivatable()
 	if(ActivatableObjects.Num() == 0)
 		return nullptr;
 
-	// TODO should take the closest one in front, not the first one
-	return ActivatableObjects[0];
+	TScriptInterface<class IActivatable> currentSelected = nullptr;
+	float currentValue = -1; // value used to determine priority
+	for (TScriptInterface<class IActivatable> activatable : ActivatableObjects)
+	{
+		FVector location = Cast<AActor>(activatable->_getUObject())->GetActorLocation();
+		FVector toActiv = location - GetActorLocation();
+		float distance = toActiv.Size2D(); // ~30 - ~150
+		toActiv.Normalize();
+		FVector lookDirection = GetActorRotation().Vector();
+		float angle = FMath::RadiansToDegrees(acosf(FVector::DotProduct(lookDirection, toActiv))); // 0 - ~80
+		float temp = distance / 30.0f + angle / 10.0f;
+		if (temp < currentValue || currentValue < 0)
+		{
+			currentValue = temp;
+			currentSelected = activatable;
+		}
+	}
+	return currentSelected;
 }
 
 // TODO move somewhere, its not bound to character
@@ -182,6 +187,16 @@ void AMainCharacter::BeginPlay()
 void AMainCharacter::Tick(const float deltaTime)
 {
 	Super::Tick(deltaTime);
+
+	TScriptInterface<IActivatable> newSelectedForActivation = GetActivatable();
+	if (SelectedForActivation != newSelectedForActivation)
+	{
+		if (SelectedForActivation)
+			SetOutline(SelectedForActivation->_getUObject(), false);
+		if (newSelectedForActivation)
+			SetOutline(newSelectedForActivation->_getUObject(), true);
+		SelectedForActivation = newSelectedForActivation;
+	}
 
 	// TODO delete
 	// We check the light level

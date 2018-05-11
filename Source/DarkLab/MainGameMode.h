@@ -96,7 +96,7 @@ protected:
 
 	// Returns true if there is free rectangular space in a room
 	// notNearPassage means that space near passages is not free
-	bool RoomSpaceIsFree(LabRoom* room, FRectSpaceStruct& space, const bool forPassage = false, const bool forDoor = false);
+	bool RoomSpaceIsFree(LabRoom* room, FRectSpaceStruct space, const bool forPassage = false, const bool forDoor = false);
 	bool RoomSpaceIsFree(LabRoom* room, const int xOffset, const int yOffset, EDirectionEnum direction, const int width = 4, const bool forPassage = false, const bool forDoor = false);
 	bool RoomSpaceIsFree(LabRoom* room, const int xOffset, const int yOffset, const int sizeX = 1, const int sizeY = 1, const bool forPassage = false, const bool forDoor = false);
 
@@ -109,8 +109,10 @@ protected:
 	// Creates random space for a future passage (not world location but offsets)
 	// Doesn't take other passages into account. Direction is always out
 	FRectSpaceStruct CreateRandomPassageSpace(LabRoom* room, EDirectionEnum& direction, const bool forDoor = false);
+
 	// Creates minimum space for a room near passage for tests and allocation
-	FRectSpaceStruct CreateMinimumRoomSpace(LabRoom* room, FRectSpaceStruct passageSpace, EDirectionEnum& direction, const bool forDoor = false);
+	// TODO maybe it should take room size just in case other room gets destroyed
+	FRectSpaceStruct CreateMinimumRoomSpace(LabRoom* room, FRectSpaceStruct passageSpace, EDirectionEnum direction);
 
 	// Creates and adds a random passage to the room, returns passage or nullptr, also allocates room space and returns allocated room space by reference
 	LabPassage* CreateAndAddRandomPassage(LabRoom* room, FRectSpaceStruct& roomSpace);
@@ -124,13 +126,13 @@ protected:
 
 	// Creates random space in the room with specified size for a future object in the room (not world location but offset)
 	// Returns false if couldn't create
-	bool CreateRandomInsideSpaceOfSize(LabRoom* room, int& xOffset, int& yOffset, const int sizeX, const int sizeY);
+	bool CreateRandomInsideSpaceOfSize(LabRoom* room, int& xOffset, int& yOffset, const int sizeX, const int sizeY, const bool canBeTaken = false);
 	// Same but near wall and returns direction from wall (width is along wall)
-	bool CreateRandomInsideSpaceOfWidthNearWall(LabRoom* room, int& xOffset, int& yOffset, const int width, EDirectionEnum& direction);
+	bool CreateRandomInsideSpaceOfWidthNearWall(LabRoom* room, int& xOffset, int& yOffset, const int width, EDirectionEnum& direction, const bool canBeTaken = false);
 
 	// Fills room with random objects, spawns and returns them
 	// Should always be called on a room that is already spawned
-	TArray<AActor*> FillRoom(LabRoom* room);
+	TArray<AActor*> FillRoom(LabRoom* room, int minNumOfLampsOverride = 0);
 
 protected:
 	// Constants used for generation
@@ -145,8 +147,8 @@ protected:
 	static const int NormalDoorWidth = 4; // Can't be lower than 2
 	static const int BigDoorWidth = 6;
 	static const int MinDistanceBetweenPassages = 1; // Can't be lower than 1
-	static const int MinDistanceInsideToPassage = 2;
-	static const int MinRoomNumOfLamps = 1; // TODO this may potentionally cause infinite search in bad rooms, think about it
+	static const int MinDistanceInsideToPassage = 1; // Maybe it should be 2
+	static const int MinRoomNumOfLamps = 0; 
 	static const int MaxRoomNumOfLampsPerHundredArea = 2;
 	static const int MaxRoomLampCreationTriesPerDesired = 2;
 	static const int MinLampWidth = 1;

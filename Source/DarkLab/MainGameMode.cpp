@@ -736,7 +736,7 @@ bool AMainGameMode::MapSpaceIsFree(const int botLeftX, const int botLeftY, const
 
 // Returns true if there is free rectangular space in a room
 // notNearPassage means that space near passages is not free
-bool AMainGameMode::RoomSpaceIsFree(LabRoom * room, FRectSpaceStruct & space, const bool forPassage, const bool forDoor)
+bool AMainGameMode::RoomSpaceIsFree(LabRoom * room, FRectSpaceStruct space, const bool forPassage, const bool forDoor)
 {
 	return RoomSpaceIsFree(room, space.BotLeftX, space.BotLeftY, space.SizeX, space.SizeY, forPassage, forDoor);
 }
@@ -940,12 +940,15 @@ FRectSpaceStruct AMainGameMode::CreateRandomPassageSpace(LabRoom * room, EDirect
 
 	return space;
 }
+
 // Creates minimum space for a room near passage for tests and allocation
-FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom* room, FRectSpaceStruct passageSpace, EDirectionEnum& direction, const bool forDoor)
+// TODO maybe it should take room size just in case other room gets destroyed
+FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom* room, FRectSpaceStruct passageSpace, EDirectionEnum direction)
 {
 	FRectSpaceStruct space;
 
-	int delta = !forDoor ? MinDistanceBetweenPassages : FMath::Max(MinDistanceBetweenPassages, NormalDoorWidth / 2 + NormalDoorWidth % 2);
+	// int delta = !forDoor ? MinDistanceBetweenPassages : FMath::Max(MinDistanceBetweenPassages, NormalDoorWidth / 2 + NormalDoorWidth % 2);
+	int delta = MinDistanceBetweenPassages;
 
 	switch (direction)
 	{
@@ -966,13 +969,13 @@ FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom* room, FRectSpace
 	{
 		space.BotLeftY = room->BotLeftY + passageSpace.BotLeftY - delta;
 		space.SizeX = MinRoomSize;
-		space.SizeY = passageSpace.SizeX + 2 * delta;
+		space.SizeY = passageSpace.SizeY + 2 * delta;
 	}
 	// Bottom or top
 	else
 	{
 		space.BotLeftX = room->BotLeftX + passageSpace.BotLeftX - delta;
-		space.SizeX = passageSpace.SizeY + 2 * delta;
+		space.SizeX = passageSpace.SizeX + 2 * delta;
 		space.SizeY = MinRoomSize;
 	}
 
@@ -992,7 +995,7 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 		return nullptr;
 
 	// Find minimum space for a new room on the other side of this passage
-	roomSpace = CreateMinimumRoomSpace(room, pasSpace, direction, forDoor);
+	roomSpace = CreateMinimumRoomSpace(room, pasSpace, direction);
 	// Test if it works on the map
 	if (!MapSpaceIsFree(roomSpace))
 		return nullptr;
@@ -1016,11 +1019,7 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 }
 
 // Create new rooms for passages 
-	// Find max distances
-	// CreateRandomRoomSpace()
-	// MapSpaceIsFree(new rooms)
 // Add passages to our new rooms
-	// newRoom->AddPassage(new passage)
 // Returns new rooms
 TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 {
@@ -1044,21 +1043,41 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 			successfulPassagesSpace.Add(passage, allocatedRoomSpace);
 		UE_LOG(LogTemp, Warning, TEXT("> %s"), passage ? TEXT("success") : TEXT("failure"));
 	}
-	// We should also find passages between this room and other allocated but not spawn 
+	// TODO We should also find passages between this room and other allocated but not spawn
 
-	// 3. For each passage we find maximum possible distance in three directions
-	// 4. For each passage we allocate new rooms (1. may be happening here)
-	// 5. We add passages to our new rooms
+	TArray<LabRoom*> newRooms;
+	TArray<LabPassage*> passages;
+	successfulPassagesSpace.GetKeys(passages);
+	for (LabPassage* passage : passages)
+	{
+		FRectSpaceStruct minSpace = successfulPassagesSpace[passage];
+		UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: %d, sX: %d, sY: %d"), minSpace.BotLeftX, minSpace.BotLeftY, minSpace.SizeX, minSpace.SizeY);
+		DeallocateSpace(minSpace);
 
-	// TODO !
-	// use successfulPassagesSpace here
+		// TODO find maximum possible distance in three directions
 
-	return TArray<LabRoom*>();
+		// TODO create new room space 
+		// CreateRandomRoomSpace()
+		// Make sure that MapSpaceIsFree(newSpace)
+		FRectSpaceStruct newSpace = minSpace;
+
+		// We create new room from new space, it also allocates room's space
+		LabRoom* newRoom = CreateRoom(newSpace);		
+		// We add passage to the room
+		if (!newRoom)
+			continue;
+		
+		newRoom->AddPassage(passage);
+		newRooms.Add(newRoom);
+	}
+
+	return newRooms;
+	// return TArray<LabRoom*>();
 }
 
 // Creates random space in the room with specified size for a future object in the room (not world location but offset)
 // Returns false if couldn't create
-bool AMainGameMode::CreateRandomInsideSpaceOfSize(LabRoom * room, int& xOffset, int& yOffset, const int sizeX, const int sizeY)
+bool AMainGameMode::CreateRandomInsideSpaceOfSize(LabRoom * room, int& xOffset, int& yOffset, const int sizeX, const int sizeY, const bool canBeTaken)
 {
 	if (sizeX < 1 || sizeY < 1 || sizeX > room->SizeX - 2 || sizeY > room->SizeY - 2)
 		return false;
@@ -1067,10 +1086,10 @@ bool AMainGameMode::CreateRandomInsideSpaceOfSize(LabRoom * room, int& xOffset, 
 	yOffset = FMath::RandRange(1, room->SizeY - 1 - sizeY);
 
 	// Test if it works in the room
-	return RoomSpaceIsFree(room, xOffset, yOffset, sizeX, sizeY);
+	return canBeTaken || RoomSpaceIsFree(room, xOffset, yOffset, sizeX, sizeY);
 }
 // Same but near wall and returns direction from wall (width is along wall)
-bool AMainGameMode::CreateRandomInsideSpaceOfWidthNearWall(LabRoom * room, int& xOffset, int& yOffset, const int width, EDirectionEnum & direction)
+bool AMainGameMode::CreateRandomInsideSpaceOfWidthNearWall(LabRoom * room, int& xOffset, int& yOffset, const int width, EDirectionEnum & direction, const bool canBeTaken)
 {
 	// Choose wall
 	direction = RandDirection(); // Direction here are INTO room, so wall is the opposite
@@ -1098,23 +1117,23 @@ bool AMainGameMode::CreateRandomInsideSpaceOfWidthNearWall(LabRoom * room, int& 
 		xOffset = FMath::RandRange(1, room->SizeX - 1 - width);
 
 	// Test if it works in the room
-	return RoomSpaceIsFree(room, xOffset, yOffset, direction, width);
+	return canBeTaken || RoomSpaceIsFree(room, xOffset, yOffset, direction, width);
 }
 
 // Fills room with random objects, spawns and returns them
 // Should always be called on a room that is already spawned
-TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room)
+TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride)
 {
 	TArray<AActor*> spawnedActors;
 
 	// The number of lamps we want to have in the room
-	int desiredNumOfLamps = FMath::RandRange(MinRoomNumOfLamps, MaxRoomNumOfLampsPerHundredArea * room->SizeX * room->SizeY / 100);
+	int desiredNumOfLamps = FMath::RandRange(MinRoomNumOfLamps, 1 + MaxRoomNumOfLampsPerHundredArea * room->SizeX * room->SizeY / 100);
 
 	// Maximum number of tries
 	int maxTries = MaxRoomLampCreationTriesPerDesired * desiredNumOfLamps;
 
 	// Creates new lamps in the room
-	for (int i = 0; spawnedActors.Num() < MinRoomNumOfLamps || (i < maxTries && spawnedActors.Num() < desiredNumOfLamps); ++i)
+	for (int i = 0; spawnedActors.Num() < MinRoomNumOfLamps || (i < maxTries && spawnedActors.Num() < desiredNumOfLamps) || spawnedActors.Num() < minNumOfLampsOverride; ++i)
 	{
 		int xOff;
 		int yOff;
@@ -1137,7 +1156,7 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room)
 	{
 		int xOff;
 		int yOff;
-		if (CreateRandomInsideSpaceOfSize(room, xOff, yOff, 1, 1))
+		if (CreateRandomInsideSpaceOfSize(room, xOff, yOff, 1, 1, true))
 		{
 			EDirectionEnum direction = RandDirection();
 			AFlashlight* flashlight = SpawnFlashlight(room->BotLeftX + xOff, room->BotLeftY + yOff, direction);
@@ -1192,7 +1211,7 @@ void AMainGameMode::BeginPlay()
 	SpawnRoom(startRoom);
 
 	// 7. We initialize and spawn other parts of the initial room
-	FillRoom(startRoom);
+	FillRoom(startRoom, 1); // we want at least one lamp in starting room so we override it
 
 	// 8+. We repeat from 1 for other rooms (rn we just spawn)
 	for (LabRoom* room : newRooms)
