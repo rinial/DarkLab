@@ -465,7 +465,6 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 		return;
 
 	SpawnedRoomObjects.Add(room);
-	TakenRoomSpace.Add(room);
 
 	// Spawning floor
 	// Doesn't include walls and passages
@@ -816,15 +815,15 @@ bool AMainGameMode::RoomSpaceIsFree(LabRoom * room, const int xOffset, const int
 		bool intersected = TakenRoomSpace[room].ContainsByPredicate([xOffset, yOffset, sizeX, sizeY](FRectSpaceStruct space)
 		{
 			// Not intersecting on X axis
-			if (space.BotLeftX + space.SizeX - 1 <= xOffset)
+			if (space.BotLeftX + space.SizeX - 1 < xOffset)
 				return false;
-			if (space.BotLeftX >= xOffset + sizeX - 1)
+			if (space.BotLeftX > xOffset + sizeX - 1)
 				return false;
 
 			// Not intersecting on Y axis
-			if (space.BotLeftY + space.SizeY - 1 <= yOffset)
+			if (space.BotLeftY + space.SizeY - 1 < yOffset)
 				return false;
-			if (space.BotLeftY >= yOffset + sizeY - 1)
+			if (space.BotLeftY > yOffset + sizeY - 1)
 				return false;
 
 			// Intersecting on both axis
@@ -843,6 +842,7 @@ LabRoom* AMainGameMode::CreateRoom(const int botLeftX, const int botLeftY, const
 
 	LabRoom* room = new LabRoom(botLeftX, botLeftY, sizeX, sizeY);
 	AllocateSpace(room);
+	TakenRoomSpace.Add(room);
 
 	return room;
 }
@@ -856,6 +856,7 @@ LabRoom* AMainGameMode::CreateRoom(FRectSpaceStruct & space)
 	if (!temp)
 		return nullptr;
 	AllocatedRoomSpace.Add(room, temp);
+	TakenRoomSpace.Add(room);
 
 	return room;
 }
@@ -1030,10 +1031,14 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 }
 
 // Creates random space in the room with specified size for a future object in the room (not world location but offset)
-// Doesn't take anything into accout, should be checked
+// Returns false if couldn't create
 bool AMainGameMode::CreateRandomInsideSpaceOfSize(LabRoom * room, int& xOffset, int& yOffset, const int sizeX, const int sizeY)
-{	
-	// TODO
+{
+	if (sizeX < 1 || sizeY < 1 || sizeX > room->SizeX - 2 || sizeY > room->SizeY - 2)
+		return false;
+
+	xOffset = FMath::RandRange(1, room->SizeX - 1 - sizeX);
+	yOffset = FMath::RandRange(1, room->SizeY - 1 - sizeY);
 
 	// Test if it works in the room
 	return RoomSpaceIsFree(room, xOffset, yOffset, sizeX, sizeY);
@@ -1066,9 +1071,9 @@ bool AMainGameMode::CreateRandomInsideSpaceOfWidthNearWall(LabRoom * room, int& 
 	}
 
 	if (wall <= 1) // Left or right
-		yOffset = FMath::RandRange(1, room->SizeY - 2);
+		yOffset = FMath::RandRange(1, room->SizeY - 1 - width);
 	else // Bottom or top
-		xOffset = FMath::RandRange(1, room->SizeX - 2);
+		xOffset = FMath::RandRange(1, room->SizeX - 1 - width);
 
 	// Test if it works in the room
 	return RoomSpaceIsFree(room, xOffset, yOffset, direction, width);
@@ -1114,7 +1119,7 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room)
 	// TODO make flashlights random too
 	AFlashlight* flashlight = SpawnFlashlight(0, 0);
 
-	return TArray<AActor*>();
+	return TArray<AActor*>(); // TODO
 }
 
 // Sets default values
