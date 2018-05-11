@@ -19,11 +19,12 @@
 
 // Probabilities
 const float AMainGameMode::PassageIsDoorProbability = 0.6f;
-const float AMainGameMode::BlueDoorProbability = 0.2f;
-const float AMainGameMode::GreenDoorProbability = 0.15f;
-const float AMainGameMode::YellowDoorProbability = 0.1f;
-const float AMainGameMode::RedDoorProbability = 0.05f;
-const float AMainGameMode::BlackDoorProbability = 0.02f;
+const float AMainGameMode::DoorIsNormalProbability = 0.95f;
+const float AMainGameMode::BlueProbability = 0.2f;
+const float AMainGameMode::GreenProbability = 0.15f;
+const float AMainGameMode::YellowProbability = 0.1f;
+const float AMainGameMode::RedProbability = 0.05f;
+const float AMainGameMode::BlackProbability = 0.02f;
 
 // Returns true with certain probability
 bool AMainGameMode::RandBool(const float probability)
@@ -35,27 +36,27 @@ FLinearColor AMainGameMode::RandColor()
 {
 	// Blue
 	float temp = FMath::FRand();
-	if (temp <= BlueDoorProbability)
+	if (temp <= BlueProbability)
 		return FLinearColor::FromSRGBColor(FColor(30, 144, 239));
 
 	// Green
-	temp -= BlueDoorProbability;
-	if (temp <= GreenDoorProbability)
+	temp -= BlueProbability;
+	if (temp <= GreenProbability)
 		return FLinearColor::Green;
 
 	// Yellow
-	temp -= GreenDoorProbability;
-	if (temp <= YellowDoorProbability)
+	temp -= GreenProbability;
+	if (temp <= YellowProbability)
 		return FLinearColor::Yellow;
 
 	// Red
-	temp -= YellowDoorProbability;
-	if (temp <= RedDoorProbability)
+	temp -= YellowProbability;
+	if (temp <= RedProbability)
 		return FLinearColor::Red;
 
 	// Black
-	temp -= RedDoorProbability;
-	if (temp <= BlackDoorProbability)
+	temp -= RedProbability;
+	if (temp <= BlackProbability)
 		return FLinearColor::Black;
 
 	// White
@@ -891,7 +892,10 @@ FRectSpaceStruct AMainGameMode::CreateRandomPassageSpace(LabRoom * room, EDirect
 		direction = EDirectionEnum::VE_Up;
 	}
 
-	int minPos = !forDoor ? MinDistanceBetweenPassages : FMath::Max(MinDistanceBetweenPassages, NormalDoorPassageWidth / 2 + NormalDoorPassageWidth % 2);
+	int doorWidth;
+	if (forDoor)
+		doorWidth = RandBool(DoorIsNormalProbability) ? NormalDoorWidth : BigDoorWidth;
+	int minPos = !forDoor ? MinDistanceBetweenPassages : FMath::Max(MinDistanceBetweenPassages, doorWidth / 2 + doorWidth % 2);
 
 	// Left or right
 	if (wall <= 1)
@@ -899,7 +903,7 @@ FRectSpaceStruct AMainGameMode::CreateRandomPassageSpace(LabRoom * room, EDirect
 		space.SizeX = 1;
 
 		if (forDoor)
-			space.SizeY = NormalDoorPassageWidth;
+			space.SizeY = doorWidth;
 		else
 			space.SizeY = FMath::RandRange(MinPassageWidth, FMath::Min(MaxPassageWidth, room->SizeY - 2 * MinDistanceBetweenPassages));
 
@@ -912,7 +916,7 @@ FRectSpaceStruct AMainGameMode::CreateRandomPassageSpace(LabRoom * room, EDirect
 		space.SizeY = 1;
 
 		if (forDoor)
-			space.SizeX = NormalDoorPassageWidth;
+			space.SizeX = doorWidth;
 		else
 			space.SizeX = FMath::RandRange(MinPassageWidth, FMath::Min(MaxPassageWidth, room->SizeX - 2 * MinDistanceBetweenPassages));
 
@@ -927,7 +931,7 @@ FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom* room, FRectSpace
 {
 	FRectSpaceStruct space;
 
-	int delta = !forDoor ? MinDistanceBetweenPassages : FMath::Max(MinDistanceBetweenPassages, NormalDoorPassageWidth / 2 + NormalDoorPassageWidth % 2);
+	int delta = !forDoor ? MinDistanceBetweenPassages : FMath::Max(MinDistanceBetweenPassages, NormalDoorWidth / 2 + NormalDoorWidth % 2);
 
 	switch (direction)
 	{

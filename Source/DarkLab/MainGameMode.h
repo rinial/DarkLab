@@ -138,7 +138,8 @@ protected:
 	static const int MaxRoomPassageCreationTriesPerDesired = 2; 
 	static const int MinPassageWidth = 2; // Can't be lower than 2
 	static const int MaxPassageWidth = 10; 
-	static const int NormalDoorPassageWidth = 4; // Can't be lower than 2
+	static const int NormalDoorWidth = 4; // Can't be lower than 2
+	static const int BigDoorWidth = 6;
 	static const int MinDistanceBetweenPassages = 1; // Can't be lower than 1
 	static const int MinDistanceInsideToPassage = 2;
 	static const int MinRoomNumOfLamps = 1; // TODO this may potentionally cause infinite search in bad rooms, think about it
@@ -148,11 +149,12 @@ protected:
 	static const int MaxLampWidth = 2;
 	// Probabilities
 	static const float PassageIsDoorProbability;
-	static const float BlueDoorProbability;
-	static const float GreenDoorProbability;
-	static const float YellowDoorProbability;
-	static const float RedDoorProbability;
-	static const float BlackDoorProbability;
+	static const float DoorIsNormalProbability;
+	static const float BlueProbability;
+	static const float GreenProbability;
+	static const float YellowProbability;
+	static const float RedProbability;
+	static const float BlackProbability;
 
 	// All space in use
 	TArray<FRectSpaceStruct> AllocatedSpace;
