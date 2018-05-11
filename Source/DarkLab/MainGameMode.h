@@ -101,6 +101,8 @@ protected:
 	// Tries to create a room and allocate space for it
 	LabRoom* CreateRoom(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
 	LabRoom* CreateRoom(FRectSpaceStruct& space);
+	// Creates starting room
+	LabRoom* CreateStartRoom();
 
 	// Creates random space for a future passage (not world location but offsets)
 	// Doesn't take other passages into account. Direction is always out

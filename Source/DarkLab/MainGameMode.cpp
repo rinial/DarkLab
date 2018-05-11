@@ -861,6 +861,12 @@ LabRoom* AMainGameMode::CreateRoom(FRectSpaceStruct & space)
 
 	return room;
 }
+// Creates starting room
+LabRoom * AMainGameMode::CreateStartRoom()
+{
+	// TODO should be random
+	return CreateRoom(-10, -5, 15, 12);;
+}
 
 // Creates random space for a future passage (not world location but offsets)
 // Doesn't take other passages into account. Direction is always out
@@ -1027,6 +1033,11 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 			successfulPassagesSpace.Add(passage, allocatedRoomSpace);
 		UE_LOG(LogTemp, Warning, TEXT("> %s"), passage ? TEXT("success") : TEXT("failure"));
 	}
+	// We should also find passages between this room and other allocated but not spawn 
+
+	// 3. For each passage we find maximum possible distance in three directions
+	// 4. For each passage we allocate new rooms (1. may be happening here)
+	// 5. We add passages to our new rooms
 
 	// TODO !
 	// use successfulPassagesSpace here
@@ -1091,7 +1102,6 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room)
 
 	// The number of lamps we want to have in the room
 	int desiredNumOfLamps = FMath::RandRange(MinRoomNumOfLamps, MaxRoomNumOfLampsPerHundredArea * room->SizeX * room->SizeY / 100);
-	UE_LOG(LogTemp, Warning, TEXT("Trying to add %d lamps"), desiredNumOfLamps);
 
 	// Maximum number of tries
 	int maxTries = MaxRoomLampCreationTriesPerDesired * desiredNumOfLamps;
@@ -1112,11 +1122,6 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room)
 			// TODO this shouldn't be here
 			if (lamp) lamp->Execute_ActivateIndirectly(lamp); 
 			successfulLamps.Add(lamp);
-			UE_LOG(LogTemp, Warning, TEXT("> success"));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("> failure"));
 		}
 	}
 
@@ -1153,53 +1158,34 @@ void AMainGameMode::BeginPlay()
 	Super::BeginPlay();
 
 
-	// TODO shouldn't create, spawn or activate directly from here
-
-
 	// Generation:
 
 	// 1. Something allocates a room
-	LabRoom* startRoom = CreateRoom(-10, -5, 15, 12);
+	LabRoom* startRoom = CreateStartRoom();
 
 	// 2. We find positions for passages and allocate minimum size
-	ExpandRoom(startRoom);
-	/*LabPassage* p1 = startRoom->AddPassage(-10, -3, EDirectionEnum::VE_Left, true);
-	LabPassage* p2 = startRoom->AddPassage(-6, 6, EDirectionEnum::VE_Up, true, FLinearColor::Red);
-	LabPassage* p3 = startRoom->AddPassage(4, 1, EDirectionEnum::VE_Left, true);
-	LabPassage* p4 = startRoom->AddPassage(-3, -5, EDirectionEnum::VE_Up, 7);*/
-
-	// 2*. We should also find passages between this room and other allocated but not spawn rooms
-
+	// 2*. We should also find passages between this room and other allocated but not spawn 
 	// 3. For each passage we find maximum possible distance in three directions
-	// TODO
-
 	// 4. For each passage we allocate new rooms (1. may be happening here)
-	/*LabRoom* r1 = CreateRoom(-20, -16, 11, 25);
-	LabRoom* r2 = CreateRoom(-8, 6, 10, 10);
-	LabRoom* r3 = CreateRoom(4, -2, 10, 20);
-	LabRoom* r4 = CreateRoom(-4, -11, 18, 7);*/
-
 	// 5. We add passages to our new rooms
-	/*if (r1) r1->AddPassage(p1);
-	if (r2) r2->AddPassage(p2);
-	if (r3) r3->AddPassage(p3);
-	if (r4) r4->AddPassage(p4);*/
+	TArray<LabRoom*> newRooms = ExpandRoom(startRoom);
 
 	// 6. We spawn our initial room
 	SpawnRoom(startRoom);
 
 	// 7. We initialize and spawn other parts of the initial room
 	FillRoom(startRoom);
-	//AWallLamp* lamp = SpawnWallLamp(-5, -4, EDirectionEnum::VE_Up, FLinearColor::White, 1, startRoom);
-	//if (lamp) lamp->Execute_ActivateIndirectly(lamp); // TODO this shouldn't be here
-	//AFlashlight* flashlight = SpawnFlashlight(0, 0);
 
 	// 8+. We repeat from 1 for other rooms (rn we just spawn)
-	/*SpawnRoom(r1);
-	SpawnRoom(r2);
-	SpawnRoom(r3);
-	SpawnRoom(r4);*/
+	for (LabRoom* room : newRooms)
+	{
+		// TArray<LabRoom*> evenNewerRooms = ExpandRoom(room)
+		SpawnRoom(room);
+		FillRoom(room);
 
+		// Repeat
+	}
+	
 	
 	// Tests
 	/*
@@ -1222,24 +1208,6 @@ void AMainGameMode::BeginPlay()
 	SpawnBasicFloor(-20, -20, 40, 40);
 	SpawnBasicWall(-7, -5, 1, 9);
 	SpawnBasicDoor(-6, 3, EDirectionEnum::VE_Up, FLinearColor::Red);
-
-	// Testing space allocation
-	AllocateSpace(1, 1, 3, 2);
-	AllocateSpace(7, 3, 2, 2);
-	AllocateSpace(3, 2, 3, 3);
-	AllocateSpace(8, 2, 2, 2);
-	UE_LOG(LogTemp, Warning, TEXT("%d %d %d %d"), AllocatedSpace[0].BotLeftX, AllocatedSpace[0].BotLeftY, AllocatedSpace[0].SizeX, AllocatedSpace[0].SizeY);
-	UE_LOG(LogTemp, Warning, TEXT("%d %d %d %d"), AllocatedSpace[1].BotLeftX, AllocatedSpace[1].BotLeftY, AllocatedSpace[1].SizeX, AllocatedSpace[1].SizeY);
-	UE_LOG(LogTemp, Warning, TEXT("%d %d %d %d"), AllocatedSpace[2].BotLeftX, AllocatedSpace[2].BotLeftY, AllocatedSpace[2].SizeX, AllocatedSpace[2].SizeY);
-	UE_LOG(LogTemp, Warning, TEXT("%d %d %d %d"), AllocatedSpace[3].BotLeftX, AllocatedSpace[3].BotLeftY, AllocatedSpace[3].SizeX, AllocatedSpace[3].SizeY);
-	UE_LOG(LogTemp, Warning, TEXT("%s"), (MapSpaceIsFree(2, 3) ? TEXT("Free space 2 3 1 1") : TEXT("No space")));
-	UE_LOG(LogTemp, Warning, TEXT("%s"), (MapSpaceIsFree(1, 3, 2, 2) ? TEXT("Free space 1 3 2 2") : TEXT("No space")));
-	UE_LOG(LogTemp, Warning, TEXT("%s"), (MapSpaceIsFree(4, 1, 5, 1) ? TEXT("Free space 4 1 5 1") : TEXT("No space")));
-	UE_LOG(LogTemp, Warning, TEXT("%s"), (MapSpaceIsFree(6, 1, 2, 2) ? TEXT("Free space 6 1 2 2") : TEXT("No space")));
-	UE_LOG(LogTemp, Warning, TEXT("%s"), (MapSpaceIsFree(5, 2) ? TEXT("NO WAY") : TEXT("No space")));
-	UE_LOG(LogTemp, Warning, TEXT("%s"), (MapSpaceIsFree(3, 2, 1, 2) ? TEXT("NO WAY") : TEXT("No space")));
-	UE_LOG(LogTemp, Warning, TEXT("%s"), (MapSpaceIsFree(4, 1, 4, 2) ? TEXT("NO WAY") : TEXT("No space")));
-	UE_LOG(LogTemp, Warning, TEXT("%s"), (MapSpaceIsFree(6, 2, 2, 3) ? TEXT("NO WAY") : TEXT("No space")));
 	*/
 }
 
