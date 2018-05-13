@@ -75,6 +75,7 @@ protected:
 	// Pool full parts of the lab
 	void PoolRoom(LabRoom* room);
 	void PoolPassage(LabPassage* passage);
+	void PoolMap();
 
 	// Tries to find a poolable object in a specified array
 	UFUNCTION(BlueprintCallable, Category = "Pools")
@@ -95,9 +96,9 @@ protected:
 	// Space is allocated and can't be allocated again
 	FRectSpaceStruct* AllocateSpace(LabRoom* room);
 	FRectSpaceStruct* AllocateSpace(const int botLeftX, const int botLeftY, const int sizeX = 1, const int sizeY = 1);
-	FRectSpaceStruct* AllocateSpace(FRectSpaceStruct& space);
+	FRectSpaceStruct* AllocateSpace(FRectSpaceStruct space);
 	// Space is not allocated anymore
-	void DeallocateSpace(FRectSpaceStruct& space);
+	void DeallocateSpace(FRectSpaceStruct space);
 	void DeallocateSpace(LabRoom* room);
 	void DeallocateSpace(const int botLeftX, const int botLeftY, const int sizeX = 1, const int sizeY = 1);
 
@@ -116,7 +117,7 @@ protected:
 
 	// Tries to create a room and allocate space for it
 	LabRoom* CreateRoom(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
-	LabRoom* CreateRoom(FRectSpaceStruct& space);
+	LabRoom* CreateRoom(FRectSpaceStruct space);
 	// Creates starting room
 	LabRoom* CreateStartRoom();
 
@@ -146,6 +147,12 @@ protected:
 	// Fills room with random objects, spawns and returns them
 	// Should always be called on a room that is already spawned
 	TArray<AActor*> FillRoom(LabRoom* room, int minNumOfLampsOverride = 0);
+
+public:
+	// Generates map
+	void GenerateMap();
+	// Resets the map
+	void ResetMap();
 
 protected:
 	// Constants used for generation
@@ -180,14 +187,6 @@ protected:
 	// All space in use
 	TArray<FRectSpaceStruct> AllocatedSpace;
 	TMap<LabRoom*, FRectSpaceStruct*> AllocatedRoomSpace;
-	//// Left and right (bottom and top) sorted coordinates of rectangles
-	//TArray<int> AllocatedX1Indices;
-	//TArray<int> AllocatedX2Indices;
-	//TArray<int> AllocatedY1Indices;
-	//TArray<int> AllocatedY2Indices;
-	//// Indices that are not used anymore and can be used again
-	//// We don't just delete from AllocatedSpace, cause we would have to decrement a lot of indices in indices arrays
-	//TArray<int> DeallocatedIndices;
 
 	// Room-specific space taken by various objects (not world locations but offsets)
 	TMap<LabRoom*, TArray<FRectSpaceStruct>> TakenRoomSpace;
@@ -226,6 +225,15 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	// TODO delete, used just for tests
+	float TimeSinceLastGeneration = 100.0f;
+
+public:
+	// Called every frame
+	virtual void Tick(const float deltaTime) override;
+
+protected:
 	// Called when actor is being removed from the play
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 

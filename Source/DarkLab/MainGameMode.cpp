@@ -415,6 +415,13 @@ void AMainGameMode::PoolPassage(LabPassage* passage)
 	SpawnedPassageObjects.Remove(passage);
 	// We don't delete passage from here as it's deleted during room's destruction
 }
+void AMainGameMode::PoolMap()
+{
+	TArray<LabRoom*> rooms;
+	SpawnedRoomObjects.GetKeys(rooms);
+	for (int i = rooms.Num() - 1; i >= 0; --i)
+		PoolRoom(rooms[i]);
+}
 
 // Tries to find a poolable object in a specified array
 UObject* AMainGameMode::TryGetPoolable(UClass* cl)
@@ -701,52 +708,15 @@ FRectSpaceStruct* AMainGameMode::AllocateSpace(const int botLeftX, const int bot
 	FRectSpaceStruct temp = FRectSpaceStruct(botLeftX, botLeftY, sizeX, sizeY);
 	return AllocateSpace(temp);
 }
-FRectSpaceStruct* AMainGameMode::AllocateSpace(FRectSpaceStruct& space)
+FRectSpaceStruct* AMainGameMode::AllocateSpace(FRectSpaceStruct space)
 {
 	if (space.SizeX < 1 || space.SizeY < 1)
 		return nullptr;
 
 	return &AllocatedSpace[AllocatedSpace.Add(space)];
-
-	//// It's index from AllocatedSpace array
-	//int index;
-	//if (DeallocatedIndices.Num() > 0)
-	//{
-	//	index = DeallocatedIndices[0];
-	//	DeallocatedIndices.RemoveAt(0);
-	//}
-	//else
-	//	index = AllocatedSpace.AddDefaulted();
-	//AllocatedSpace[index] = space;
-
-	//// Now we need to fill the indices arrays while keeping them sorted
-	//// For X1
-	//int indexWithHigherX1 = Algo::LowerBound(AllocatedX1Indices, index, [this](int ind1, int ind2) { return AllocatedSpace[ind1].BotLeftX < AllocatedSpace[ind2].BotLeftX; });
-	//if (indexWithHigherX1 == INDEX_NONE)
-	//	AllocatedX1Indices.Add(index);
-	//else
-	//	AllocatedX1Indices.Insert(index, indexWithHigherX1);
-	//// For X2
-	//int indexWithHigherX2 = Algo::LowerBound(AllocatedX2Indices, index, [this](int ind1, int ind2) { return AllocatedSpace[ind1].BotLeftX + AllocatedSpace[ind1].SizeX < AllocatedSpace[ind2].BotLeftX + AllocatedSpace[ind2].SizeX; });
-	//if (indexWithHigherX2 == INDEX_NONE)
-	//	AllocatedX2Indices.Add(index);
-	//else
-	//	AllocatedX2Indices.Insert(index, indexWithHigherX2);
-	//// For Y1
-	//int indexWithHigherY1 = Algo::LowerBound(AllocatedY1Indices, index, [this](int ind1, int ind2) { return AllocatedSpace[ind1].BotLeftY < AllocatedSpace[ind2].BotLeftY; });
-	//if (indexWithHigherY1 == INDEX_NONE)
-	//	AllocatedY1Indices.Add(index);
-	//else
-	//	AllocatedY1Indices.Insert(index, indexWithHigherY1);
-	//// For Y2
-	//int indexWithHigherY2 = Algo::LowerBound(AllocatedY2Indices, index, [this](int ind1, int ind2) { return AllocatedSpace[ind1].BotLeftY + AllocatedSpace[ind1].SizeY < AllocatedSpace[ind2].BotLeftY + AllocatedSpace[ind2].SizeY; });
-	//if (indexWithHigherY2 == INDEX_NONE)
-	//	AllocatedY2Indices.Add(index);
-	//else
-	//	AllocatedY2Indices.Insert(index, indexWithHigherY2);
 }
 // Space is not allocated anymore
-void AMainGameMode::DeallocateSpace(FRectSpaceStruct& space)
+void AMainGameMode::DeallocateSpace(FRectSpaceStruct space)
 {
 	AllocatedSpace.Remove(space);
 	// DeallocateSpace(space.BotLeftX, space.BotLeftY, space.SizeX, space.SizeY);
@@ -758,8 +728,10 @@ void AMainGameMode::DeallocateSpace(LabRoom* room)
 
 	if (AllocatedRoomSpace.Contains(room))
 	{
-		AllocatedSpace.Remove(*AllocatedRoomSpace[room]);
+		int index;
+		AllocatedSpace.Find(*(AllocatedRoomSpace[room]), index);
 		AllocatedRoomSpace.Remove(room);
+		AllocatedSpace.RemoveAt(index);
 	}
 	else
 		DeallocateSpace(room->BotLeftX, room->BotLeftY, room->SizeX, room->SizeY);
@@ -951,14 +923,14 @@ LabRoom* AMainGameMode::CreateRoom(const int botLeftX, const int botLeftY, const
 
 	return room;
 }
-LabRoom* AMainGameMode::CreateRoom(FRectSpaceStruct & space)
+LabRoom* AMainGameMode::CreateRoom(FRectSpaceStruct space)
 {
 	if (space.SizeX < 4 || space.SizeY < 4 || !MapSpaceIsFree(space))
 		return nullptr;
 
 	LabRoom* room = new LabRoom(space);
 	FRectSpaceStruct* temp = AllocateSpace(space);
-	if (!temp)
+	if (!temp || !room)
 		return nullptr;
 	AllocatedRoomSpace.Add(room, temp);
 	TakenRoomSpace.Add(room);
@@ -996,9 +968,7 @@ FRectSpaceStruct AMainGameMode::CreateRandomPassageSpace(LabRoom * room, EDirect
 		break;
 	}
 
-	int doorWidth;
-	if (forDoor)
-		doorWidth = RandBool(DoorIsNormalProbability) ? NormalDoorWidth : BigDoorWidth;
+	int doorWidth = !forDoor ? 0 : RandBool(DoorIsNormalProbability) ? NormalDoorWidth : BigDoorWidth;
 	int minPos = !forDoor ? MinDistanceBetweenPassages : FMath::Max(MinDistanceBetweenPassages, doorWidth / 2 + doorWidth % 2);
 
 	// Left or right
@@ -1258,6 +1228,44 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 	return spawnedActors;
 }
 
+// Generates map
+void AMainGameMode::GenerateMap()
+{
+	// Generation:
+
+	// 1. Something allocates a room
+	LabRoom* startRoom = CreateStartRoom();
+
+	// 2. We find positions for passages and allocate minimum size
+	// 2*. We should also find passages between this room and other allocated but not spawn 
+	// 3. For each passage we find maximum possible distance in three directions
+	// 4. For each passage we allocate new rooms (1. may be happening here)
+	// 5. We add passages to our new rooms
+	TArray<LabRoom*> newRooms = ExpandRoom(startRoom);
+
+	// 6. We spawn our initial room
+	SpawnRoom(startRoom);
+
+	// 7. We initialize and spawn other parts of the initial room
+	FillRoom(startRoom, 1); // we want at least one lamp in starting room so we override it
+
+							// 8+. We repeat from 1 for other rooms (rn we just spawn)
+	for (LabRoom* room : newRooms)
+	{
+		// TArray<LabRoom*> evenNewerRooms = ExpandRoom(room)
+		SpawnRoom(room);
+		FillRoom(room);
+
+		// Repeat
+	}
+}
+// Resets the map
+void AMainGameMode::ResetMap()
+{
+	PoolMap();
+	GenerateMap();
+}
+
 // Sets default values
 AMainGameMode::AMainGameMode()
 {
@@ -1277,6 +1285,9 @@ AMainGameMode::AMainGameMode()
 	static ConstructorHelpers::FObjectFinder<UClass> flashlightBP(TEXT("Class'/Game/Blueprints/FlashlightBP.FlashlightBP_C'"));
 	if (flashlightBP.Succeeded())
 		FlashlightBP = flashlightBP.Object;
+
+	// Set to call Tick() every frame
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 // Called when the game starts or when spawned
@@ -1284,35 +1295,9 @@ void AMainGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-
-	// Generation:
-
-	// 1. Something allocates a room
-	LabRoom* startRoom = CreateStartRoom();
-
-	// 2. We find positions for passages and allocate minimum size
-	// 2*. We should also find passages between this room and other allocated but not spawn 
-	// 3. For each passage we find maximum possible distance in three directions
-	// 4. For each passage we allocate new rooms (1. may be happening here)
-	// 5. We add passages to our new rooms
-	TArray<LabRoom*> newRooms = ExpandRoom(startRoom);
-
-	// 6. We spawn our initial room
-	SpawnRoom(startRoom);
-
-	// 7. We initialize and spawn other parts of the initial room
-	FillRoom(startRoom, 1); // we want at least one lamp in starting room so we override it
-
-	// 8+. We repeat from 1 for other rooms (rn we just spawn)
-	for (LabRoom* room : newRooms)
-	{
-		// TArray<LabRoom*> evenNewerRooms = ExpandRoom(room)
-		SpawnRoom(room);
-		FillRoom(room);
-
-		// Repeat
-	}
-	
+	GenerateMap();
+	/*PoolMap();
+	GenerateMap();*/
 	
 	// Tests
 	/*
@@ -1336,6 +1321,21 @@ void AMainGameMode::BeginPlay()
 	SpawnBasicWall(-7, -5, 1, 9);
 	SpawnBasicDoor(-6, 3, EDirectionEnum::VE_Up, FLinearColor::Red);
 	*/
+}
+
+// Called every frame
+void AMainGameMode::Tick(const float deltaTime)
+{
+	Super::Tick(deltaTime);
+
+	// TODO delete, used just for test
+	/*TimeSinceLastGeneration += deltaTime;
+	if (TimeSinceLastGeneration > 0.1f)
+	{
+		TimeSinceLastGeneration = 0.0f;
+		PoolMap();
+		GenerateMap();
+	}*/
 }
 
 // Called when actor is being removed from the play

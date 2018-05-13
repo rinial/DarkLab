@@ -22,7 +22,7 @@ enum class EDirectionEnum : uint8
 USTRUCT()
 struct FRectSpaceStruct
 {
-	GENERATED_BODY()
+	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY()
 	int BotLeftX;
@@ -36,9 +36,13 @@ struct FRectSpaceStruct
 	UPROPERTY()
 	int SizeY;
 
-	bool operator==(const FRectSpaceStruct& other)
+	ENGINE_API bool operator== (const FRectSpaceStruct& other)
 	{
 		return BotLeftX == other.BotLeftX && BotLeftY == other.BotLeftY && SizeX == other.SizeX && SizeY == other.SizeY;
+	}
+	ENGINE_API friend bool operator== (const FRectSpaceStruct& a, const FRectSpaceStruct& b)
+	{
+		return a.BotLeftX == b.BotLeftX && a.BotLeftY == b.BotLeftY && a.SizeX == b.SizeX && a.SizeY == b.SizeY;
 	}
 
 	FRectSpaceStruct()
