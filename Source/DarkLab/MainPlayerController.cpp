@@ -3,6 +3,7 @@
 #include "MainPlayerController.h"
 #include "MainCharacter.h"
 #include "GameFramework/GameModeBase.h"
+#include "MainGameMode.h"
 // For on screen debug
 #include "EngineGlobals.h"
 #include "Engine/Engine.h"
@@ -85,9 +86,18 @@ void AMainPlayerController::ShowHideMenu()
 
 	// TODO
 	// delete
-	FGenericPlatformMisc::RequestExit(false);
+	Cast<AMainGameMode>(GetWorld()->GetAuthGameMode())->ResetMap();
+	//FGenericPlatformMisc::RequestExit(false);
 
 	// TODO
+}
+
+// Resets map, only used for debug
+void AMainPlayerController::ResetMap()
+{
+	UE_LOG(LogTemp, Warning, TEXT("ResetMap called"));
+
+	Cast<AMainGameMode>(GetWorld()->GetAuthGameMode())->ResetMap();
 }
 
 // Takes one 'life' and calls CalculateLoss
@@ -167,6 +177,8 @@ void AMainPlayerController::SetupInputComponent()
 	InputComponent->BindAction("Activate", IE_Pressed, this, &AMainPlayerController::Activate);
 
 	InputComponent->BindAction("Menu/Cancel", IE_Pressed, this, &AMainPlayerController::ShowHideMenu);
+
+	InputComponent->BindAction("DebugReset", IE_Pressed, this, &AMainPlayerController::ResetMap);
 }
 
 // Called every frame

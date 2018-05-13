@@ -35,21 +35,33 @@ private:
 	// GetInputMouseDelta doesn't really work as it should
 	FVector2D LastMousePosition;
 
+protected:
 	// Cotntrol where the character goes
+	UFUNCTION()
 	void MoveUp(const float value);
+	UFUNCTION()
 	void MoveRight(const float value);
 
 	// Control where the character looks
+	UFUNCTION()
 	void LookWithMouse();
+	UFUNCTION()
 	void LookWithStick();
 
 	// Makes the character use something he has equiped
+	UFUNCTION()
 	void UseEquiped();
 	// Makes the character avtivate smth near him
+	UFUNCTION()
 	void Activate();
 
 	// Show/Hide menu
+	UFUNCTION()
 	void ShowHideMenu();
+
+	// Resets map, only used for debug
+	UFUNCTION()
+	void ResetMap();
 
 public:
 	// Called from the main character. Takes one 'life' and calls CalculateLoss
