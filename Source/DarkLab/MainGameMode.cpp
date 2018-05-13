@@ -869,10 +869,12 @@ bool AMainGameMode::RoomSpaceIsFree(LabRoom * room, const int xOffset, const int
 				if ((wallDirection == EDirectionEnum::VE_Left && passage->BotLeftX != room->BotLeftX) || (wallDirection == EDirectionEnum::VE_Right && passage->BotLeftX != room->BotLeftX + room->SizeX - 1))
 					return false;
 
+				int localExtra = !passage->bIsDoor ? extra : FMath::Max(extra, passage->Width / 2 + passage->Width % 2);
+
 				// Not intersecting on Y axis
-				if (passage->BotLeftY - room->BotLeftY + passage->Width - 1 + extra < yOffset)
+				if (passage->BotLeftY - room->BotLeftY + passage->Width - 1 + localExtra < yOffset)
 					return false;
-				if (passage->BotLeftY - room->BotLeftY > yOffset + sizeY - 1 + extra)
+				if (passage->BotLeftY - room->BotLeftY > yOffset + sizeY - 1 + localExtra)
 					return false;
 
 				// Intersecting
@@ -895,10 +897,12 @@ bool AMainGameMode::RoomSpaceIsFree(LabRoom * room, const int xOffset, const int
 				if ((wallDirection == EDirectionEnum::VE_Down && passage->BotLeftY != room->BotLeftY) || (wallDirection == EDirectionEnum::VE_Up && passage->BotLeftY != room->BotLeftY + room->SizeY - 1))
 					return false;
 
+				int localExtra = !passage->bIsDoor ? extra : FMath::Max(extra, passage->Width / 2 + passage->Width % 2);
+
 				// Not intersecting on X axis
-				if (passage->BotLeftX - room->BotLeftX + passage->Width - 1 + extra < xOffset)
+				if (passage->BotLeftX - room->BotLeftX + passage->Width - 1 + localExtra < xOffset)
 					return false;
-				if (passage->BotLeftX - room->BotLeftX > xOffset + sizeX - 1 + extra)
+				if (passage->BotLeftX - room->BotLeftX > xOffset + sizeX - 1 + localExtra)
 					return false;
 
 				// Intersecting
@@ -1067,6 +1071,7 @@ FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom* room, FRectSpace
 
 	return space;
 }
+// TODO CreateRandomRoomSpace
 
 // Creates and adds a random passage to the room, returns passage or nullptr, also allocates room space and returns allocated room space by reference
 LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpaceStruct & roomSpace)
@@ -1104,8 +1109,8 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 	return passage;
 }
 
+// Creates new passages in the room
 // Create new rooms for passages 
-// Add passages to our new rooms
 // Returns new rooms
 TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 {
@@ -1158,7 +1163,6 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 	}
 
 	return newRooms;
-	// return TArray<LabRoom*>();
 }
 
 // Creates random space in the room with specified size for a future object in the room (not world location but offset)

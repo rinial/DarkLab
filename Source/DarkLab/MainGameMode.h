@@ -127,14 +127,13 @@ protected:
 	// Creates minimum space for a room near passage for tests and allocation
 	// TODO maybe it should take room size just in case other room gets destroyed
 	FRectSpaceStruct CreateMinimumRoomSpace(LabRoom* room, FRectSpaceStruct passageSpace, EDirectionEnum direction);
+	// TODO CreateRandomRoomSpace
 
 	// Creates and adds a random passage to the room, returns passage or nullptr, also allocates room space and returns allocated room space by reference
 	LabPassage* CreateAndAddRandomPassage(LabRoom* room, FRectSpaceStruct& roomSpace);
 
 	// Creates new passages in the room
-	// Allocates minimum room space for passages
 	// Create new rooms for passages 
-	// Add passages to our new rooms
 	// Returns new rooms
 	TArray<LabRoom*> ExpandRoom(LabRoom* room);
 
