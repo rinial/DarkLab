@@ -82,17 +82,9 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 {
 	if (!actor)
 		return 0.0f;
-	return GetLightingAmount(lightLoc, actor, actor->GetActorLocation(), sixPoints, sixPointsRadius, fourMore, debug);
+	return GetLightingAmount(lightLoc, actor->GetActorLocation(), sixPoints, sixPointsRadius, fourMore, debug);
 }
 float AMainGameMode::GetLightingAmount(FVector& lightLoc, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool debug)
-{
-	return GetLightingAmount(lightLoc, nullptr, location, sixPoints, sixPointsRadius, fourMore, debug);
-}
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const TArray<FVector> locations, const bool debug)
-{
-	return GetLightingAmount(lightLoc, nullptr, locations, debug);
-}
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool debug)
 {
 	TArray<FVector> locations;
 	locations.Add(location);
@@ -119,22 +111,10 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 			locations.Add(location - temp * sixPointsRadius);
 		}
 	}
-	return GetLightingAmount(lightLoc, actor, locations, debug);
+	return GetLightingAmount(lightLoc, locations, debug);
 }
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations, const bool debug)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const TArray<FVector> locations, const bool debug)
 {
-	FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("LightTrace")), true);
-	// TODO delete? we already set up visibility channel
-	// Add actor and all of its components as ignored
-	if (actor)
-	{
-		params.AddIgnoredActor(actor);
-		TInlineComponentArray<UActorComponent*> components;
-		actor->GetComponents(components, true);
-		for (UActorComponent* component : components)
-			params.AddIgnoredComponent(Cast<UPrimitiveComponent>(component));
-	}
-
 	float result = 0.0f;
 
 	// First we find all the point lights (spot lights count as point lights)
@@ -176,15 +156,9 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 			// UE_LOG(LogTemp, Warning, TEXT("dist: %f, rad: %f"), distance, lightRadius);
 			if (distance > lightRadius)
 				continue;
-
-			bool bHit = GetWorld()->LineTraceTestByChannel(lightLocation, location, ECC_Visibility, params);
-			// TODO delete if affects performance too much
-			// This is a line trace in a different direction helpful in cases when light is positioned inside something like a wall which is ignored by the line trace
-			if(!bHit)
-				bHit =  GetWorld()->LineTraceTestByChannel(location, lightLocation, ECC_Visibility, params);
-
+						
 			// If location could be lit
-			if (!bHit)
+			if (CanSee(lightLocation, location))
 			{
 				if(debug)
 					DrawDebugLine(gameWorld, location, lightLocation, FColor::Cyan);
@@ -215,6 +189,63 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 
 	// UE_LOG(LogTemp, Warning, TEXT("Final %f"), result);
 	return result;
+}
+// Returns true if one actor/location can see other actor/location
+// Its not about visibility to human eye, doesn't take light into account
+bool AMainGameMode::CanSee(const AActor * actor1, const AActor * actor2, const bool debug)
+{
+	if (!actor1)
+		return false;
+
+	return CanSee(actor1->GetActorLocation(), actor2, debug);
+}
+bool AMainGameMode::CanSee(const FVector location, const AActor * actor, const bool debug)
+{
+	if (!actor)
+		return false;
+
+	return CanSee(location, actor->GetActorLocation(), debug);
+}
+bool AMainGameMode::CanSee(const AActor * actor, const FVector location, const bool debug)
+{
+	if(!actor)
+		return false;
+
+	return CanSee(actor->GetActorLocation(), location, debug);
+}
+bool AMainGameMode::CanSee(const FVector location1, const FVector location2, const bool debug)
+{
+	UWorld* gameWorld = GetWorld();
+	if (!gameWorld)
+		return false;
+
+	FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("LightTrace")), true);
+	/*// Add actor and all of its components as ignored
+	if (actor)
+	{
+		params.AddIgnoredActor(actor);
+		TInlineComponentArray<UActorComponent*> components;
+		actor->GetComponents(components, true);
+		for (UActorComponent* component : components)
+		params.AddIgnoredComponent(Cast<UPrimitiveComponent>(component));
+	}*/
+
+	if (debug)
+	{
+		DrawDebugPoint(gameWorld, location1, 5, FColor::Red);
+		DrawDebugPoint(gameWorld, location2, 5, FColor::Red);
+	}
+
+	bool bHit = gameWorld->LineTraceTestByChannel(location1, location2, ECC_Visibility, params);
+	// TODO delete if affects performance too much
+	// This is a line trace in a different direction helpful in cases when location1 is positioned inside something like a wall which is ignored by the line trace
+	if (!bHit)
+		bHit = gameWorld->LineTraceTestByChannel(location2, location1, ECC_Visibility, params);
+
+	if (debug && !bHit)
+		DrawDebugLine(gameWorld, location1, location2, FColor::Cyan);
+
+	return !bHit;
 }
 
 // Places an object on the map
