@@ -29,9 +29,10 @@ public:
 	void Stop();
 	// When light is too strong goes backwards and returns true. Great for some situations and will look weird in others. Returns false if light ain't too strong
 	bool RetreatFromLight();
-
 	// Tracks something
 	void Tracking();
+	// Goes away from last brightest light
+	void IntoDarkness();
 
 	// TODO delete, this is only used for debug
 	UPROPERTY(EditAnywhere, Category = "Darkness: Debug")

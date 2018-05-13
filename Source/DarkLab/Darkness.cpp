@@ -73,14 +73,20 @@ void ADarkness::Tracking()
 
 	// We don't move if objects are already close
 	// TODO delete magic number
-	if (direction.Size() < 10.0f)
+	if (direction.Size() < 20.0f)
 		return;
 
 	direction.Normalize();
 
-	// TODO maybe normal Move shoudld be used
-	// Move(direction);
 	Move(direction);
+}
+// Goes away from last brightest light
+void ADarkness::IntoDarkness()
+{
+	// Away from brightest light
+	FVector fleeDirection = GetActorLocation() - BrightestLightLocation;
+	fleeDirection.Normalize();
+	Move(fleeDirection);
 }
 
 // Used for collision overlaps

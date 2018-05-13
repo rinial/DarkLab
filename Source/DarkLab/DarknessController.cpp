@@ -10,7 +10,7 @@
 // Called on disabling a character
 void ADarknessController::OnDisabling()
 {
-	State = EDarkStateEnum::VE_Passive;
+	State = EDarkStateEnum::VE_Retreating;
 	Darkness->Stop();
 
 	// Start tracking a new one after a delay
@@ -64,7 +64,19 @@ void ADarknessController::Tick(const float deltaTime)
 
 	// Tracks if isn't retreating already
 	if (!isRetreating)
-		Darkness->Tracking();
+	{
+		switch (State)
+		{
+		case EDarkStateEnum::VE_Passive:
+			break;
+		case EDarkStateEnum::VE_Hunting:
+			Darkness->Tracking();
+			break;
+		case EDarkStateEnum::VE_Retreating:
+			Darkness->IntoDarkness();
+			break;
+		}
+	}
 
 	// TODO delete later: used for debug
 	if (GEngine)
