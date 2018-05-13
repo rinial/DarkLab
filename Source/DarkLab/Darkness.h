@@ -58,9 +58,12 @@ protected:
 	// The darkness's resistance to light
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
 	float LightResistance = 0.0f;
-	// The speed of resistance rising
+	// The speed of resistance rising if in light higher than resistance
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
-	float LightResSpeed = 0.01f;
+	float LightResGainSpeed = 0.01f;
+	// The speed of resistance dropping while not in any light
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
+	float LightResLossSpeed = 0.005f;
 	// The darkness's resistance to light
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
 	float LightFearK = 10.0f;
