@@ -9,11 +9,10 @@
 #include "Activatable.h"
 #include "Informative.h"
 #include "MainPlayerController.h"
+#include "MainGameMode.h"
 // For on screen debug
 #include "EngineGlobals.h"
 #include "Engine/Engine.h"
-// TODO delete later?
-// #include "MainGameMode.h"
 
 // Movement functions
 void AMainCharacter::Move(FVector direction, const float value)
@@ -110,17 +109,23 @@ TScriptInterface<class IActivatable> AMainCharacter::GetActivatable()
 		return nullptr;
 
 	TScriptInterface<class IActivatable> currentSelected = nullptr;
-	float currentValue = -1; // value used to determine priority
+	float currentValue = 0; // value used to determine priority
 	for (TScriptInterface<class IActivatable> activatable : ActivatableObjects)
 	{
-		FVector location = Cast<AActor>(activatable->_getUObject())->GetActorLocation();
+		AActor* actor = Cast<AActor>(activatable->_getUObject());
+		// We check if actor can be seen before its actually activatable
+		// The check is done with Z increased so that there are no conflicts with floor
+		if (!GameMode->CanSee(this, actor, actor->GetActorLocation() + FVector(0, 0, 30), true)) // TODO disable debug here
+			continue;
+
+		FVector location = actor->GetActorLocation();
 		FVector toActiv = location - GetActorLocation();
 		float distance = toActiv.Size2D(); // ~30 - ~150
 		toActiv.Normalize();
 		FVector lookDirection = GetActorRotation().Vector();
 		float angle = FMath::RadiansToDegrees(acosf(FVector::DotProduct(lookDirection, toActiv))); // 0 - ~80
 		float temp = distance / 30.0f + angle / 10.0f;
-		if (temp < currentValue || currentValue < 0)
+		if (temp < currentValue || currentSelected == nullptr)
 		{
 			currentValue = temp;
 			currentSelected = activatable;
@@ -180,7 +185,7 @@ void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// GameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
+	GameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
 }
 
 // Called every frame
@@ -188,6 +193,7 @@ void AMainCharacter::Tick(const float deltaTime)
 {
 	Super::Tick(deltaTime);
 
+	// TODO move to a separate function
 	TScriptInterface<IActivatable> newSelectedForActivation = GetActivatable();
 	if (SelectedForActivation != newSelectedForActivation)
 	{
@@ -209,7 +215,8 @@ void AMainCharacter::Tick(const float deltaTime)
 		TArray<FString> informativeNames;
 
 		// Activatable in front
-		informativeObjects.Add(ActivatableObjects.Num() > 0 ? Cast<IInformative>(GetActivatable()->_getUObject()) : nullptr);
+		TScriptInterface<IActivatable> activatable = GetActivatable();
+		informativeObjects.Add(activatable ? Cast<IInformative>(activatable->_getUObject()) : nullptr);
 		informativeNames.Add("Activatable");
 
 		// Currently equipped

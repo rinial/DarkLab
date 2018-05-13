@@ -34,12 +34,19 @@ public:
 	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool debug = false);
 	float GetLightingAmount(FVector& lightLoc, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool debug = false);
 	float GetLightingAmount(FVector& lightLoc, const TArray<FVector> locations, const bool debug = false);
+	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool debug = false);
+	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations, const bool debug = false);
 	// Returns true if one actor/location can see other actor/location
 	// Its not about visibility to human eye, doesn't take light into account
 	bool CanSee(const AActor* actor1, const AActor* actor2, const bool debug = false);
 	bool CanSee(const FVector location, const AActor* actor, const bool debug = false);
 	bool CanSee(const AActor* actor, const FVector location, const bool debug = false);
 	bool CanSee(const FVector location1, const FVector location2, const bool debug = false);
+	bool CanSee(const AActor* actor1, const FVector location1, const AActor* actor2, const bool debug = false);
+	bool CanSee(const AActor* actor1, const AActor* actor2, const FVector location2, const bool debug = false);
+	bool CanSee(const AActor* actor1, const FVector location1, const FVector location2, const bool debug = false);
+	bool CanSee(const FVector location1, const AActor* actor2, const FVector location2, const bool debug = false);
+	bool CanSee(const AActor* actor1, const FVector location1, const AActor* actor2, const FVector location2, const bool debug = false);
 
 protected:
 	// Places an object on the map

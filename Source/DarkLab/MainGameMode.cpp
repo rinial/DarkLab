@@ -82,9 +82,17 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 {
 	if (!actor)
 		return 0.0f;
-	return GetLightingAmount(lightLoc, actor->GetActorLocation(), sixPoints, sixPointsRadius, fourMore, debug);
+	return GetLightingAmount(lightLoc, actor, actor->GetActorLocation(), sixPoints, sixPointsRadius, fourMore, debug);
 }
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool debug)
+float AMainGameMode::GetLightingAmount(FVector & lightLoc, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool debug)
+{
+	return GetLightingAmount(lightLoc, nullptr, location, sixPoints, sixPointsRadius, fourMore, debug);
+}
+float AMainGameMode::GetLightingAmount(FVector & lightLoc, const TArray<FVector> locations, const bool debug)
+{
+	return GetLightingAmount(lightLoc, nullptr, locations, debug);
+}
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool debug)
 {
 	TArray<FVector> locations;
 	locations.Add(location);
@@ -111,9 +119,9 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const FVector location
 			locations.Add(location - temp * sixPointsRadius);
 		}
 	}
-	return GetLightingAmount(lightLoc, locations, debug);
+	return GetLightingAmount(lightLoc, actor, locations, debug);
 }
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const TArray<FVector> locations, const bool debug)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations, const bool debug)
 {
 	float result = 0.0f;
 
@@ -158,7 +166,7 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const TArray<FVector> 
 				continue;
 						
 			// If location could be lit
-			if (CanSee(lightLocation, location))
+			if (CanSee(actor, location, lightLocation))
 			{
 				if(debug)
 					DrawDebugLine(gameWorld, location, lightLocation, FColor::Cyan);
@@ -194,41 +202,74 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const TArray<FVector> 
 // Its not about visibility to human eye, doesn't take light into account
 bool AMainGameMode::CanSee(const AActor * actor1, const AActor * actor2, const bool debug)
 {
+	if (!actor1 || !actor2)
+		return false;
+
+	return CanSee(actor1, actor1->GetActorLocation(), actor2, actor2->GetActorLocation(), debug);
+}
+bool AMainGameMode::CanSee(const FVector location1, const AActor * actor2, const bool debug)
+{
+	if (!actor2)
+		return false;
+
+	return CanSee(nullptr, location1, actor2, actor2->GetActorLocation(), debug);
+}
+bool AMainGameMode::CanSee(const AActor * actor1, const FVector location2, const bool debug)
+{
+	if(!actor1)
+		return false;
+
+	return CanSee(actor1, actor1->GetActorLocation(), nullptr, location2, debug);
+}
+bool AMainGameMode::CanSee(const FVector location1, const FVector location2, const bool debug)
+{
+	return CanSee(nullptr, location1, nullptr, location2, debug);
+}
+bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const AActor * actor2, const bool debug)
+{
+	if (!actor2)
+		return false;
+
+	return CanSee(actor1, location1, actor2, actor2->GetActorLocation(), debug);
+}
+bool AMainGameMode::CanSee(const AActor * actor1, const AActor * actor2, const FVector location2, const bool debug)
+{
 	if (!actor1)
 		return false;
 
-	return CanSee(actor1->GetActorLocation(), actor2, debug);
+	return CanSee(actor1, actor1->GetActorLocation(), actor2, location2, debug);
 }
-bool AMainGameMode::CanSee(const FVector location, const AActor * actor, const bool debug)
+bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const FVector location2, const bool debug)
 {
-	if (!actor)
-		return false;
-
-	return CanSee(location, actor->GetActorLocation(), debug);
+	return CanSee(actor1, location1, nullptr, location2, debug);
 }
-bool AMainGameMode::CanSee(const AActor * actor, const FVector location, const bool debug)
+bool AMainGameMode::CanSee(const FVector location1, const AActor * actor2, const FVector location2, const bool debug)
 {
-	if(!actor)
-		return false;
-
-	return CanSee(actor->GetActorLocation(), location, debug);
+	return CanSee(nullptr, location1, actor2, location2, debug);
 }
-bool AMainGameMode::CanSee(const FVector location1, const FVector location2, const bool debug)
+bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const AActor * actor2, const FVector location2, const bool debug)
 {
 	UWorld* gameWorld = GetWorld();
 	if (!gameWorld)
 		return false;
 
 	FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("LightTrace")), true);
-	/*// Add actor and all of its components as ignored
-	if (actor)
+	if (actor1)
 	{
-		params.AddIgnoredActor(actor);
+		params.AddIgnoredActor(actor1);
 		TInlineComponentArray<UActorComponent*> components;
-		actor->GetComponents(components, true);
+		actor1->GetComponents(components, true);
 		for (UActorComponent* component : components)
-		params.AddIgnoredComponent(Cast<UPrimitiveComponent>(component));
-	}*/
+			params.AddIgnoredComponent(Cast<UPrimitiveComponent>(component));
+	}
+	if (actor2)
+	{
+		params.AddIgnoredActor(actor2);
+		TInlineComponentArray<UActorComponent*> components;
+		actor2->GetComponents(components, true);
+		for (UActorComponent* component : components)
+			params.AddIgnoredComponent(Cast<UPrimitiveComponent>(component));
+	}
 
 	if (debug)
 	{
