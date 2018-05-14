@@ -125,6 +125,12 @@ protected:
 	bool RoomSpaceIsFree(LabRoom* room, const int xOffset, const int yOffset, EDirectionEnum direction, const int width = 4, const bool forPassage = false, const bool forDoor = false);
 	bool RoomSpaceIsFree(LabRoom* room, const int xOffset, const int yOffset, const int sizeX = 1, const int sizeY = 1, const bool forPassage = false, const bool forDoor = false);
 
+	// Returns true is first is inside second
+	bool IsInside(LabRoom* room1, LabRoom* room2);
+	bool IsInside(FRectSpaceStruct space1, LabRoom* room2);
+	bool IsInside(LabRoom* room1, FRectSpaceStruct space2);
+	bool IsInside(FRectSpaceStruct space1, FRectSpaceStruct space2);
+
 	// Tries to create a room and allocate space for it
 	LabRoom* CreateRoom(FRectSpaceStruct space);
 	LabRoom* CreateRoom(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);

@@ -986,6 +986,45 @@ bool AMainGameMode::RoomSpaceIsFree(LabRoom * room, const int xOffset, const int
 	}
 }
 
+// Returns true is first is inside second
+bool AMainGameMode::IsInside(LabRoom * room1, LabRoom * room2)
+{
+	if (!room1 || !room2)
+		return false;
+}
+bool AMainGameMode::IsInside(FRectSpaceStruct space1, LabRoom * room2)
+{
+	if (!room2)
+		return false;
+
+	return IsInside(space1, FRectSpaceStruct(room2->BotLeftX, room2->BotLeftY, room2->SizeX, room2->SizeY));
+}
+bool AMainGameMode::IsInside(LabRoom * room1, FRectSpaceStruct space2)
+{
+	if (!room1)
+		return false;
+
+	return IsInside(FRectSpaceStruct(room1->BotLeftX, room1->BotLeftY, room1->SizeX, room1->SizeY), space2);
+}
+bool AMainGameMode::IsInside(FRectSpaceStruct space1, FRectSpaceStruct space2)
+{
+	// Out on the left
+	if(space1.BotLeftX < space2.BotLeftX)
+		return false;
+
+	// Out on the bottom
+	if (space1.BotLeftY < space2.BotLeftY)
+		return false;
+
+	// Out on the right
+	if (space1.BotLeftX + space1.SizeX > space2.BotLeftX + space2.SizeX)
+		return false;
+
+	// Out on the top
+	if (space1.BotLeftY + space1.SizeY > space2.BotLeftY + space2.SizeY)
+		return false;
+}
+
 // Tries to create a room and allocate space for it
 LabRoom* AMainGameMode::CreateRoom(FRectSpaceStruct space)
 {
