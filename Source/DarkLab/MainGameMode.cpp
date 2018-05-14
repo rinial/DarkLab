@@ -1235,6 +1235,7 @@ void AMainGameMode::GenerateMap()
 
 	// 1. Something allocates a room
 	LabRoom* startRoom = CreateStartRoom();
+	LabRoom* leftRoom = CreateRoom(-17, -5, 5, 12);
 
 	// 2. We find positions for passages and allocate minimum size
 	// 2*. We should also find passages between this room and other allocated but not spawn 
@@ -1242,15 +1243,26 @@ void AMainGameMode::GenerateMap()
 	// 4. For each passage we allocate new rooms (1. may be happening here)
 	// 5. We add passages to our new rooms
 	TArray<LabRoom*> newRooms = ExpandRoom(startRoom);
+	TArray<LabRoom*> newLeftRooms = ExpandRoom(leftRoom); // THIS should produce passages to the rooms from start room
 
 	// 6. We spawn our initial room
 	SpawnRoom(startRoom);
+	SpawnRoom(leftRoom);
 
 	// 7. We initialize and spawn other parts of the initial room
 	FillRoom(startRoom, 1); // we want at least one lamp in starting room so we override it
+	FillRoom(leftRoom);
 
-							// 8+. We repeat from 1 for other rooms (rn we just spawn)
+	// 8+. We repeat from 1 for other rooms (rn we just spawn)
 	for (LabRoom* room : newRooms)
+	{
+		// TArray<LabRoom*> evenNewerRooms = ExpandRoom(room)
+		SpawnRoom(room);
+		FillRoom(room);
+
+		// Repeat
+	}
+	for (LabRoom* room : newLeftRooms)
 	{
 		// TArray<LabRoom*> evenNewerRooms = ExpandRoom(room)
 		SpawnRoom(room);
