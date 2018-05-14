@@ -18,10 +18,6 @@ public:
 	int SizeX = 4;
 	int SizeY = 4;
 
-	// Used for rooms inside rooms
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Room")
-	LabRoom* OuterRoom = nullptr;
-
 	// Passages from this room
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Room")
 	TArray<LabPassage*> Passages;
@@ -41,8 +37,8 @@ private:
 
 public:
 	// Sets default values
-	LabRoom(int botLeftX, int botLeftY, int sizeX, int sizeY, LabRoom* outer = nullptr);
-	LabRoom(FRectSpaceStruct locSize, LabRoom* outer = nullptr);
+	LabRoom(int botLeftX, int botLeftY, int sizeX, int sizeY);
+	LabRoom(FRectSpaceStruct locSize);
 
 	// Called on destruction
 	~LabRoom();

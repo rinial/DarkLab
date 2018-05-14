@@ -108,12 +108,12 @@ bool LabRoom::LeadsFromThisRoom(int botLeftX, int botLeftY, EDirectionEnum direc
 }
 
 // Sets default values
-LabRoom::LabRoom(int botLeftX, int botLeftY, int sizeX, int sizeY, LabRoom* outer) : BotLeftX(botLeftX), BotLeftY(botLeftY), OuterRoom(outer)
+LabRoom::LabRoom(int botLeftX, int botLeftY, int sizeX, int sizeY) : BotLeftX(botLeftX), BotLeftY(botLeftY)
 {
 	SizeX = sizeX > 4 ? sizeX : 4;
 	SizeY = sizeY > 4 ? sizeY : 4;
 }
-LabRoom::LabRoom(FRectSpaceStruct locSize, LabRoom * outer) : LabRoom(locSize.BotLeftX, locSize.BotLeftY, locSize.SizeX, locSize.SizeY, outer)
+LabRoom::LabRoom(FRectSpaceStruct locSize) : LabRoom(locSize.BotLeftX, locSize.BotLeftY, locSize.SizeX, locSize.SizeY)
 { }
 
 // Called on destruction

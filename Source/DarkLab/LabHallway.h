@@ -26,8 +26,8 @@ public:
 
 public:
 	// Sets default values
-	LabHallway(int botLeftX, int botLeftY, EDirectionEnum direction, int length, int width = 8, LabRoom* from = nullptr, LabRoom* to = nullptr, int enterWidth = 4, int exitWidth = 4, LabRoom* outer = nullptr);
-	LabHallway(int botLeftX, int botLeftY, EDirectionEnum direction, int length, int width, LabRoom* from, LabRoom* to, bool enterIsDoor, bool exitIsDoor, FLinearColor enterColor = FLinearColor::White, FLinearColor exitColor = FLinearColor::White, int enterWidth = 4, int exitWidth = 4, LabRoom* outer = nullptr);
+	LabHallway(int botLeftX, int botLeftY, EDirectionEnum direction, int length, int width = 8, LabRoom* from = nullptr, LabRoom* to = nullptr, int enterWidth = 4, int exitWidth = 4);
+	LabHallway(int botLeftX, int botLeftY, EDirectionEnum direction, int length, int width, LabRoom* from, LabRoom* to, bool enterIsDoor, bool exitIsDoor, FLinearColor enterColor = FLinearColor::White, FLinearColor exitColor = FLinearColor::White, int enterWidth = 4, int exitWidth = 4);
 
 	// Called on destruction
 	~LabHallway();
