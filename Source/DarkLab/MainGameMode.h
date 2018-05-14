@@ -93,15 +93,6 @@ protected:
 	void SpawnRoom(LabRoom* room);
 	void SpawnPassage(LabPassage* passage, LabRoom* room = nullptr);
 
-	//// Space is allocated and can't be allocated again
-	//FRectSpaceStruct* AllocateSpace(LabRoom* room);
-	//FRectSpaceStruct* AllocateSpace(const int botLeftX, const int botLeftY, const int sizeX = 1, const int sizeY = 1);
-	//FRectSpaceStruct* AllocateSpace(FRectSpaceStruct space);
-	//// Space is not allocated anymore
-	//void DeallocateSpace(FRectSpaceStruct space);
-	//void DeallocateSpace(LabRoom* room);
-	//void DeallocateSpace(const int botLeftX, const int botLeftY, const int sizeX = 1, const int sizeY = 1);
-
 	// Room is allocated and can't be allocated again
 	void AllocateRoom(LabRoom* room);
 	// Room is not allocated anymore
