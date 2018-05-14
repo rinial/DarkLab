@@ -125,6 +125,7 @@ protected:
 	// Tries to create a room and allocate space for it
 	LabRoom* CreateRoom(FRectSpaceStruct space);
 	LabRoom* CreateRoom(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
+
 	// Creates starting room
 	LabRoom* CreateStartRoom();
 
@@ -135,7 +136,9 @@ protected:
 	// Creates minimum space for a room near passage for tests and allocation
 	// TODO maybe it should take room size just in case other room gets destroyed
 	FRectSpaceStruct CreateMinimumRoomSpace(LabRoom* room, FRectSpaceStruct passageSpace, EDirectionEnum direction);
-	// TODO CreateRandomRoomSpace
+
+	// Creates a random room based on minimum room space
+	LabRoom* CreateRandomRoom(FRectSpaceStruct minSpace);
 
 	// Creates and adds a random passage to the room, returns passage or nullptr and returns allocated room space by reference or another room that is now connected
 	LabPassage* CreateAndAddRandomPassage(LabRoom* room, FRectSpaceStruct& roomSpace, LabRoom*& possibleRoomConnection);

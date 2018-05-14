@@ -19,7 +19,7 @@
 #include "DarknessController.h"
 
 // Probabilities
-const float AMainGameMode::ConnectToOtherRoomProbability = 1.0f;
+const float AMainGameMode::ConnectToOtherRoomProbability = 0.8f;
 const float AMainGameMode::PassageIsDoorProbability = 0.6f;
 const float AMainGameMode::DoorIsNormalProbability = 0.95f;
 const float AMainGameMode::SpawnFlashlightProbability = 0.4f; // TODO make it lower
@@ -107,7 +107,7 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 		locations.Add(location - FVector::RightVector * sixPointsRadius);
 		locations.Add(location + FVector::ForwardVector * sixPointsRadius);
 		locations.Add(location - FVector::ForwardVector * sixPointsRadius);
-		
+
 		// We add four more locations around the point (diagonally)
 		if (fourMore)
 		{
@@ -146,7 +146,7 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 	// We find local results for all locations
 	for (FVector location : locations)
 	{
-		if(debug)
+		if (debug)
 			DrawDebugPoint(gameWorld, location, 5, FColor::Red);
 
 		// This will be used for the spot lights
@@ -166,11 +166,11 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 			// UE_LOG(LogTemp, Warning, TEXT("dist: %f, rad: %f"), distance, lightRadius);
 			if (distance > lightRadius)
 				continue;
-						
+
 			// If location could be lit
 			if (CanSee(actor, location, lightLocation))
 			{
-				if(debug)
+				if (debug)
 					DrawDebugLine(gameWorld, location, lightLocation, FColor::Cyan);
 
 				// 1 if near the edge of light, 0 if in center
@@ -218,7 +218,7 @@ bool AMainGameMode::CanSee(const FVector location1, const AActor * actor2, const
 }
 bool AMainGameMode::CanSee(const AActor * actor1, const FVector location2, const bool debug)
 {
-	if(!actor1)
+	if (!actor1)
 		return false;
 
 	return CanSee(actor1, actor1->GetActorLocation(), nullptr, location2, debug);
@@ -449,7 +449,7 @@ UObject* AMainGameMode::TryGetPoolable(UClass* cl)
 		}
 	}
 
-	if(index < 0)
+	if (index < 0)
 		return nullptr;
 
 	object = pool[index];
@@ -530,7 +530,7 @@ AWallLamp * AMainGameMode::SpawnWallLamp(const int botLeftX, const int botLeftY,
 		if (SpawnedRoomObjects.Contains(room))
 			SpawnedRoomObjects[room].Add(lamp);
 		if (AllocatedRoomSpace.Contains(room))
-			AllocateRoomSpace(room, botLeftX, botLeftY, direction, width, false); 
+			AllocateRoomSpace(room, botLeftX, botLeftY, direction, width, false);
 	}
 
 	// UE_LOG(LogTemp, Warning, TEXT("Spawned a wall lamp"));
@@ -949,7 +949,7 @@ bool AMainGameMode::IsInside(LabRoom * room1, FRectSpaceStruct space2)
 bool AMainGameMode::IsInside(FRectSpaceStruct space1, FRectSpaceStruct space2)
 {
 	// Out on the left
-	if(space1.BotLeftX < space2.BotLeftX)
+	if (space1.BotLeftX < space2.BotLeftX)
 		return false;
 
 	// Out on the bottom
@@ -984,11 +984,14 @@ LabRoom* AMainGameMode::CreateRoom(const int botLeftX, const int botLeftY, const
 
 	return room;
 }
+
 // Creates starting room
 LabRoom * AMainGameMode::CreateStartRoom()
 {
-	// TODO should be random
-	return CreateRoom(-10, -5, 15, 12);;
+	// TODO should be different
+	FRectSpaceStruct minSpace(-10, -5, 15, 12);
+
+	return CreateRandomRoom(minSpace);;
 }
 
 // Creates random space for a future passage (not world location but offsets)
@@ -1088,7 +1091,16 @@ FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom* room, FRectSpace
 
 	return space;
 }
-// TODO CreateRandomRoomSpace
+
+// Creates a random room based on minimum room space
+LabRoom * AMainGameMode::CreateRandomRoom(FRectSpaceStruct minSpace)
+{
+	LabRoom* room = CreateRoom(minSpace);
+
+	// TODO
+
+	return room;
+}
 
 // Creates and adds a random passage to the room, returns passage or nullptr, also allocates room space and returns allocated room space by reference
 LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpaceStruct & roomSpace, LabRoom*& possibleRoomConnection)
@@ -1107,12 +1119,12 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 
 	// Test if it works on the map
 	// Intersects something spawned
-	if (!MapSpaceIsFree(false, true, roomSpace)) 
+	if (!MapSpaceIsFree(false, true, roomSpace))
 		return nullptr;
 
 	LabRoom* intersected = nullptr;
 	// Intersects something allocated
-	bool spaceIsFree = MapSpaceIsFree(true, false, roomSpace, intersected); 
+	bool spaceIsFree = MapSpaceIsFree(true, false, roomSpace, intersected);
 	if (!spaceIsFree)
 	{
 		// If we don't want to connect
@@ -1180,13 +1192,8 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 			{
 				// UE_LOG(LogTemp, Warning, TEXT("> %s"), TEXT("success"));
 
-				// TODO create new room space 
-				// CreateRandomRoomSpace()
-				// Make sure that MapSpaceIsFree(newSpace)
-				FRectSpaceStruct newSpace = minRoomSpace;
-
-				// We create new room from new space, it also allocates room's space
-				LabRoom* newRoom = CreateRoom(newSpace);
+				// We create new room from min space, it also allocates room's space
+				LabRoom* newRoom = CreateRandomRoom(minRoomSpace);
 				if (!newRoom)
 					continue;
 
@@ -1243,10 +1250,10 @@ bool AMainGameMode::CreateRandomInsideSpaceOfWidthNearWall(LabRoom * room, int& 
 	}
 
 	// Left or right
-	if (direction == EDirectionEnum::VE_Left || direction == EDirectionEnum::VE_Right) 
+	if (direction == EDirectionEnum::VE_Left || direction == EDirectionEnum::VE_Right)
 		yOffset = FMath::RandRange(1, room->SizeY - 1 - width);
 	// Bottom or top
-	else 
+	else
 		xOffset = FMath::RandRange(1, room->SizeX - 1 - width);
 
 	// Test if it works in the room
@@ -1270,15 +1277,15 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 	{
 		int xOff;
 		int yOff;
-		int width = FMath::RandRange(MinLampWidth, MaxLampWidth); 
+		int width = FMath::RandRange(MinLampWidth, MaxLampWidth);
 		EDirectionEnum direction;
 		if (CreateRandomInsideSpaceOfWidthNearWall(room, xOff, yOff, width, direction))
 		{
 			// TODO color should depend on the room
-			FLinearColor color = RandColor(); 
+			FLinearColor color = RandColor();
 			AWallLamp* lamp = SpawnWallLamp(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, color, width, room);
 			// TODO this shouldn't be here
-			if (lamp) lamp->Execute_ActivateIndirectly(lamp); 
+			if (lamp) lamp->Execute_ActivateIndirectly(lamp);
 			spawnedActors.Add(lamp);
 		}
 	}
@@ -1403,7 +1410,7 @@ void AMainGameMode::BeginPlay()
 	GenerateMap();
 	/*PoolMap();
 	GenerateMap();*/
-	
+
 	// Tests
 	/*
 	// Testing room pooling
@@ -1420,7 +1427,7 @@ void AMainGameMode::BeginPlay()
 	LabHallway* hallway2 = new LabHallway(-5, -25, EDirectionEnum::VE_Right, 50, 12, nullptr, nullptr, false, true, FLinearColor::White, FLinearColor::Black, 10, 6);
 	SpawnRoom(hallway1);
 	SpawnRoom(hallway2);
-	
+
 	// Testing basic room parts
 	SpawnBasicFloor(-20, -20, 40, 40);
 	SpawnBasicWall(-7, -5, 1, 9);
