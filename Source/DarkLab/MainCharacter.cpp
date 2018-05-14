@@ -115,7 +115,7 @@ TScriptInterface<class IActivatable> AMainCharacter::GetActivatable()
 		AActor* actor = Cast<AActor>(activatable->_getUObject());
 		// We check if actor can be seen before its actually activatable
 		// The check is done with Z increased so that there are no conflicts with floor
-		if (!GameMode->CanSee(this, actor, actor->GetActorLocation() + FVector(0, 0, 30), true)) // TODO disable debug here
+		if (!GameMode->CanSee(this, actor, actor->GetActorLocation() + FVector(0, 0, 30)))
 			continue;
 
 		FVector location = actor->GetActorLocation();

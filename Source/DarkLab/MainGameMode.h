@@ -153,8 +153,41 @@ public:
 	void GenerateMap();
 	// Resets the map
 	void ResetMap();
+	// Shows/hides debug
+	void ShowHideDebug();
 
 protected:
+	// For debug
+	bool bShowDebug = false;
+
+	// All space in use
+	TArray<FRectSpaceStruct> AllocatedSpace;
+	TMap<LabRoom*, FRectSpaceStruct*> AllocatedRoomSpace;
+	// TMap<FRectSpaceStruct*, LabPassage*> AllocatedMinRoomSpaceForPassages; // ?
+	// CreateAndAddRandomPassage
+
+	// Room-specific space taken by various objects (not world locations but offsets)
+	TMap<LabRoom*, TArray<FRectSpaceStruct>> TakenRoomSpace;
+
+	// Spawned map parts
+	// Does not include pickupable objects
+	TMap<LabRoom*, TArray<TScriptInterface<IDeactivatable>>> SpawnedRoomObjects;
+	TMap<LabPassage*, TArray<TScriptInterface<IDeactivatable>>> SpawnedPassageObjects;
+
+	// Pools
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
+	TArray<TScriptInterface<IDeactivatable>> DefaultPool;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
+	TArray<TScriptInterface<IDeactivatable>> BasicFloorPool;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
+	TArray<TScriptInterface<IDeactivatable>> BasicWallPool;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
+	TArray<TScriptInterface<IDeactivatable>> BasicDoorPool;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
+	TArray<TScriptInterface<IDeactivatable>> WallLampPool;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
+	TArray<TScriptInterface<IDeactivatable>> FlashlightPool;
+
 	// Constants used for generation
 	static const int MinRoomSize = 4; // Can't be lower than 4
 	static const int MaxRoomSize = 50;
@@ -184,31 +217,8 @@ protected:
 	static const float RedProbability;
 	static const float BlackProbability;
 
-	// All space in use
-	TArray<FRectSpaceStruct> AllocatedSpace;
-	TMap<LabRoom*, FRectSpaceStruct*> AllocatedRoomSpace;
-
-	// Room-specific space taken by various objects (not world locations but offsets)
-	TMap<LabRoom*, TArray<FRectSpaceStruct>> TakenRoomSpace;
-
-	// Spawned map parts
-	// Does not include pickupable objects
-	TMap<LabRoom*, TArray<TScriptInterface<IDeactivatable>>> SpawnedRoomObjects;
-	TMap<LabPassage*, TArray<TScriptInterface<IDeactivatable>>> SpawnedPassageObjects;
-
-	// Pools
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
-	TArray<TScriptInterface<IDeactivatable>> DefaultPool;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
-	TArray<TScriptInterface<IDeactivatable>> BasicFloorPool;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
-	TArray<TScriptInterface<IDeactivatable>> BasicWallPool;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
-	TArray<TScriptInterface<IDeactivatable>> BasicDoorPool;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
-	TArray<TScriptInterface<IDeactivatable>> WallLampPool;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
-	TArray<TScriptInterface<IDeactivatable>> FlashlightPool;
+	// Pointers to existing controllers
+	class ADarknessController* DarknessController;
 	
 private:
 	// Classes used for spawning

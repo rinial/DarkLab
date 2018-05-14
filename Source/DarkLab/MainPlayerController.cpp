@@ -178,7 +178,8 @@ void AMainPlayerController::SetupInputComponent()
 
 	InputComponent->BindAction("Menu/Cancel", IE_Pressed, this, &AMainPlayerController::ShowHideMenu);
 
-	InputComponent->BindAction("DebugReset", IE_Pressed, this, &AMainPlayerController::ResetMap);
+	InputComponent->BindAction("DebugReset", IE_Pressed, Cast<AMainGameMode>(GetWorld()->GetAuthGameMode()), &AMainGameMode::ResetMap);
+	InputComponent->BindAction("DebugShow", IE_Pressed, Cast<AMainGameMode>(GetWorld()->GetAuthGameMode()), &AMainGameMode::ShowHideDebug);
 }
 
 // Called every frame

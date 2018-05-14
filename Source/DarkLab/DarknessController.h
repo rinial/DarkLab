@@ -21,6 +21,11 @@ class DARKLAB_API ADarknessController : public AAIController
 {
 	GENERATED_BODY()
 
+public:
+	// Shows/hides debug
+	UFUNCTION()
+	void SetShowDebug(bool show);
+
 private:
 	// Controlled darkness
 	UPROPERTY()

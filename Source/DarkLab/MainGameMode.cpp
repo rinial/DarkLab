@@ -16,6 +16,7 @@
 #include "LabRoom.h"
 #include "LabHallway.h"
 #include "Algo/BinarySearch.h"
+#include "DarknessController.h"
 
 // Probabilities
 const float AMainGameMode::PassageIsDoorProbability = 0.6f;
@@ -1084,7 +1085,7 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 // Returns new rooms
 TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 {
-	TMap<LabPassage*, FRectSpaceStruct> successfulPassagesSpace;
+	TArray<LabRoom*> newRooms;
 
 	// The number of passages we want to have in the room
 	// These are not just new but overall
@@ -1096,41 +1097,40 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 
 	// Creates new passages in the room
 	// Allocates minimum room space for passages
+	// Create rooms for the passages if rooms weren't found already
 	for (int i = 0; room->Passages.Num() < MinRoomNumOfPassages || (i < maxTries && room->Passages.Num() < desiredNumOfPassages); ++i)
 	{
 		FRectSpaceStruct allocatedRoomSpace;
 		LabPassage* passage = CreateAndAddRandomPassage(room, allocatedRoomSpace);
 		if (passage)
-			successfulPassagesSpace.Add(passage, allocatedRoomSpace);
-		UE_LOG(LogTemp, Warning, TEXT("> %s"), passage ? TEXT("success") : TEXT("failure"));
+		{
+			UE_LOG(LogTemp, Warning, TEXT("> %s"), TEXT("success"));
+
+			// Should add passage to the found room if we found one
+
+			UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: %d, sX: %d, sY: %d"), allocatedRoomSpace.BotLeftX, allocatedRoomSpace.BotLeftY, allocatedRoomSpace.SizeX, allocatedRoomSpace.SizeY);
+			DeallocateSpace(allocatedRoomSpace); // TODO should'nt allocate in the first place
+
+			// TODO create new room space 
+			// CreateRandomRoomSpace()
+			// Make sure that MapSpaceIsFree(newSpace)
+			FRectSpaceStruct newSpace = allocatedRoomSpace;
+
+			// We create new room from new space, it also allocates room's space
+			LabRoom* newRoom = CreateRoom(newSpace);
+			if (!newRoom)
+				continue;
+
+			// We add passage to the room
+			newRoom->AddPassage(passage);
+			newRooms.Add(newRoom);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("> %s"), TEXT("failure"));
+		}
 	}
 	// TODO We should also find passages between this room and other allocated but not spawn
-
-	TArray<LabRoom*> newRooms;
-	TArray<LabPassage*> passages;
-	successfulPassagesSpace.GetKeys(passages);
-	for (LabPassage* passage : passages)
-	{
-		FRectSpaceStruct minSpace = successfulPassagesSpace[passage];
-		UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: %d, sX: %d, sY: %d"), minSpace.BotLeftX, minSpace.BotLeftY, minSpace.SizeX, minSpace.SizeY);
-		DeallocateSpace(minSpace);
-
-		// TODO find maximum possible distance in three directions
-
-		// TODO create new room space 
-		// CreateRandomRoomSpace()
-		// Make sure that MapSpaceIsFree(newSpace)
-		FRectSpaceStruct newSpace = minSpace;
-
-		// We create new room from new space, it also allocates room's space
-		LabRoom* newRoom = CreateRoom(newSpace);		
-		// We add passage to the room
-		if (!newRoom)
-			continue;
-		
-		newRoom->AddPassage(passage);
-		newRooms.Add(newRoom);
-	}
 
 	return newRooms;
 }
@@ -1266,6 +1266,14 @@ void AMainGameMode::ResetMap()
 	GenerateMap();
 }
 
+// Shows/hides debug
+void AMainGameMode::ShowHideDebug()
+{
+	bShowDebug = !bShowDebug;
+	if (DarknessController)
+		DarknessController->SetShowDebug(bShowDebug);
+}
+
 // Sets default values
 AMainGameMode::AMainGameMode()
 {
@@ -1294,6 +1302,18 @@ AMainGameMode::AMainGameMode()
 void AMainGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// We find darkness controller
+	UWorld* gameWorld = GetWorld();
+	for (TObjectIterator<ADarknessController> Itr; Itr; ++Itr)
+	{
+		// World Check
+		if (Itr->GetWorld() != gameWorld)
+			continue;
+
+		DarknessController = *Itr;
+		break; // We only need one (and there should be only one)
+	}
 
 	GenerateMap();
 	/*PoolMap();
@@ -1345,12 +1365,12 @@ void AMainGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	UE_LOG(LogTemp, Warning, TEXT("EndPlay called"));
 
-	TArray<LabRoom*> spawnedRooms;
-	SpawnedRoomObjects.GetKeys(spawnedRooms);
+	TArray<LabRoom*> allocatedRooms;
+	AllocatedRoomSpace.GetKeys(allocatedRooms);
 
 	// Clear all saved rooms
-	for (int i = spawnedRooms.Num() - 1; i >= 0; --i)
-		delete spawnedRooms[i];
+	for (int i = allocatedRooms.Num() - 1; i >= 0; --i)
+		delete allocatedRooms[i];
 }
 
 // TODO delete?
