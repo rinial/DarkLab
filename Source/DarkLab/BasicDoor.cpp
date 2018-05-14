@@ -23,6 +23,14 @@ void ABasicDoor::ActivateObject(AMainCharacter * character)
 	}
 }
 
+// TODO let some interface define it?
+// Resets to initial state
+void ABasicDoor::Reset()
+{
+	DoorDriver->Stop();
+	DoorDriver->SetPlaybackPosition(0.0f, true);
+}
+
 // Sets default values
 ABasicDoor::ABasicDoor()
 {

@@ -16,6 +16,11 @@ public:
 	// Called when the object is activated
 	UFUNCTION(BlueprintCallable, Category = "Activatable")
 	virtual void ActivateObject(AMainCharacter* character) override;
+
+	// TODO let some interface define it?
+	// Resets to initial state
+	UFUNCTION(BlueprintCallable, Category = "Door")
+	void Reset();
 	
 protected:
 	// Door's direction and root object
