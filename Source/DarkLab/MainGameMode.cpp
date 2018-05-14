@@ -504,6 +504,7 @@ ABasicDoor * AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeft
 	if (!door)
 		door = GetWorld()->SpawnActor<ABasicDoor>(BasicDoorBP);
 
+	door->Reset(); // Clothes the door if it was open
 	door->DoorColor = color; // Sets wall's color
 	PlaceObject(door, botLeftX, botLeftY, direction, width);
 
@@ -532,7 +533,7 @@ AWallLamp * AMainGameMode::SpawnWallLamp(const int botLeftX, const int botLeftY,
 			AllocateRoomSpace(room, botLeftX, botLeftY, direction, width, false); 
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Spawned a wall lamp"));
+	// UE_LOG(LogTemp, Warning, TEXT("Spawned a wall lamp"));
 
 	return lamp;
 }
@@ -545,7 +546,7 @@ AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLef
 	flashlight->Reset(); // Disables light if it was on
 	PlaceObject(flashlight, botLeftX, botLeftY, direction);
 
-	UE_LOG(LogTemp, Warning, TEXT("Spawned a flashlight"));
+	// UE_LOG(LogTemp, Warning, TEXT("Spawned a flashlight"));
 
 	return flashlight;
 }
@@ -661,7 +662,7 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 		SpawnBasicWall(room->BotLeftX + bottomWallPositions[i], room->BotLeftY, wallLength, 1, room);
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Spawned a room"));
+	// UE_LOG(LogTemp, Warning, TEXT("Spawned a room"));
 }
 void AMainGameMode::SpawnPassage(LabPassage* passage, LabRoom* room)
 {
@@ -689,7 +690,7 @@ void AMainGameMode::SpawnPassage(LabPassage* passage, LabRoom* room)
 		SpawnBasicDoor(passage->BotLeftX, passage->BotLeftY, passage->GridDirection, passage->Color, passage->Width, passage);
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("> Spawned a passage"));
+	// UE_LOG(LogTemp, Warning, TEXT("> Spawned a passage"));
 }
 
 //// Space is allocated and can't be allocated again
@@ -868,7 +869,6 @@ bool AMainGameMode::MapSpaceIsFree(bool amongAllocated, bool amongSpawned, const
 }
 
 // Returns true if there is free rectangular space in a room
-// notNearPassage means that space near passages is not free
 bool AMainGameMode::RoomSpaceIsFree(LabRoom * room, FRectSpaceStruct space, const bool forPassage, const bool forDoor)
 {
 	return RoomSpaceIsFree(room, space.BotLeftX, space.BotLeftY, space.SizeX, space.SizeY, forPassage, forDoor);
@@ -991,6 +991,8 @@ bool AMainGameMode::IsInside(LabRoom * room1, LabRoom * room2)
 {
 	if (!room1 || !room2)
 		return false;
+
+	return IsInside(FRectSpaceStruct(room1->BotLeftX, room1->BotLeftY, room1->SizeX, room1->SizeY), FRectSpaceStruct(room2->BotLeftX, room2->BotLeftY, room2->SizeX, room2->SizeY));
 }
 bool AMainGameMode::IsInside(FRectSpaceStruct space1, LabRoom * room2)
 {
@@ -1023,6 +1025,9 @@ bool AMainGameMode::IsInside(FRectSpaceStruct space1, FRectSpaceStruct space2)
 	// Out on the top
 	if (space1.BotLeftY + space1.SizeY > space2.BotLeftY + space2.SizeY)
 		return false;
+
+	// Everything is fine
+	return true;
 }
 
 // Tries to create a room and allocate space for it
@@ -1170,16 +1175,28 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 	LabRoom* intersected = nullptr;
 	// Intersects something allocated
 	bool spaceIsFree = MapSpaceIsFree(true, false, roomSpace, intersected); 
-
-	// TODO somewhere we find possibleRoomConnection
-	// Make sure that not all intersects are possible connections
-	// Includes minimum completely
 	if (!spaceIsFree)
-		possibleRoomConnection = nullptr; // TODO nullptr obviously
+	{
+		// If we don't want to connect
+		if (!RandBool(ConnectToOtherRoomProbability))
+			return nullptr;
 
-	// If we have something to connect to but we don't want to
-	if (possibleRoomConnection && !RandBool(ConnectToOtherRoomProbability))
-		return nullptr;
+		// We found something that intersects roomSpace but is not spawned yet
+		// We check if instead of creating new room (which we can't do since we intersected) we can connect to this room instead
+
+		// Other room should include the room space
+		if (!IsInside(roomSpace, intersected))
+			return nullptr;
+
+		// TODO maybe we should delete this since other room should always be able to include passage if it includes roomSpace
+		// Now we check if other room can include our passage
+		FRectSpaceStruct pasSpaceForOther = FRectSpaceStruct(pasSpace.BotLeftX - intersected->BotLeftX + room->BotLeftX, pasSpace.BotLeftY - intersected->BotLeftY + room->BotLeftY, pasSpace.SizeX, pasSpace.SizeY);
+		if (!RoomSpaceIsFree(intersected, pasSpaceForOther, true)) // We don't check for door since we already have good walls for sliding door in original room
+			return nullptr;
+
+		// At this point other room should be considered good
+		possibleRoomConnection = intersected;
+	}
 
 	// Add this passage to the room
 	LabPassage* passage;
@@ -1206,7 +1223,7 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 	// The number of passages we want to have in the room
 	// These are not just new but overall
 	int desiredNumOfPassages = FMath::RandRange(MinRoomNumOfPassages, MaxRoomNumOfPassages);
-	UE_LOG(LogTemp, Warning, TEXT("Trying to add %d passages"), desiredNumOfPassages);
+	// UE_LOG(LogTemp, Warning, TEXT("Trying to add %d passages"), desiredNumOfPassages);
 
 	// Maximum number of tries
 	int maxTries = MaxRoomPassageCreationTriesPerDesired * desiredNumOfPassages;
@@ -1223,9 +1240,7 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 		{
 			if (!possibleRoomConnection)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("> %s"), TEXT("success"));
-
-				UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: %d, sX: %d, sY: %d"), minRoomSpace.BotLeftX, minRoomSpace.BotLeftY, minRoomSpace.SizeX, minRoomSpace.SizeY);
+				// UE_LOG(LogTemp, Warning, TEXT("> %s"), TEXT("success"));
 
 				// TODO create new room space 
 				// CreateRandomRoomSpace()
@@ -1243,18 +1258,14 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 			}
 			else
 			{
-				UE_LOG(LogTemp, Warning, TEXT("> %s"), TEXT("found a room to connect to"));
-
-				// Should add passage to the found room if we found one
-				// (unless it was added before)
+				// UE_LOG(LogTemp, Warning, TEXT("> %s"), TEXT("found a room to connect to"));
 			}
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("> %s"), TEXT("failure"));
+			// UE_LOG(LogTemp, Warning, TEXT("> %s"), TEXT("failure"));
 		}
 	}
-	// TODO We should also find passages between this room and other allocated but not spawn
 
 	return newRooms;
 }
