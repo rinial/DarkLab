@@ -93,31 +93,41 @@ protected:
 	void SpawnRoom(LabRoom* room);
 	void SpawnPassage(LabPassage* passage, LabRoom* room = nullptr);
 
-	// Space is allocated and can't be allocated again
-	FRectSpaceStruct* AllocateSpace(LabRoom* room);
-	FRectSpaceStruct* AllocateSpace(const int botLeftX, const int botLeftY, const int sizeX = 1, const int sizeY = 1);
-	FRectSpaceStruct* AllocateSpace(FRectSpaceStruct space);
-	// Space is not allocated anymore
-	void DeallocateSpace(FRectSpaceStruct space);
-	void DeallocateSpace(LabRoom* room);
-	void DeallocateSpace(const int botLeftX, const int botLeftY, const int sizeX = 1, const int sizeY = 1);
+	//// Space is allocated and can't be allocated again
+	//FRectSpaceStruct* AllocateSpace(LabRoom* room);
+	//FRectSpaceStruct* AllocateSpace(const int botLeftX, const int botLeftY, const int sizeX = 1, const int sizeY = 1);
+	//FRectSpaceStruct* AllocateSpace(FRectSpaceStruct space);
+	//// Space is not allocated anymore
+	//void DeallocateSpace(FRectSpaceStruct space);
+	//void DeallocateSpace(LabRoom* room);
+	//void DeallocateSpace(const int botLeftX, const int botLeftY, const int sizeX = 1, const int sizeY = 1);
+
+	// Room is allocated and can't be allocated again
+	void AllocateRoom(LabRoom* room);
+	// Room is not allocated anymore
+	void DeallocateRoom(LabRoom* room);
+	// Space in the room is allocated and can't be allocated again
+	void AllocateRoomSpace(LabRoom* room, FRectSpaceStruct space, bool local = true);
+	void AllocateRoomSpace(LabRoom* room, const int xOffset, const int yOffset, const EDirectionEnum direction, const int width, bool local = true);
+	void AllocateRoomSpace(LabRoom* room, const int xOffset, const int yOffset, const int sizeX, const int sizeY, bool local = true);
+	// Space in the room is not allocated anymore
+	void DeallocateRoomSpace(LabRoom* room, FRectSpaceStruct space);
 
 	// Returns true if there is free rectangular space
-	// Returns by reference rect space that intersected the sent one
-	bool MapSpaceIsFree(FRectSpaceStruct space);
-	bool MapSpaceIsFree(const int botLeftX, const int botLeftY, const int sizeX = 1, const int sizeY = 1);
-	bool MapSpaceIsFree(FRectSpaceStruct space, FRectSpaceStruct& intersectedSpace);
-	bool MapSpaceIsFree(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, FRectSpaceStruct& intersectedSpace);
+	// Returns another room that intersected the sent space
+	bool MapSpaceIsFree(bool amongAllocated, bool amongSpawned, FRectSpaceStruct space);
+	bool MapSpaceIsFree(bool amongAllocated, bool amongSpawned, const int botLeftX, const int botLeftY, const int sizeX = 1, const int sizeY = 1);
+	bool MapSpaceIsFree(bool amongAllocated, bool amongSpawned, FRectSpaceStruct space, LabRoom*& intersected);
+	bool MapSpaceIsFree(bool amongAllocated, bool amongSpawned, const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, LabRoom*& intersected);
 
 	// Returns true if there is free rectangular space in a room
-	// notNearPassage means that space near passages is not free
 	bool RoomSpaceIsFree(LabRoom* room, FRectSpaceStruct space, const bool forPassage = false, const bool forDoor = false);
 	bool RoomSpaceIsFree(LabRoom* room, const int xOffset, const int yOffset, EDirectionEnum direction, const int width = 4, const bool forPassage = false, const bool forDoor = false);
 	bool RoomSpaceIsFree(LabRoom* room, const int xOffset, const int yOffset, const int sizeX = 1, const int sizeY = 1, const bool forPassage = false, const bool forDoor = false);
 
 	// Tries to create a room and allocate space for it
-	LabRoom* CreateRoom(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
 	LabRoom* CreateRoom(FRectSpaceStruct space);
+	LabRoom* CreateRoom(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY);
 	// Creates starting room
 	LabRoom* CreateStartRoom();
 
@@ -130,8 +140,8 @@ protected:
 	FRectSpaceStruct CreateMinimumRoomSpace(LabRoom* room, FRectSpaceStruct passageSpace, EDirectionEnum direction);
 	// TODO CreateRandomRoomSpace
 
-	// Creates and adds a random passage to the room, returns passage or nullptr, also allocates room space and returns allocated room space by reference
-	LabPassage* CreateAndAddRandomPassage(LabRoom* room, FRectSpaceStruct& roomSpace);
+	// Creates and adds a random passage to the room, returns passage or nullptr and returns allocated room space by reference or another room that is now connected
+	LabPassage* CreateAndAddRandomPassage(LabRoom* room, FRectSpaceStruct& roomSpace, LabRoom*& possibleRoomConnection);
 
 	// Creates new passages in the room
 	// Create new rooms for passages 
@@ -160,14 +170,11 @@ protected:
 	// For debug
 	bool bShowDebug = false;
 
-	// All space in use
-	TArray<FRectSpaceStruct> AllocatedSpace;
-	TMap<LabRoom*, FRectSpaceStruct*> AllocatedRoomSpace;
-	// TMap<FRectSpaceStruct*, LabPassage*> AllocatedMinRoomSpaceForPassages; // ?
-	// CreateAndAddRandomPassage
+	// Rooms that are created but are not spawned yet and can still be changed
+	TArray<LabRoom*> AllocatedRooms;
 
 	// Room-specific space taken by various objects (not world locations but offsets)
-	TMap<LabRoom*, TArray<FRectSpaceStruct>> TakenRoomSpace;
+	TMap<LabRoom*, TArray<FRectSpaceStruct>> AllocatedRoomSpace;
 
 	// Spawned map parts
 	// Does not include pickupable objects
@@ -208,6 +215,7 @@ protected:
 	static const int MaxLampWidth = 2;
 	static const int MaxGenericSpawnTries = 3;
 	// Probabilities
+	static const float ConnectToOtherRoomProbability;
 	static const float PassageIsDoorProbability;
 	static const float DoorIsNormalProbability;
 	static const float SpawnFlashlightProbability;

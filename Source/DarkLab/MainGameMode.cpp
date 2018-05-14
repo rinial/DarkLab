@@ -19,6 +19,7 @@
 #include "DarknessController.h"
 
 // Probabilities
+const float AMainGameMode::ConnectToOtherRoomProbability = 1.0f;
 const float AMainGameMode::PassageIsDoorProbability = 0.6f;
 const float AMainGameMode::DoorIsNormalProbability = 0.95f;
 const float AMainGameMode::SpawnFlashlightProbability = 0.4f; // TODO make it lower
@@ -403,8 +404,7 @@ void AMainGameMode::PoolRoom(LabRoom * room)
 		// This is a weird case that should never happen
 		// Room is not responsible for the passage pooling is this DOES happen somehow
 	}
-	DeallocateSpace(room);
-	TakenRoomSpace.Remove(room);
+	AllocatedRoomSpace.Remove(room);
 	delete room;
 }
 void AMainGameMode::PoolPassage(LabPassage* passage)
@@ -528,9 +528,8 @@ AWallLamp * AMainGameMode::SpawnWallLamp(const int botLeftX, const int botLeftY,
 	{
 		if (SpawnedRoomObjects.Contains(room))
 			SpawnedRoomObjects[room].Add(lamp);
-		if (TakenRoomSpace.Contains(room))
-			// TODO make this a function
-			TakenRoomSpace[room].Add(FRectSpaceStruct(botLeftX - room->BotLeftX, botLeftY - room->BotLeftY, direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down ? width : 1, direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down ? 1 : width)); 
+		if (AllocatedRoomSpace.Contains(room))
+			AllocateRoomSpace(room, botLeftX, botLeftY, direction, width, false); 
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Spawned a wall lamp"));
@@ -561,6 +560,7 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 	if (SpawnedRoomObjects.Contains(room))
 		return;
 
+	DeallocateRoom(room);
 	SpawnedRoomObjects.Add(room);
 
 	// Spawning floor
@@ -597,7 +597,7 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 			leftWallPositions.Add(passage->BotLeftY + passage->Width - room->BotLeftY);
 
 			// Take space inside room so nothing can be spawned there
-			TakenRoomSpace[room].Add(FRectSpaceStruct(passage->BotLeftX - room->BotLeftX + 1, passage->BotLeftY - room->BotLeftY, MinDistanceInsideToPassage, passage->Width));
+			AllocateRoomSpace(room, passage->BotLeftX + 1, passage->BotLeftY, MinDistanceInsideToPassage, passage->Width, false);
 		}
 		// Top wall
 		else if (passage->BotLeftY == room->BotLeftY + room->SizeY - 1)
@@ -606,7 +606,7 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 			topWallPositions.Add(passage->BotLeftX + passage->Width - room->BotLeftX);
 
 			// Take space inside room so nothing can be spawned there
-			TakenRoomSpace[room].Add(FRectSpaceStruct(passage->BotLeftX - room->BotLeftX, passage->BotLeftY - room->BotLeftY - MinDistanceInsideToPassage, passage->Width, MinDistanceInsideToPassage));
+			AllocateRoomSpace(room, passage->BotLeftX, passage->BotLeftY - MinDistanceInsideToPassage, passage->Width, MinDistanceInsideToPassage, false);
 		}
 		// Right wall
 		else if (passage->BotLeftX == room->BotLeftX + room->SizeX - 1)
@@ -615,7 +615,7 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 			rightWallPositions.Add(passage->BotLeftY + passage->Width - room->BotLeftY);
 
 			// Take space inside room so nothing can be spawned there
-			TakenRoomSpace[room].Add(FRectSpaceStruct(passage->BotLeftX - room->BotLeftX - MinDistanceInsideToPassage, passage->BotLeftY - room->BotLeftY, MinDistanceInsideToPassage, passage->Width));
+			AllocateRoomSpace(room, passage->BotLeftX - MinDistanceInsideToPassage, passage->BotLeftY, MinDistanceInsideToPassage, passage->Width, false);
 		}
 		// Bottom wall
 		else if (passage->BotLeftY == room->BotLeftY)
@@ -624,7 +624,7 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 			bottomWallPositions.Add(passage->BotLeftX + passage->Width - room->BotLeftX);
 
 			// Take space inside room so nothing can be spawned there
-			TakenRoomSpace[room].Add(FRectSpaceStruct(passage->BotLeftX - room->BotLeftX, passage->BotLeftY - room->BotLeftY + 1, passage->Width, MinDistanceInsideToPassage));
+			AllocateRoomSpace(room, passage->BotLeftX, passage->BotLeftY + 1, passage->Width, MinDistanceInsideToPassage, false);
 		}
 
 		// Spawn the passage
@@ -692,105 +692,179 @@ void AMainGameMode::SpawnPassage(LabPassage* passage, LabRoom* room)
 	UE_LOG(LogTemp, Warning, TEXT("> Spawned a passage"));
 }
 
-// Space is allocated and can't be allocated again
-FRectSpaceStruct* AMainGameMode::AllocateSpace(LabRoom * room)
-{
-	if (!room)
-		return nullptr;
+//// Space is allocated and can't be allocated again
+//FRectSpaceStruct* AMainGameMode::AllocateSpace(LabRoom * room)
+//{
+//	if (!room)
+//		return nullptr;
+//
+//	FRectSpaceStruct* temp = AllocateSpace(room->BotLeftX, room->BotLeftY, room->SizeX, room->SizeY);
+//	if (temp)
+//		AllocatedRoomSpace.Add(room, temp);
+//
+//	return temp;
+//}
+//FRectSpaceStruct* AMainGameMode::AllocateSpace(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
+//{
+//	FRectSpaceStruct temp = FRectSpaceStruct(botLeftX, botLeftY, sizeX, sizeY);
+//	return AllocateSpace(temp);
+//}
+//FRectSpaceStruct* AMainGameMode::AllocateSpace(FRectSpaceStruct space)
+//{
+//	if (space.SizeX < 1 || space.SizeY < 1)
+//		return nullptr;
+//
+//	return &AllocatedSpace[AllocatedSpace.Add(space)];
+//}
+//// Space is not allocated anymore
+//void AMainGameMode::DeallocateSpace(FRectSpaceStruct space)
+//{
+//	AllocatedSpace.Remove(space);
+//	// DeallocateSpace(space.BotLeftX, space.BotLeftY, space.SizeX, space.SizeY);
+//}
+//void AMainGameMode::DeallocateSpace(LabRoom* room)
+//{
+//	if (!room)
+//		return;
+//
+//	if (AllocatedRoomSpace.Contains(room))
+//	{
+//		int index;
+//		AllocatedSpace.Find(*(AllocatedRoomSpace[room]), index);
+//		AllocatedRoomSpace.Remove(room);
+//		AllocatedSpace.RemoveAt(index);
+//	}
+//	else
+//		DeallocateSpace(room->BotLeftX, room->BotLeftY, room->SizeX, room->SizeY);
+//}
+//void AMainGameMode::DeallocateSpace(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
+//{
+//	FRectSpaceStruct* temp = AllocatedSpace.FindByPredicate([botLeftX, botLeftY, sizeX, sizeY](FRectSpaceStruct space)
+//	{
+//		// ==
+//		return space.BotLeftX == botLeftX && space.BotLeftY == botLeftY && space.SizeX == sizeX && space.SizeY == sizeY;
+//	});
+//	if (!temp)
+//		return;
+//
+//	AllocatedSpace.Remove(*temp);
+//}
 
-	FRectSpaceStruct* temp = AllocateSpace(room->BotLeftX, room->BotLeftY, room->SizeX, room->SizeY);
-	if (temp)
-		AllocatedRoomSpace.Add(room, temp);
-
-	return temp;
-}
-FRectSpaceStruct* AMainGameMode::AllocateSpace(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
-{
-	FRectSpaceStruct temp = FRectSpaceStruct(botLeftX, botLeftY, sizeX, sizeY);
-	return AllocateSpace(temp);
-}
-FRectSpaceStruct* AMainGameMode::AllocateSpace(FRectSpaceStruct space)
-{
-	if (space.SizeX < 1 || space.SizeY < 1)
-		return nullptr;
-
-	return &AllocatedSpace[AllocatedSpace.Add(space)];
-}
-// Space is not allocated anymore
-void AMainGameMode::DeallocateSpace(FRectSpaceStruct space)
-{
-	AllocatedSpace.Remove(space);
-	// DeallocateSpace(space.BotLeftX, space.BotLeftY, space.SizeX, space.SizeY);
-}
-void AMainGameMode::DeallocateSpace(LabRoom* room)
+// Room is allocated and can't be allocated again
+void AMainGameMode::AllocateRoom(LabRoom * room)
 {
 	if (!room)
 		return;
 
-	if (AllocatedRoomSpace.Contains(room))
-	{
-		int index;
-		AllocatedSpace.Find(*(AllocatedRoomSpace[room]), index);
-		AllocatedRoomSpace.Remove(room);
-		AllocatedSpace.RemoveAt(index);
-	}
+	AllocatedRooms.AddUnique(room);
+}
+// Room is not allocated anymore
+void AMainGameMode::DeallocateRoom(LabRoom * room)
+{
+	if (!room)
+		return;
+
+	AllocatedRooms.Remove(room);
+}
+// Space in the room is allocated and can't be allocated again
+void AMainGameMode::AllocateRoomSpace(LabRoom * room, FRectSpaceStruct space, bool local)
+{
+	AllocateRoomSpace(room, space.BotLeftX, space.BotLeftY, space.SizeX, space.SizeY, local);
+}
+void AMainGameMode::AllocateRoomSpace(LabRoom * room, const int xOffset, const int yOffset, const EDirectionEnum direction, const int width, bool local)
+{
+	AllocateRoomSpace(room, xOffset, yOffset, direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down ? width : 1, direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down ? 1 : width, local);
+}
+void AMainGameMode::AllocateRoomSpace(LabRoom * room, const int xOffset, const int yOffset, const int sizeX, const int sizeY, bool local)
+{
+	if (local)
+		AllocatedRoomSpace[room].Add(FRectSpaceStruct(xOffset, yOffset, sizeX, sizeY));
 	else
-		DeallocateSpace(room->BotLeftX, room->BotLeftY, room->SizeX, room->SizeY);
+		AllocatedRoomSpace[room].Add(FRectSpaceStruct(xOffset - room->BotLeftX, yOffset - room->BotLeftY, sizeX, sizeY));
 }
-void AMainGameMode::DeallocateSpace(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
+// Space in the room is not allocated anymore
+void AMainGameMode::DeallocateRoomSpace(LabRoom * room, FRectSpaceStruct space)
 {
-	FRectSpaceStruct* temp = AllocatedSpace.FindByPredicate([botLeftX, botLeftY, sizeX, sizeY](FRectSpaceStruct space)
-	{
-		// ==
-		return space.BotLeftX == botLeftX && space.BotLeftY == botLeftY && space.SizeX == sizeX && space.SizeY == sizeY;
-	});
-	if (!temp)
-		return;
-
-	AllocatedSpace.Remove(*temp);
+	// TODO
 }
 
 // Returns true if there is free rectangular space
-// Returns by reference rect space that intersected the sent one
-bool AMainGameMode::MapSpaceIsFree(FRectSpaceStruct space)
+// Returns another room that intersected the sent space
+bool AMainGameMode::MapSpaceIsFree(bool amongAllocated, bool amongSpawned, FRectSpaceStruct space)
 {
-	FRectSpaceStruct intersected;
-	return MapSpaceIsFree(space, intersected);
+	LabRoom* intersected = nullptr;
+	return MapSpaceIsFree(amongAllocated, amongSpawned, space, intersected);
 }
-bool AMainGameMode::MapSpaceIsFree(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
+bool AMainGameMode::MapSpaceIsFree(bool amongAllocated, bool amongSpawned, const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
 {
-	FRectSpaceStruct intersected;
-	return MapSpaceIsFree(botLeftX, botLeftY, sizeX, sizeY, intersected);
+	LabRoom* intersected = nullptr;
+	return MapSpaceIsFree(amongAllocated, amongSpawned, botLeftX, botLeftY, sizeX, sizeY, intersected);
 }
-bool AMainGameMode::MapSpaceIsFree(FRectSpaceStruct space, FRectSpaceStruct & intersectedSpace)
+bool AMainGameMode::MapSpaceIsFree(bool amongAllocated, bool amongSpawned, FRectSpaceStruct space, LabRoom*& intersected)
 {
-	return MapSpaceIsFree(space.BotLeftX, space.BotLeftY, space.SizeX, space.SizeY, intersectedSpace);
+	return MapSpaceIsFree(amongAllocated, amongSpawned, space.BotLeftX, space.BotLeftY, space.SizeX, space.SizeY, intersected);
 }
-bool AMainGameMode::MapSpaceIsFree(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, FRectSpaceStruct& intersectedSpace)
+bool AMainGameMode::MapSpaceIsFree(bool amongAllocated, bool amongSpawned, const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, LabRoom*& intersected)
 {
 	/*if (sizeX < 1 || sizeY < 1)
 		return false;*/
 
-	bool intersected = AllocatedSpace.ContainsByPredicate([botLeftX, botLeftY, sizeX, sizeY, &intersectedSpace](FRectSpaceStruct space)
+	if (amongAllocated)
 	{
-		// Not intersecting on X axis
-		if (space.BotLeftX + space.SizeX - 1 <= botLeftX)
-			return false;
-		if (space.BotLeftX >= botLeftX + sizeX - 1)
-			return false;
+		bool intersectedAllocated = AllocatedRooms.ContainsByPredicate([botLeftX, botLeftY, sizeX, sizeY, &intersected](LabRoom* room)
+		{
+			if (!room)
+				return false;
 
-		// Not intersecting on Y axis
-		if (space.BotLeftY + space.SizeY - 1 <= botLeftY)
-			return false;
-		if (space.BotLeftY >= botLeftY + sizeY - 1)
-			return false;
+			// Not intersecting on X axis
+			if (room->BotLeftX + room->SizeX - 1 <= botLeftX)
+				return false;
+			if (room->BotLeftX >= botLeftX + sizeX - 1)
+				return false;
 
-		// Intersecting on both axis
-		intersectedSpace = space;
-		return true;
-	});
+			// Not intersecting on Y axis
+			if (room->BotLeftY + room->SizeY - 1 <= botLeftY)
+				return false;
+			if (room->BotLeftY >= botLeftY + sizeY - 1)
+				return false;
 
-	return !intersected;
+			// Intersecting on both axis
+			intersected = room;
+			return true;
+		});
+		if (intersectedAllocated)
+			return false;
+	}
+	if (amongSpawned)
+	{
+		TArray<LabRoom*> spawnedRooms;
+		SpawnedRoomObjects.GetKeys(spawnedRooms);
+		bool intersectedSpawned = spawnedRooms.ContainsByPredicate([botLeftX, botLeftY, sizeX, sizeY, &intersected](LabRoom* room)
+		{
+			if (!room)
+				return false;
+
+			// Not intersecting on X axis
+			if (room->BotLeftX + room->SizeX - 1 <= botLeftX)
+				return false;
+			if (room->BotLeftX >= botLeftX + sizeX - 1)
+				return false;
+
+			// Not intersecting on Y axis
+			if (room->BotLeftY + room->SizeY - 1 <= botLeftY)
+				return false;
+			if (room->BotLeftY >= botLeftY + sizeY - 1)
+				return false;
+
+			// Intersecting on both axis
+			intersected = room;
+			return true;
+		});
+		if (intersectedSpawned)
+			return false;
+	}
+
+	return true;
 }
 
 // Returns true if there is free rectangular space in a room
@@ -890,7 +964,7 @@ bool AMainGameMode::RoomSpaceIsFree(LabRoom * room, const int xOffset, const int
 			return false;
 		// Space is withing room borders including walls
 
-		bool intersected = TakenRoomSpace[room].ContainsByPredicate([xOffset, yOffset, sizeX, sizeY](FRectSpaceStruct space)
+		bool intersected = AllocatedRoomSpace[room].ContainsByPredicate([xOffset, yOffset, sizeX, sizeY](FRectSpaceStruct space)
 		{
 			// Not intersecting on X axis
 			if (space.BotLeftX + space.SizeX - 1 < xOffset)
@@ -913,28 +987,18 @@ bool AMainGameMode::RoomSpaceIsFree(LabRoom * room, const int xOffset, const int
 }
 
 // Tries to create a room and allocate space for it
-LabRoom* AMainGameMode::CreateRoom(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
-{
-	if(sizeX < 4 || sizeY < 4 || !MapSpaceIsFree(botLeftX, botLeftY, sizeX, sizeY))
-		return nullptr;
-
-	LabRoom* room = new LabRoom(botLeftX, botLeftY, sizeX, sizeY);
-	AllocateSpace(room);
-	TakenRoomSpace.Add(room);
-
-	return room;
-}
 LabRoom* AMainGameMode::CreateRoom(FRectSpaceStruct space)
 {
-	if (space.SizeX < 4 || space.SizeY < 4 || !MapSpaceIsFree(space))
-		return nullptr;
+	return CreateRoom(space.BotLeftX, space.BotLeftY, space.SizeX, space.SizeY);
+}
+LabRoom* AMainGameMode::CreateRoom(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY)
+{
+	/*if(sizeX < 4 || sizeY < 4 || !MapSpaceIsFree(true, true, botLeftX, botLeftY, sizeX, sizeY))
+		return nullptr;*/
 
-	LabRoom* room = new LabRoom(space);
-	FRectSpaceStruct* temp = AllocateSpace(space);
-	if (!temp || !room)
-		return nullptr;
-	AllocatedRoomSpace.Add(room, temp);
-	TakenRoomSpace.Add(room);
+	LabRoom* room = new LabRoom(botLeftX, botLeftY, sizeX, sizeY);
+	AllocateRoom(room);
+	AllocatedRoomSpace.Add(room);
 
 	return room;
 }
@@ -1045,7 +1109,7 @@ FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom* room, FRectSpace
 // TODO CreateRandomRoomSpace
 
 // Creates and adds a random passage to the room, returns passage or nullptr, also allocates room space and returns allocated room space by reference
-LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpaceStruct & roomSpace)
+LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpaceStruct & roomSpace, LabRoom*& possibleRoomConnection)
 {
 	bool forDoor = RandBool(PassageIsDoorProbability);
 	EDirectionEnum direction;
@@ -1058,24 +1122,37 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 
 	// Find minimum space for a new room on the other side of this passage
 	roomSpace = CreateMinimumRoomSpace(room, pasSpace, direction);
+
 	// Test if it works on the map
-	if (!MapSpaceIsFree(roomSpace))
+	// Intersects something spawned
+	if (!MapSpaceIsFree(false, true, roomSpace)) 
+		return nullptr;
+
+	LabRoom* intersected = nullptr;
+	// Intersects something allocated
+	bool spaceIsFree = MapSpaceIsFree(true, false, roomSpace, intersected); 
+
+	// TODO somewhere we find possibleRoomConnection
+	// Make sure that not all intersects are possible connections
+	// Includes minimum completely
+	if (!spaceIsFree)
+		possibleRoomConnection = nullptr; // TODO nullptr obviously
+
+	// If we have something to connect to but we don't want to
+	if (possibleRoomConnection && !RandBool(ConnectToOtherRoomProbability))
 		return nullptr;
 
 	// Add this passage to the room
 	LabPassage* passage;
-	if(!forDoor)
-		passage = room->AddPassage(room->BotLeftX + pasSpace.BotLeftX, room->BotLeftY + pasSpace.BotLeftY, direction, direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down ? pasSpace.SizeX : pasSpace.SizeY);
+	if (!forDoor)
+		passage = room->AddPassage(room->BotLeftX + pasSpace.BotLeftX, room->BotLeftY + pasSpace.BotLeftY, direction, possibleRoomConnection, direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down ? pasSpace.SizeX : pasSpace.SizeY);
 	else
 	{
 		// TODO maybe it shouldn't allow every color
 		FLinearColor color = RandColor();
 
-		passage = room->AddPassage(room->BotLeftX + pasSpace.BotLeftX, room->BotLeftY + pasSpace.BotLeftY, direction, forDoor, color, direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down ? pasSpace.SizeX : pasSpace.SizeY);
+		passage = room->AddPassage(room->BotLeftX + pasSpace.BotLeftX, room->BotLeftY + pasSpace.BotLeftY, direction, possibleRoomConnection, forDoor, color, direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down ? pasSpace.SizeX : pasSpace.SizeY);
 	}
-
-	// Allocate minumum space for the room
-	AllocateSpace(roomSpace);
 
 	return passage;
 }
@@ -1100,30 +1177,38 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 	// Create rooms for the passages if rooms weren't found already
 	for (int i = 0; room->Passages.Num() < MinRoomNumOfPassages || (i < maxTries && room->Passages.Num() < desiredNumOfPassages); ++i)
 	{
-		FRectSpaceStruct allocatedRoomSpace;
-		LabPassage* passage = CreateAndAddRandomPassage(room, allocatedRoomSpace);
+		FRectSpaceStruct minRoomSpace;
+		LabRoom* possibleRoomConnection = nullptr;
+		LabPassage* passage = CreateAndAddRandomPassage(room, minRoomSpace, possibleRoomConnection);
 		if (passage)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("> %s"), TEXT("success"));
+			if (!possibleRoomConnection)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("> %s"), TEXT("success"));
 
-			// Should add passage to the found room if we found one
+				UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: %d, sX: %d, sY: %d"), minRoomSpace.BotLeftX, minRoomSpace.BotLeftY, minRoomSpace.SizeX, minRoomSpace.SizeY);
 
-			UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: %d, sX: %d, sY: %d"), allocatedRoomSpace.BotLeftX, allocatedRoomSpace.BotLeftY, allocatedRoomSpace.SizeX, allocatedRoomSpace.SizeY);
-			DeallocateSpace(allocatedRoomSpace); // TODO should'nt allocate in the first place
+				// TODO create new room space 
+				// CreateRandomRoomSpace()
+				// Make sure that MapSpaceIsFree(newSpace)
+				FRectSpaceStruct newSpace = minRoomSpace;
 
-			// TODO create new room space 
-			// CreateRandomRoomSpace()
-			// Make sure that MapSpaceIsFree(newSpace)
-			FRectSpaceStruct newSpace = allocatedRoomSpace;
+				// We create new room from new space, it also allocates room's space
+				LabRoom* newRoom = CreateRoom(newSpace);
+				if (!newRoom)
+					continue;
 
-			// We create new room from new space, it also allocates room's space
-			LabRoom* newRoom = CreateRoom(newSpace);
-			if (!newRoom)
-				continue;
+				// We add passage to the room
+				newRoom->AddPassage(passage);
+				newRooms.Add(newRoom);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("> %s"), TEXT("found a room to connect to"));
 
-			// We add passage to the room
-			newRoom->AddPassage(passage);
-			newRooms.Add(newRoom);
+				// Should add passage to the found room if we found one
+				// (unless it was added before)
+			}
 		}
 		else
 		{
@@ -1377,12 +1462,12 @@ void AMainGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	UE_LOG(LogTemp, Warning, TEXT("EndPlay called"));
 
-	TArray<LabRoom*> allocatedRooms;
-	AllocatedRoomSpace.GetKeys(allocatedRooms);
+	TArray<LabRoom*> allRooms;
+	AllocatedRoomSpace.GetKeys(allRooms);
 
 	// Clear all saved rooms
-	for (int i = allocatedRooms.Num() - 1; i >= 0; --i)
-		delete allocatedRooms[i];
+	for (int i = allRooms.Num() - 1; i >= 0; --i)
+		delete allRooms[i];
 }
 
 // TODO delete?

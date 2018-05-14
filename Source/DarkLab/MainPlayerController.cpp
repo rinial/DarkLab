@@ -84,10 +84,7 @@ void AMainPlayerController::ShowHideMenu()
 {
 	UE_LOG(LogTemp, Warning, TEXT("ShowHideMenu called"));
 
-	// TODO
-	// delete
-	Cast<AMainGameMode>(GetWorld()->GetAuthGameMode())->ResetMap();
-	//FGenericPlatformMisc::RequestExit(false);
+	FGenericPlatformMisc::RequestExit(false);
 
 	// TODO
 }
