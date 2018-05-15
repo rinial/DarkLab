@@ -68,6 +68,10 @@ protected:
 
 	// Returns by reference character's location on the grid
 	void GetCharacterLocation(int& x, int& y);
+	// Returns the room the character is in
+	LabRoom* GetCharacterRoom();
+	// Called when character enters new room
+	void OnEnterRoom(LabRoom* room);
 
 	// Gets the pool for the object/class
 	TArray<TScriptInterface<IDeactivatable>>& GetCorrectPool(TScriptInterface<IDeactivatable> object);
@@ -225,6 +229,9 @@ protected:
 	TArray<TScriptInterface<IDeactivatable>> WallLampPool;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
 	TArray<TScriptInterface<IDeactivatable>> FlashlightPool;
+
+	// The last room character was in
+	LabRoom* LastRoom;
 
 	// Constants used for generation
 	static const int MinRoomSize = 5; // Can't be lower than 4

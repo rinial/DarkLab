@@ -357,6 +357,34 @@ void AMainGameMode::GetCharacterLocation(int & x, int & y)
 	FVector characterLocation = MainPlayerController->GetCharacter()->GetActorLocation();
 	WorldToGrid(characterLocation.X, characterLocation.Y, x, y);
 }
+// Returns the room the character is in
+LabRoom * AMainGameMode::GetCharacterRoom()
+{
+	int x, y;
+	GetCharacterLocation(x, y);
+
+	// Still in last room
+	if (LastRoom && LastRoom->BotLeftX <= x && LastRoom->BotLeftY <= y && LastRoom->BotLeftX + LastRoom->SizeX - 1 >= x && LastRoom->BotLeftY + LastRoom->SizeY - 1 >= y)
+		return LastRoom;
+
+	LabRoom* characterRoom;
+	MapSpaceIsFree(false, true, x, y, 1, 1, characterRoom);
+
+	if (characterRoom)
+	{
+		LastRoom = characterRoom;
+		OnEnterRoom(LastRoom);
+	}
+
+	return LastRoom;
+}
+// Called when character enters new room
+void AMainGameMode::OnEnterRoom(LabRoom * room)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Entered new room"));
+
+	// TODO
+}
 
 // Gets the pool for the object/class
 TArray<TScriptInterface<IDeactivatable>>& AMainGameMode::GetCorrectPool(TScriptInterface<IDeactivatable> object)
@@ -1600,6 +1628,8 @@ void AMainGameMode::GenerateMap()
 
 	ExpandDepth(startRoom, 5);
 	SpawnFillDepth(startRoom, 3);
+
+	GetCharacterRoom();
 }
 // Resets the map
 void AMainGameMode::ResetMap()
@@ -1694,13 +1724,18 @@ void AMainGameMode::Tick(const float deltaTime)
 {
 	Super::Tick(deltaTime);
 
+	// Updates LastRoom, calles OnEnterRoom
+	GetCharacterRoom();
+
 	// TODO delete later: used for debug
 	if (GEngine)
 	{
-		int x, y;
-		GetCharacterLocation(x, y);
+		// Character's location
+		int charX, charY;
+		GetCharacterLocation(charX, charY);
 
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Character location: x: %d, y: %d"), x, y), true);
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Character room: pX: %d, pY: %d, sX: %d, sY: %d"), LastRoom->BotLeftX, LastRoom->BotLeftY, LastRoom->SizeX, LastRoom->SizeY), true);
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Character location: x: %d, y: %d"), charX, charY), true);
 
 		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT(""), true);
 	}
