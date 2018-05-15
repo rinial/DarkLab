@@ -48,6 +48,10 @@ public:
 	bool CanSee(const FVector location1, const AActor* actor2, const FVector location2, const bool debug = false);
 	bool CanSee(const AActor* actor1, const FVector location1, const AActor* actor2, const FVector location2, const bool debug = false);
 
+public:
+	// Chanes world location into grid location
+	void WorldToGrid(const float worldX, const float worldY, int& gridX, int& gridY) const;
+
 protected:
 	// Places an object on the map
 	// TODO return false if can't place?
@@ -61,6 +65,9 @@ protected:
 	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const int sizeX, const int sizeY, const int sizeZ);
 	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const EDirectionEnum direction, const int sizeX, const int sizeY = 1);
 	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const EDirectionEnum direction, const int sizeX, const int sizeY, const int sizeZ);
+
+	// Returns by reference character's location on the grid
+	void GetCharacterLocation(int& x, int& y);
 
 	// Gets the pool for the object/class
 	TArray<TScriptInterface<IDeactivatable>>& GetCorrectPool(TScriptInterface<IDeactivatable> object);
@@ -252,6 +259,7 @@ protected:
 
 	// Pointers to existing controllers
 	class ADarknessController* DarknessController;
+	class AMainPlayerController* MainPlayerController;
 	
 private:
 	// Classes used for spawning
@@ -268,9 +276,6 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	// TODO delete, used just for tests
-	float TimeSinceLastGeneration = 100.0f;
 
 public:
 	// Called every frame

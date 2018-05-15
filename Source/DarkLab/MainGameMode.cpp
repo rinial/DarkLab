@@ -15,8 +15,12 @@
 #include "LabPassage.h"
 #include "LabRoom.h"
 #include "LabHallway.h"
-#include "Algo/BinarySearch.h"
 #include "DarknessController.h"
+#include "MainPlayerController.h"
+#include "MainCharacter.h"
+// For on screen debug
+#include "EngineGlobals.h"
+#include "Engine/Engine.h"
 
 // Probabilities
 const float AMainGameMode::ConnectToOtherRoomProbability = 0.8f;
@@ -291,6 +295,14 @@ bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const
 	return !bHit;
 }
 
+// Chanes world location into grid location
+void AMainGameMode::WorldToGrid(const float worldX, const float worldY, int & gridX, int & gridY) const
+{
+	// We reverse x and y
+	gridX = worldY / 50 + (worldY >= 0 ? 0 : -1);
+	gridY = worldX / 50 + (worldX >= 0 ? 0 : -1);
+}
+
 // Places an object on the map
 // TODO return false if can't place?
 void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const int botLeftX, const int botLeftY, const EDirectionEnum direction)
@@ -337,6 +349,13 @@ void AMainGameMode::PlaceObject(TScriptInterface<IPlaceable> object, const FIntV
 	UObject* obj = object->_getUObject();
 	object->Execute_SetSize(obj, FIntVector(sizeX, sizeY, sizeZ));
 	object->Execute_Place(obj, botLeftLoc, direction);
+}
+
+// Returns by reference character's location on the grid
+void AMainGameMode::GetCharacterLocation(int & x, int & y)
+{
+	FVector characterLocation = MainPlayerController->GetCharacter()->GetActorLocation();
+	WorldToGrid(characterLocation.X, characterLocation.Y, x, y);
 }
 
 // Gets the pool for the object/class
@@ -1041,7 +1060,7 @@ LabRoom* AMainGameMode::CreateRoom(const int botLeftX, const int botLeftY, const
 LabRoom * AMainGameMode::CreateStartRoom()
 {
 	// TODO should be different
-	FRectSpaceStruct minSpace(-10, -5, 15, 12);
+	FRectSpaceStruct minSpace(-5, -5, 10, 10);
 
 	return CreateRandomRoom(minSpace);;
 }
@@ -1638,9 +1657,13 @@ void AMainGameMode::BeginPlay()
 		break; // We only need one (and there should be only one)
 	}
 
+	// Then we find the character controller
+	APlayerController* controller = gameWorld->GetFirstPlayerController();
+	if (controller)
+		MainPlayerController = Cast<AMainPlayerController>(controller);
+
+	// Finally we generate map
 	GenerateMap();
-	/*PoolMap();
-	GenerateMap();*/
 
 	// Tests
 	/*
@@ -1671,14 +1694,16 @@ void AMainGameMode::Tick(const float deltaTime)
 {
 	Super::Tick(deltaTime);
 
-	// TODO delete, used just for test
-	/*TimeSinceLastGeneration += deltaTime;
-	if (TimeSinceLastGeneration > 0.1f)
+	// TODO delete later: used for debug
+	if (GEngine)
 	{
-		TimeSinceLastGeneration = 0.0f;
-		PoolMap();
-		GenerateMap();
-	}*/
+		int x, y;
+		GetCharacterLocation(x, y);
+
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Character location: x: %d, y: %d"), x, y), true);
+
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT(""), true);
+	}
 }
 
 // Called when actor is being removed from the play
