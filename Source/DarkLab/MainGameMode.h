@@ -188,6 +188,9 @@ protected:
 	// Should always be called on a room that is already spawned
 	TArray<AActor*> FillRoom(LabRoom* room, int minNumOfLampsOverride = 0);
 
+	// Activates all lamps in a single room
+	void ActivateRoomLamps(LabRoom* room);
+
 	// Expands room if it's not spawned yet
 	// Repeats with all adjasent rooms recursively
 	void ExpandDepth(LabRoom* start, int depth, LabPassage* fromPassage = nullptr);
@@ -215,6 +218,9 @@ protected:
 
 	// Rooms that have already been expanded
 	TArray<LabRoom*> ExpandedRooms;
+
+	// Rooms that were visited by player
+	TArray<LabRoom*> VisitedRooms;
 
 	// Spawned map parts
 	// Does not include pickupable objects
@@ -263,6 +269,7 @@ protected:
 	static const float PassageIsDoorProbability;
 	static const float DoorIsNormalProbability;
 	static const float SpawnFlashlightProbability;
+	static const float LampsTurnOnOnEnterProbability;
 	static const float BlueProbability;
 	static const float GreenProbability;
 	static const float YellowProbability;

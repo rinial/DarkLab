@@ -27,6 +27,7 @@ const float AMainGameMode::ConnectToOtherRoomProbability = 0.8f;
 const float AMainGameMode::PassageIsDoorProbability = 0.6f;
 const float AMainGameMode::DoorIsNormalProbability = 0.95f;
 const float AMainGameMode::SpawnFlashlightProbability = 0.4f; // TODO make it lower
+const float AMainGameMode::LampsTurnOnOnEnterProbability = 0.8f;
 const float AMainGameMode::BlueProbability = 0.2f;
 const float AMainGameMode::GreenProbability = 0.15f;
 const float AMainGameMode::YellowProbability = 0.1f;
@@ -391,6 +392,13 @@ void AMainGameMode::OnEnterRoom(LabRoom* lastRoom, LabRoom* newRoom)
 		// TODO smth about last room here
 	}
 
+	if (!VisitedRooms.Contains(newRoom))
+	{
+		if (!lastRoom || RandBool(LampsTurnOnOnEnterProbability))
+			ActivateRoomLamps(newRoom);
+		VisitedRooms.Add(newRoom);
+	}
+
 	ExpandDepth(newRoom, 5);
 	SpawnFillDepth(newRoom, 3);
 }
@@ -479,6 +487,7 @@ void AMainGameMode::PoolRoom(LabRoom * room)
 	}
 	AllocatedRoomSpace.Remove(room);
 	ExpandedRooms.Remove(room);
+	VisitedRooms.Remove(room);
 	delete room;
 }
 void AMainGameMode::PoolPassage(LabPassage* passage)
@@ -506,6 +515,8 @@ void AMainGameMode::PoolMap()
 	AllocatedRooms.Empty();
 	AllocatedRoomSpace.Empty();
 	ExpandedRooms.Empty();
+	VisitedRooms.Empty();
+	LastRoom = nullptr;
 }
 
 // Tries to find a poolable object in a specified array
@@ -1560,8 +1571,6 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 			// TODO color should depend on the room
 			FLinearColor color = RandColor();
 			AWallLamp* lamp = SpawnWallLamp(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, color, width, room);
-			// TODO this shouldn't be here
-			if (lamp) lamp->Execute_ActivateIndirectly(lamp);
 			spawnedActors.Add(lamp);
 		}
 	}
@@ -1582,6 +1591,24 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 	}
 
 	return spawnedActors;
+}
+
+// Activates all lamps in a single room
+void AMainGameMode::ActivateRoomLamps(LabRoom * room)
+{
+	if (!room)
+		return;
+
+	if (!SpawnedRoomObjects.Contains(room))
+		return;
+
+	for (TScriptInterface<IDeactivatable> obj : SpawnedRoomObjects[room])
+	{
+		AWallLamp* lamp = Cast<AWallLamp>(obj->_getUObject());
+		if (!lamp)
+			continue;
+		lamp->Execute_ActivateIndirectly(lamp);
+	}
 }
 
 // Expands room if it's not spawned yet
