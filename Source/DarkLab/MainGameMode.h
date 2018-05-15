@@ -147,7 +147,9 @@ protected:
 
 	// Shrinks space to not include specified room but still include minSpace
 	// If prioritize horizontal is true, it tries to shrink horizontal part, otherwise vertival
-	void ShrinkSpace(FRectSpaceStruct& currentSpace, FRectSpaceStruct minSpace, LabRoom* toAvoid, bool prioritizeHorizontal);
+	void ShrinkSpace(FRectSpaceStruct& currentSpace, FRectSpaceStruct minSpace, LabRoom* toAvoid, bool prioritizeX);
+	bool TryShrinkX(FRectSpaceStruct& currentSpace, FRectSpaceStruct minSpace, LabRoom* toAvoid);
+	bool TryShrinkY(FRectSpaceStruct& currentSpace, FRectSpaceStruct minSpace, LabRoom* toAvoid);
 
 	// Creates a random room based on minimum room space
 	LabRoom* CreateRandomRoom(FRectSpaceStruct minSpace, bool fromPassage = false, EDirectionEnum direction = EDirectionEnum::VE_Up);
