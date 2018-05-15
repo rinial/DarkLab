@@ -67,7 +67,6 @@ void AMainCharacter::Disable()
 
 	bIsDisabled = true;
 
-	// TODO destroy instead?
 	this->SetActorEnableCollision(false);
 	PrimaryActorTick.SetTickFunctionEnable(false);
 
@@ -75,8 +74,18 @@ void AMainCharacter::Disable()
 	AMainPlayerController* controller = Cast<AMainPlayerController>(GetController());
 	if (controller)
 		controller->OnDisabled();
+}
+// Called from controller when it's time to enable character again
+void AMainCharacter::Enable()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Got enabled"));
 
-	// TODO Destroy?
+	bIsDisabled = false;
+
+	this->SetActorEnableCollision(true);
+	PrimaryActorTick.SetTickFunctionEnable(true);
+
+	GameMode->OnCharacterEnabled();
 }
 
 // Used for the activator's collision overlaps

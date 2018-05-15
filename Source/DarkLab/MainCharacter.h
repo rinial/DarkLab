@@ -26,6 +26,9 @@ public:
 	// Happens when something 'damages' the character
 	UFUNCTION(BlueprintCallable, Category = "Main Character")
 	void Disable();
+	// Called from controller when it's time to enable character again
+	UFUNCTION(BlueprintCallable, Category = "Main Character")
+	void Enable();
 
 protected:
 	// The coefficient for the movement backwards

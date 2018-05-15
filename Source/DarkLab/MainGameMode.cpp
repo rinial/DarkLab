@@ -372,22 +372,32 @@ LabRoom * AMainGameMode::GetCharacterRoom()
 
 	if (characterRoom)
 	{
+		OnEnterRoom(LastRoom, characterRoom);
 		LastRoom = characterRoom;
-		OnEnterRoom(LastRoom);
 	}
 
 	return LastRoom;
 }
 // Called when character enters new room
-void AMainGameMode::OnEnterRoom(LabRoom * room)
+void AMainGameMode::OnEnterRoom(LabRoom* lastRoom, LabRoom* newRoom)
 {
-	if (!room)
+	if (!newRoom)
 		return;
 
 	UE_LOG(LogTemp, Warning, TEXT("Entered new room"));
 
-	ExpandDepth(room, 5);
-	SpawnFillDepth(room, 3);
+	if (lastRoom)
+	{
+		// TODO smth about last room here
+	}
+
+	ExpandDepth(newRoom, 5);
+	SpawnFillDepth(newRoom, 3);
+}
+// Called when character is enabled to reset the map
+void AMainGameMode::OnCharacterEnabled()
+{
+	ResetMap();
 }
 
 // Gets the pool for the object/class
@@ -443,13 +453,25 @@ void AMainGameMode::PoolRoom(LabRoom * room)
 		// We pool passage if it isn't connected to some other spawned room
 		if (passage->From == room)
 		{
-			if (!passage->To || !SpawnedRoomObjects.Contains(passage->To))
+			if (!passage->To)
 				PoolPassage(passage);
+			else if (!SpawnedRoomObjects.Contains(passage->To))
+			{
+				passage->To->Passages.Remove(passage);
+				passage->To = nullptr;
+				PoolPassage(passage);
+			}
 		}
 		else if (passage->To == room)
 		{
-			if (!passage->From || !SpawnedRoomObjects.Contains(passage->From))
+			if (!passage->From)
 				PoolPassage(passage);
+			else if (!SpawnedRoomObjects.Contains(passage->From))
+			{
+				passage->From->Passages.Remove(passage);
+				passage->From = nullptr;
+				PoolPassage(passage);
+			}
 		}
 		// else
 		// This is a weird case that should never happen
@@ -1629,6 +1651,7 @@ void AMainGameMode::GenerateMap()
 	ExpandRoom(startRoom);
 	SpawnRoom(startRoom);
 	FillRoom(startRoom, 1);
+	MainPlayerController->GetCharacter()->SetActorLocation(FVector(25, 25, 90));
 	GetCharacterRoom();
 }
 // Resets the map

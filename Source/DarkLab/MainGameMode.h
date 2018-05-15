@@ -71,8 +71,13 @@ protected:
 	// Returns the room the character is in
 	LabRoom* GetCharacterRoom();
 	// Called when character enters new room
-	void OnEnterRoom(LabRoom* room);
+	void OnEnterRoom(LabRoom* lastRoom, LabRoom* newRoom);
 
+public:
+	// Called when character is enabled to reset the map
+	void OnCharacterEnabled();
+
+protected:
 	// Gets the pool for the object/class
 	TArray<TScriptInterface<IDeactivatable>>& GetCorrectPool(TScriptInterface<IDeactivatable> object);
 	TArray<TScriptInterface<IDeactivatable>>& GetCorrectPool(UClass* cl);

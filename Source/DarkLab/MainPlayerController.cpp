@@ -84,6 +84,8 @@ void AMainPlayerController::ShowHideMenu()
 {
 	UE_LOG(LogTemp, Warning, TEXT("ShowHideMenu called"));
 
+	// TODO delete
+	// Exits
 	FGenericPlatformMisc::RequestExit(false);
 
 	// TODO
@@ -132,9 +134,11 @@ void AMainPlayerController::OnLoss()
 void AMainPlayerController::Enable()
 {
 	// We only unposses at this point, otherwise we would have no character during the respawn delay
-	UnPossess();
-	GetWorld()->GetAuthGameMode()->RestartPlayer(this);
-	MainCharacter = Cast<AMainCharacter>(GetCharacter());
+	// UnPossess();
+	// GetWorld()->GetAuthGameMode()->RestartPlayer(this);
+	// MainCharacter = Cast<AMainCharacter>(GetCharacter());
+
+	MainCharacter->Enable();
 }
 
 // Sets default values
