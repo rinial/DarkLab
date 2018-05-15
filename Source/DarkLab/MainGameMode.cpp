@@ -1526,9 +1526,11 @@ void AMainGameMode::ExpandDepth(LabRoom * start, int depth, LabPassage* fromPass
 		return;
 	else
 	{
-		for (LabPassage* passage : start->Passages)
+		// We need a copy to avoid errors during expansion
+		TArray<LabPassage*> passagesCopy = start->Passages;
+		for (LabPassage* passage : passagesCopy)
 		{
-			if (!passage || (fromPassage && passage == fromPassage))
+			if (passage == fromPassage)
 				continue;
 			if (passage->From != start)
 				ExpandDepth(passage->From, depth - 1, passage);
@@ -1555,7 +1557,9 @@ void AMainGameMode::SpawnFillDepth(LabRoom * start, int depth, LabPassage* fromP
 		return;
 	else
 	{
-		for (LabPassage* passage : start->Passages)
+		// We need a copy to avoid errors during expansion
+		TArray<LabPassage*> passagesCopy = start->Passages;
+		for (LabPassage* passage : passagesCopy)
 		{
 			if (passage == fromPassage)
 				continue;
