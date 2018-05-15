@@ -116,6 +116,12 @@ protected:
 	bool RoomSpaceIsFree(LabRoom* room, const int xOffset, const int yOffset, EDirectionEnum direction, const int width = 4, const bool forPassage = false, const bool forDoor = false);
 	bool RoomSpaceIsFree(LabRoom* room, const int xOffset, const int yOffset, const int sizeX = 1, const int sizeY = 1, const bool forPassage = false, const bool forDoor = false);
 
+	// Returns true is one intersects the other (more than just side)
+	bool Intersect(LabRoom* room1, LabRoom* room2);
+	bool Intersect(FRectSpaceStruct space1, LabRoom* room2);
+	bool Intersect(LabRoom* room1, FRectSpaceStruct space2);
+	bool Intersect(FRectSpaceStruct space1, FRectSpaceStruct space2);
+
 	// Returns true is first is inside second
 	bool IsInside(LabRoom* room1, LabRoom* room2);
 	bool IsInside(FRectSpaceStruct space1, LabRoom* room2);
@@ -136,9 +142,15 @@ protected:
 	// Creates minimum space for a room near passage for tests and allocation
 	// TODO maybe it should take room size just in case other room gets destroyed
 	FRectSpaceStruct CreateMinimumRoomSpace(LabRoom* room, FRectSpaceStruct passageSpace, EDirectionEnum direction);
+	// Creates random room space based on minimum room space
+	FRectSpaceStruct CreateRandomRoomSpace(FRectSpaceStruct minSpace, bool fromPassage = false, EDirectionEnum direction = EDirectionEnum::VE_Up);
+
+	// Shrinks space to not include specified room but still include minSpace
+	// If prioritize horizontal is true, it tries to shrink horizontal part, otherwise vertival
+	void ShrinkSpace(FRectSpaceStruct& currentSpace, FRectSpaceStruct minSpace, LabRoom* toAvoid, bool prioritizeHorizontal);
 
 	// Creates a random room based on minimum room space
-	LabRoom* CreateRandomRoom(FRectSpaceStruct minSpace);
+	LabRoom* CreateRandomRoom(FRectSpaceStruct minSpace, bool fromPassage = false, EDirectionEnum direction = EDirectionEnum::VE_Up);
 
 	// Creates and adds a random passage to the room, returns passage or nullptr and returns allocated room space by reference or another room that is now connected
 	LabPassage* CreateAndAddRandomPassage(LabRoom* room, FRectSpaceStruct& roomSpace, LabRoom*& possibleRoomConnection);

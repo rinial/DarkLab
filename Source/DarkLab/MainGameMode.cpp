@@ -924,6 +924,46 @@ bool AMainGameMode::RoomSpaceIsFree(LabRoom * room, const int xOffset, const int
 	}
 }
 
+// Returns true is one intersects the other (more than just side)
+bool AMainGameMode::Intersect(LabRoom * room1, LabRoom * room2)
+{
+	if (!room1 || !room2)
+		return false;
+
+	return Intersect(FRectSpaceStruct(room1->BotLeftX, room1->BotLeftY, room1->SizeX, room1->SizeY), FRectSpaceStruct(room2->BotLeftX, room2->BotLeftY, room2->SizeX, room2->SizeY));
+}
+bool AMainGameMode::Intersect(FRectSpaceStruct space1, LabRoom * room2)
+{
+	if (!room2)
+		return false;
+
+	return Intersect(space1, FRectSpaceStruct(room2->BotLeftX, room2->BotLeftY, room2->SizeX, room2->SizeY));
+}
+bool AMainGameMode::Intersect(LabRoom * room1, FRectSpaceStruct space2)
+{
+	if (!room1)
+		return false;
+
+	return Intersect(FRectSpaceStruct(room1->BotLeftX, room1->BotLeftY, room1->SizeX, room1->SizeY), space2);
+}
+bool AMainGameMode::Intersect(FRectSpaceStruct space1, FRectSpaceStruct space2)
+{
+	// Not intersecting on X axis
+	if (space1.BotLeftX + space1.SizeX - 1 <= space2.BotLeftX)
+		return false;
+	if (space1.BotLeftX >= space2.BotLeftX + space2.SizeX - 1)
+		return false;
+
+	// Not intersecting on Y axis
+	if (space1.BotLeftY + space1.SizeY - 1 <= space2.BotLeftY)
+		return false;
+	if (space1.BotLeftY >= space2.BotLeftY + space2.SizeY - 1)
+		return false;
+
+	// Intersecting on both axis
+	return true;
+}
+
 // Returns true is first is inside second
 bool AMainGameMode::IsInside(LabRoom * room1, LabRoom * room2)
 {
@@ -1091,13 +1131,139 @@ FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom* room, FRectSpace
 
 	return space;
 }
+// Creates random room space based on minimum room space
+FRectSpaceStruct AMainGameMode::CreateRandomRoomSpace(FRectSpaceStruct minSpace, bool fromPassage, EDirectionEnum direction)
+{
+	FRectSpaceStruct randomSpace;
+
+	// TODO shouldn't randomize for corridors?
+	// We randomize what we make first
+	if (FMath::RandBool())
+	{
+		randomSpace.SizeX = FMath::RandRange(minSpace.SizeX, MaxRoomSize);
+		randomSpace.SizeY = FMath::RandRange(minSpace.SizeY, FMath::Max(minSpace.SizeY, MaxRoomArea / randomSpace.SizeX));
+	}
+	else
+	{
+		randomSpace.SizeY = FMath::RandRange(minSpace.SizeY, MaxRoomSize);
+		randomSpace.SizeX = FMath::RandRange(minSpace.SizeX, FMath::Max(minSpace.SizeX, MaxRoomArea / randomSpace.SizeY));
+	}
+
+	if (!fromPassage)
+	{
+		randomSpace.BotLeftX = FMath::RandRange(minSpace.BotLeftX - randomSpace.SizeX + minSpace.SizeX, minSpace.BotLeftX);
+		randomSpace.BotLeftY = FMath::RandRange(minSpace.BotLeftY - randomSpace.SizeY + minSpace.SizeY, minSpace.BotLeftY);
+	}
+	else
+	{
+		if (direction == EDirectionEnum::VE_Left || direction == EDirectionEnum::VE_Right)
+		{
+			randomSpace.BotLeftY = FMath::RandRange(minSpace.BotLeftY - randomSpace.SizeY + minSpace.SizeY, minSpace.BotLeftY);
+			if (direction == EDirectionEnum::VE_Right)
+				randomSpace.BotLeftX = minSpace.BotLeftX;
+			else
+				randomSpace.BotLeftX = minSpace.BotLeftX - randomSpace.SizeX + minSpace.SizeX;
+		}
+		else
+		{
+			randomSpace.BotLeftX = FMath::RandRange(minSpace.BotLeftX - randomSpace.SizeX + minSpace.SizeX, minSpace.BotLeftX);
+			if (direction == EDirectionEnum::VE_Up)
+				randomSpace.BotLeftY = minSpace.BotLeftY;
+			else
+				randomSpace.BotLeftY = minSpace.BotLeftY - randomSpace.SizeY + minSpace.SizeY;
+		}
+	}
+
+	return randomSpace;
+}
+
+// Shrinks space to not include specified room but still include minSpace
+// If prioritize horizontal is true, it tries to shrink horizontal part, otherwise vertival
+void AMainGameMode::ShrinkSpace(FRectSpaceStruct & currentSpace, FRectSpaceStruct minSpace, LabRoom * toAvoid, bool prioritizeX)
+{
+	if (!toAvoid)
+		return;
+
+	bool fixed = false;
+	if (prioritizeX)
+	{
+		// Doesn't intersect minimum on X, so solution on X exists
+		if (minSpace.BotLeftX + minSpace.SizeX - 1 <= toAvoid->BotLeftX || 
+			toAvoid->BotLeftX + toAvoid->SizeX - 1 <= minSpace.BotLeftX)
+		{
+			// Check that intersect on X exists 
+			int overR = currentSpace.BotLeftX + currentSpace.SizeX - 1 - toAvoid->BotLeftX;
+			int overL = toAvoid->BotLeftX + toAvoid->SizeX - 1 - currentSpace.BotLeftX;
+			if (overR > 0 && overL > 0)
+			{
+
+				// TODO it aint good Changeee!!!
+				// Intersect on the right
+				int overR = currentSpace.BotLeftX + currentSpace.SizeX - 1 - toAvoid->BotLeftX;
+				if (overR > 0)
+				{
+					int newSize = currentSpace.SizeX - overR;
+					if (currentSpace.BotLeftX + newSize >= minSpace.BotLeftX + minSpace.SizeX)
+					{
+						currentSpace.SizeX = newSize;
+						fixed = true;
+					}
+				}
+			}
+		}
+	}
+
+	//// Not intersecting on X axis
+	//if (space1.BotLeftX + space1.SizeX - 1 <= space2.BotLeftX)
+	//	return false;
+	//if (space1.BotLeftX >= space2.BotLeftX + space2.SizeX - 1)
+	//	return false;
+
+	//// Not intersecting on Y axis
+	//if (space1.BotLeftY + space1.SizeY - 1 <= space2.BotLeftY)
+	//	return false;
+	//if (space1.BotLeftY >= space2.BotLeftY + space2.SizeY - 1)
+	//	return false;
+
+	//// Intersecting on both axis
+	//return true;
+}
 
 // Creates a random room based on minimum room space
-LabRoom * AMainGameMode::CreateRandomRoom(FRectSpaceStruct minSpace)
+LabRoom * AMainGameMode::CreateRandomRoom(FRectSpaceStruct minSpace, bool fromPassage, EDirectionEnum direction)
 {
-	LabRoom* room = CreateRoom(minSpace);
+	FRectSpaceStruct currentSpace = CreateRandomRoomSpace(minSpace, fromPassage, direction);
+	TArray<LabPassage*> additionalPassages;
 
-	// TODO
+	LabRoom* intersected;
+	bool prioritizeX = FMath::RandBool(); // TODO should depend on smth
+	bool swapPriority = true; // TODO should be random or kept otherwise
+
+	while (!MapSpaceIsFree(true, false, currentSpace, intersected))
+	{
+		// TODO should try to include these and add their passages
+		// IsInside()
+
+		ShrinkSpace(currentSpace, minSpace, intersected, prioritizeX);
+
+		if (swapPriority)
+			prioritizeX = !prioritizeX;
+		else
+			prioritizeX = FMath::RandBool();
+	}
+	while (!MapSpaceIsFree(false, true, currentSpace, intersected))
+	{
+		ShrinkSpace(currentSpace, minSpace, intersected, prioritizeX);
+
+		if (swapPriority)
+			prioritizeX = !prioritizeX;
+		else
+			prioritizeX = FMath::RandBool();
+	}
+
+	LabRoom* room = CreateRoom(currentSpace);
+
+	// TODO add passages
 
 	return room;
 }
@@ -1193,7 +1359,7 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 				// UE_LOG(LogTemp, Warning, TEXT("> %s"), TEXT("success"));
 
 				// We create new room from min space, it also allocates room's space
-				LabRoom* newRoom = CreateRandomRoom(minRoomSpace);
+				LabRoom* newRoom = CreateRandomRoom(minRoomSpace, true, passage->GridDirection);
 				if (!newRoom)
 					continue;
 
