@@ -389,15 +389,15 @@ void AMainGameMode::PoolRoom(LabRoom * room)
 		if (!passage)
 			continue;
 
-		// We pool passage if it isn't connected to some other room
+		// We pool passage if it isn't connected to some other spawned room
 		if (passage->From == room)
 		{
-			if (!passage->To)
+			if (!passage->To || !SpawnedRoomObjects.Contains(passage->To))
 				PoolPassage(passage);
 		}
 		else if (passage->To == room)
 		{
-			if (!passage->From)
+			if (!passage->From || !SpawnedRoomObjects.Contains(passage->From))
 				PoolPassage(passage);
 		}
 		// else
@@ -405,6 +405,7 @@ void AMainGameMode::PoolRoom(LabRoom * room)
 		// Room is not responsible for the passage pooling is this DOES happen somehow
 	}
 	AllocatedRoomSpace.Remove(room);
+	ExpandedRooms.Remove(room);
 	delete room;
 }
 void AMainGameMode::PoolPassage(LabPassage* passage)
@@ -422,6 +423,16 @@ void AMainGameMode::PoolMap()
 	SpawnedRoomObjects.GetKeys(rooms);
 	for (int i = rooms.Num() - 1; i >= 0; --i)
 		PoolRoom(rooms[i]);
+
+	// Clear all saved rooms
+	TArray<LabRoom*> allRooms;
+	AllocatedRoomSpace.GetKeys(allRooms);
+	for (int i = allRooms.Num() - 1; i >= 0; --i)
+		delete allRooms[i];
+
+	AllocatedRooms.Empty();
+	AllocatedRoomSpace.Empty();
+	ExpandedRooms.Empty();
 }
 
 // Tries to find a poolable object in a specified array
@@ -705,6 +716,7 @@ void AMainGameMode::DeallocateRoom(LabRoom * room)
 
 	AllocatedRooms.Remove(room);
 }
+
 // Space in the room is allocated and can't be allocated again
 void AMainGameMode::AllocateRoomSpace(LabRoom * room, FRectSpaceStruct space, bool local)
 {
@@ -1136,17 +1148,19 @@ FRectSpaceStruct AMainGameMode::CreateRandomRoomSpace(FRectSpaceStruct minSpace,
 {
 	FRectSpaceStruct randomSpace;
 
+	int area = FMath::RandRange(FMath::Max(minSpace.SizeX * minSpace.SizeY, MinRoomArea), MaxRoomArea);
+
 	// TODO shouldn't randomize for corridors?
 	// We randomize what we make first
 	if (FMath::RandBool())
 	{
-		randomSpace.SizeX = FMath::RandRange(minSpace.SizeX, MaxRoomSize);
-		randomSpace.SizeY = FMath::RandRange(minSpace.SizeY, FMath::Max(minSpace.SizeY, MaxRoomArea / randomSpace.SizeX));
+		randomSpace.SizeX = FMath::RandRange(minSpace.SizeX, FMath::Min(area / minSpace.SizeY, MaxRoomSize));
+		randomSpace.SizeY = FMath::Max(minSpace.SizeY, area / randomSpace.SizeX);
 	}
 	else
 	{
-		randomSpace.SizeY = FMath::RandRange(minSpace.SizeY, MaxRoomSize);
-		randomSpace.SizeX = FMath::RandRange(minSpace.SizeX, FMath::Max(minSpace.SizeX, MaxRoomArea / randomSpace.SizeY));
+		randomSpace.SizeY = FMath::RandRange(minSpace.SizeY, FMath::Min(area / minSpace.SizeX, MaxRoomSize));
+		randomSpace.SizeX = FMath::Max(minSpace.SizeX, area / randomSpace.SizeY);
 	}
 
 	if (!fromPassage)
@@ -1258,7 +1272,7 @@ LabRoom * AMainGameMode::CreateRandomRoom(FRectSpaceStruct minSpace, bool fromPa
 
 	LabRoom* intersected;
 	bool prioritizeX = FMath::RandBool(); // TODO should depend on smth
-	bool swapPriority = true; // TODO should be random or kept otherwise
+	bool swapPriority = false;
 
 	while (!MapSpaceIsFree(true, false, currentSpace, intersected))
 	{
@@ -1355,6 +1369,8 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 // Returns new rooms
 TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 {
+	ExpandedRooms.AddUnique(room);
+
 	TArray<LabRoom*> newRooms;
 
 	// The number of passages we want to have in the room
@@ -1495,48 +1511,72 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 	return spawnedActors;
 }
 
+// Expands room if it's not spawned yet
+// Repeats with all adjasent rooms recursively
+void AMainGameMode::ExpandDepth(LabRoom * start, int depth, LabPassage* fromPassage)
+{
+	if (!start)
+		return;
+
+	// If not spawned and not expanded
+	if (!ExpandedRooms.Contains(start) && !SpawnedRoomObjects.Contains(start))
+		ExpandRoom(start);
+
+	if (depth <= 1)
+		return;
+	else
+	{
+		for (LabPassage* passage : start->Passages)
+		{
+			if (!passage || (fromPassage && passage == fromPassage))
+				continue;
+			if (passage->From != start)
+				ExpandDepth(passage->From, depth - 1, passage);
+			if (passage->To != start)
+				ExpandDepth(passage->To, depth - 1, passage);
+		}
+	}
+}
+// Spawns and fills room if it's not spawned yet
+// Repeats with all adjasent rooms recursively
+void AMainGameMode::SpawnFillDepth(LabRoom * start, int depth, LabPassage* fromPassage)
+{
+	if (!start)
+		return;
+
+	// If not spawned
+	if (!SpawnedRoomObjects.Contains(start))
+	{
+		SpawnRoom(start);
+		FillRoom(start);
+	}
+
+	if (depth <= 1)
+		return;
+	else
+	{
+		for (LabPassage* passage : start->Passages)
+		{
+			if (passage == fromPassage)
+				continue;
+			if (passage->From != start)
+				SpawnFillDepth(passage->From, depth - 1, passage);
+			if (passage->To != start)
+				SpawnFillDepth(passage->To, depth - 1, passage);
+		}
+	}
+}
+
 // Generates map
 void AMainGameMode::GenerateMap()
 {
-	// Generation:
-
-	// 1. Something allocates a room
 	LabRoom* startRoom = CreateStartRoom();
-	LabRoom* leftRoom = CreateRoom(-17, -5, 5, 12);
-
-	// 2. We find positions for passages and allocate minimum size
-	// 2*. We should also find passages between this room and other allocated but not spawn 
-	// 3. For each passage we find maximum possible distance in three directions
-	// 4. For each passage we allocate new rooms (1. may be happening here)
-	// 5. We add passages to our new rooms
-	TArray<LabRoom*> newRooms = ExpandRoom(startRoom);
-	TArray<LabRoom*> newLeftRooms = ExpandRoom(leftRoom); // THIS should produce passages to the rooms from start room
-
-	// 6. We spawn our initial room
+	ExpandRoom(startRoom);
 	SpawnRoom(startRoom);
-	SpawnRoom(leftRoom);
+	FillRoom(startRoom, 1);
 
-	// 7. We initialize and spawn other parts of the initial room
-	FillRoom(startRoom, 1); // we want at least one lamp in starting room so we override it
-	FillRoom(leftRoom);
-
-	// 8+. We repeat from 1 for other rooms (rn we just spawn)
-	for (LabRoom* room : newRooms)
-	{
-		// TArray<LabRoom*> evenNewerRooms = ExpandRoom(room)
-		SpawnRoom(room);
-		FillRoom(room);
-
-		// Repeat
-	}
-	for (LabRoom* room : newLeftRooms)
-	{
-		// TArray<LabRoom*> evenNewerRooms = ExpandRoom(room)
-		SpawnRoom(room);
-		FillRoom(room);
-
-		// Repeat
-	}
+	ExpandDepth(startRoom, 5);
+	SpawnFillDepth(startRoom, 3);
 }
 // Resets the map
 void AMainGameMode::ResetMap()

@@ -172,6 +172,13 @@ protected:
 	// Should always be called on a room that is already spawned
 	TArray<AActor*> FillRoom(LabRoom* room, int minNumOfLampsOverride = 0);
 
+	// Expands room if it's not spawned yet
+	// Repeats with all adjasent rooms recursively
+	void ExpandDepth(LabRoom* start, int depth, LabPassage* fromPassage = nullptr);
+	// Spawns and fills room if it's not spawned yet
+	// Repeats with all adjasent rooms recursively
+	void SpawnFillDepth(LabRoom* start, int depth, LabPassage* fromPassage = nullptr);
+
 public:
 	// Generates map
 	void GenerateMap();
@@ -189,6 +196,9 @@ protected:
 
 	// Room-specific space taken by various objects (not world locations but offsets)
 	TMap<LabRoom*, TArray<FRectSpaceStruct>> AllocatedRoomSpace;
+
+	// Rooms that have already been expanded
+	TArray<LabRoom*> ExpandedRooms;
 
 	// Spawned map parts
 	// Does not include pickupable objects
@@ -210,13 +220,14 @@ protected:
 	TArray<TScriptInterface<IDeactivatable>> FlashlightPool;
 
 	// Constants used for generation
-	static const int MinRoomSize = 4; // Can't be lower than 4
-	static const int MaxRoomSize = 50;
-	static const int MaxRoomArea = 300;
+	static const int MinRoomSize = 5; // Can't be lower than 4
+	static const int MaxRoomSize = 35;
+	static const int MinRoomArea = 25;
+	static const int MaxRoomArea = 250;
 	static const int MinRoomNumOfPassages = 1; // Can't be lower than 1
 	static const int MaxRoomNumOfPassages = 10; 
 	static const int MaxRoomPassageCreationTriesPerDesired = 2; 
-	static const int MinPassageWidth = 2; // Can't be lower than 2
+	static const int MinPassageWidth = 3; // Can't be lower than 2
 	static const int MaxPassageWidth = 10; 
 	static const int NormalDoorWidth = 4; // Can't be lower than 2
 	static const int BigDoorWidth = 6;
