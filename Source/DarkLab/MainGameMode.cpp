@@ -381,9 +381,13 @@ LabRoom * AMainGameMode::GetCharacterRoom()
 // Called when character enters new room
 void AMainGameMode::OnEnterRoom(LabRoom * room)
 {
+	if (!room)
+		return;
+
 	UE_LOG(LogTemp, Warning, TEXT("Entered new room"));
 
-	// TODO
+	ExpandDepth(room, 5);
+	SpawnFillDepth(room, 3);
 }
 
 // Gets the pool for the object/class
@@ -1625,10 +1629,6 @@ void AMainGameMode::GenerateMap()
 	ExpandRoom(startRoom);
 	SpawnRoom(startRoom);
 	FillRoom(startRoom, 1);
-
-	ExpandDepth(startRoom, 5);
-	SpawnFillDepth(startRoom, 3);
-
 	GetCharacterRoom();
 }
 // Resets the map
