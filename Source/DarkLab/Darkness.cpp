@@ -155,8 +155,10 @@ void ADarkness::Tick(float DeltaTime)
 	if (Luminosity > LightResistance)
 		LightResistance += DeltaTime * LightResGainSpeed;
 	// Or decrease it if in no light at all
-	else if (Luminosity <= 0.0f && LightResistance >= 0.0f)
+	else if (Luminosity <= 0.0f && LightResistance > 0.0f)
 		LightResistance -= DeltaTime * LightResLossSpeed;
+	if (LightResistance < 0.0f)
+		LightResistance = 0.0f;
 
 	// TODO delete later: used for debug
 	if (GEngine)
