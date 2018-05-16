@@ -297,9 +297,77 @@ bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const
 }
 
 // Returns the light level for a passage
-float AMainGameMode::GetPassageLightingAmount(LabPassage * passage, bool oneSide, bool from)
+float AMainGameMode::GetPassageLightingAmount(LabPassage * passage, bool oneSide, bool innerSide)
 {
-	return 0.0f;
+	if (!passage)
+		return 0.f;
+
+	TArray<FVector> locations;
+
+	float centerX, centerY;
+	GridToWorld(passage->BotLeftX, passage->BotLeftY, passage->GridDirection == EDirectionEnum::VE_Up || passage->GridDirection == EDirectionEnum::VE_Down ? passage->Width : 1, passage->GridDirection == EDirectionEnum::VE_Up || passage->GridDirection == EDirectionEnum::VE_Down ? 1 : passage->Width, centerX, centerY);
+
+	FVector center = FVector(centerX, centerY, 30); // Small offset to avoid floor
+
+	// We create vectors for points assuming GridDirection is Up and innerSide is true
+	// Then we rotate them based on actual direction and bool value
+	TArray<FVector> localPoints;
+	localPoints.Add(FVector(-25, 0, 0));
+	// TODO add more local points here
+
+	switch (passage->GridDirection)
+	{
+	case EDirectionEnum::VE_Up:
+		if (innerSide)
+			break;
+		for (int i = 0; i < localPoints.Num(); ++i)
+			localPoints[i] = localPoints[i].RotateAngleAxis(180, FVector(0, 0, 1));
+		break;
+	case EDirectionEnum::VE_Down:
+		if (!innerSide)
+			break;
+		for (int i = 0; i < localPoints.Num(); ++i)
+			localPoints[i] = localPoints[i].RotateAngleAxis(180, FVector(0, 0, 1));
+		break;
+	case EDirectionEnum::VE_Right:
+		for (int i = 0; i < localPoints.Num(); ++i)
+			localPoints[i] = localPoints[i].RotateAngleAxis(innerSide ? 90 : -90, FVector(0, 0, 1));
+		break;
+	case EDirectionEnum::VE_Left:
+		for (int i = 0; i < localPoints.Num(); ++i)
+			localPoints[i] = localPoints[i].RotateAngleAxis(innerSide ? -90 : 90, FVector(0, 0, 1));
+		break;
+	}
+	
+	locations.Add(center);
+	for (FVector localPoint : localPoints)
+		locations.Add(center + localPoint);
+	if(!oneSide)
+		for (FVector localPoint : localPoints)
+			locations.Add(center - localPoint);
+
+	FVector lightLoc;	
+	return GetLightingAmount(lightLoc, locations, bShowDebug);
+}
+// Returns the light level for a room
+float AMainGameMode::GetRoomLightingAmount(LabRoom * room)
+{
+	if (!room)
+		return 0.f;
+
+	float light = 0.f;
+
+	for (LabPassage* passage : room->Passages)
+	{
+		if (!passage)
+			continue;
+
+		// TODO shouldn't always be oneSide
+		float temp = GetPassageLightingAmount(passage, true, passage->From == room);
+		light = temp > light ? temp : light;
+	}
+
+	return light;
 }
 
 // Changes world location into grid location
@@ -1801,6 +1869,7 @@ void AMainGameMode::Tick(const float deltaTime)
 		int charX, charY;
 		GetCharacterLocation(charX, charY);
 
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("- Luminosity: %f"), GetRoomLightingAmount(LastRoom)), true);
 		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Character room: pX: %d, pY: %d, sX: %d, sY: %d"), LastRoom->BotLeftX, LastRoom->BotLeftY, LastRoom->SizeX, LastRoom->SizeY), true);
 		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Character location: x: %d, y: %d"), charX, charY), true);
 

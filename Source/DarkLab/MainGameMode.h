@@ -50,7 +50,9 @@ public:
 
 protected:
 	// Returns the light level for a passage
-	float GetPassageLightingAmount(LabPassage* passage, bool oneSide = false, bool from = true);
+	float GetPassageLightingAmount(LabPassage* passage, bool oneSide = false, bool innerSide = true);
+	// Returns the light level for a room
+	float GetRoomLightingAmount(LabRoom* room);
 
 public:
 	// Changes world location into grid location
