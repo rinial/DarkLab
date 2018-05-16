@@ -231,6 +231,9 @@ protected:
 	// Rooms that were visited by player
 	TArray<LabRoom*> VisitedRooms;
 
+	// The last room character was in
+	LabRoom* LastRoom;
+
 	// Spawned map parts
 	// Does not include pickupable objects
 	TMap<LabRoom*, TArray<TScriptInterface<IDeactivatable>>> SpawnedRoomObjects;
@@ -249,9 +252,6 @@ protected:
 	TArray<TScriptInterface<IDeactivatable>> WallLampPool;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
 	TArray<TScriptInterface<IDeactivatable>> FlashlightPool;
-
-	// The last room character was in
-	LabRoom* LastRoom;
 
 	// Constants used for generation
 	static const int MinRoomSize = 5; // Can't be lower than 4

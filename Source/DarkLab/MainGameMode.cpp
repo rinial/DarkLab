@@ -142,7 +142,7 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 			continue;
 
 		// We don't care about invisible lights
-		if ((!Itr->IsVisible()) || Itr->bHiddenInGame)
+		if ((!Itr->IsVisible()) || Itr->bHiddenInGame || Itr->GetOwner()->bHidden)
 			continue;
 
 		pointLights.Add(*Itr);
@@ -533,46 +533,39 @@ void AMainGameMode::PoolRoom(LabRoom * room)
 	if (!room)
 		return;
 
-	if (!SpawnedRoomObjects.Contains(room))
-		return;
-
-	PoolObjects(SpawnedRoomObjects[room]);
-	SpawnedRoomObjects.Remove(room);
-	for (LabPassage* passage : room->Passages)
+	if (SpawnedRoomObjects.Contains(room))
 	{
-		if (!passage)
-			continue;
+		PoolObjects(SpawnedRoomObjects[room]);
+		for (LabPassage* passage : room->Passages)
+		{
+			if (!passage)
+				continue;
 
-		// We pool passage if it isn't connected to some other spawned room
-		if (passage->From == room)
-		{
-			if (!passage->To)
-				PoolPassage(passage);
-			else if (!SpawnedRoomObjects.Contains(passage->To))
+			// We pool passage if it isn't connected to some other spawned room
+			if (passage->From == room)
 			{
-				passage->To->Passages.Remove(passage);
-				passage->To = nullptr;
-				PoolPassage(passage);
+				if (!passage->To || !SpawnedRoomObjects.Contains(passage->To))
+					PoolPassage(passage);
 			}
-		}
-		else if (passage->To == room)
-		{
-			if (!passage->From)
-				PoolPassage(passage);
-			else if (!SpawnedRoomObjects.Contains(passage->From))
+			else if (passage->To == room)
 			{
-				passage->From->Passages.Remove(passage);
-				passage->From = nullptr;
-				PoolPassage(passage);
+				if (!passage->From || !SpawnedRoomObjects.Contains(passage->From))
+					PoolPassage(passage);
 			}
+			// else
+			// This is a weird case that should never happen
+			// Room is not responsible for the passage pooling is this DOES happen somehow
 		}
-		// else
-		// This is a weird case that should never happen
-		// Room is not responsible for the passage pooling is this DOES happen somehow
 	}
+
+	SpawnedRoomObjects.Remove(room);
 	AllocatedRoomSpace.Remove(room);
 	ExpandedRooms.Remove(room);
 	VisitedRooms.Remove(room);
+	AllocatedRooms.Remove(room);
+	if (LastRoom == room)
+		LastRoom = nullptr;
+
 	delete room;
 }
 void AMainGameMode::PoolPassage(LabPassage* passage)
@@ -586,21 +579,18 @@ void AMainGameMode::PoolPassage(LabPassage* passage)
 }
 void AMainGameMode::PoolMap()
 {
-	TArray<LabRoom*> rooms;
-	SpawnedRoomObjects.GetKeys(rooms);
-	for (int i = rooms.Num() - 1; i >= 0; --i)
-		PoolRoom(rooms[i]);
-
-	// Clear all saved rooms
+	// Pool and clear all saved rooms
 	TArray<LabRoom*> allRooms;
 	AllocatedRoomSpace.GetKeys(allRooms);
 	for (int i = allRooms.Num() - 1; i >= 0; --i)
-		delete allRooms[i];
+		PoolRoom(allRooms[i]);
 
-	AllocatedRooms.Empty();
+	// Should already be empty but we do this just in case
+	SpawnedRoomObjects.Empty();
 	AllocatedRoomSpace.Empty();
 	ExpandedRooms.Empty();
 	VisitedRooms.Empty();
+	AllocatedRooms.Empty();
 	LastRoom = nullptr;
 }
 
@@ -1884,10 +1874,9 @@ void AMainGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	UE_LOG(LogTemp, Warning, TEXT("EndPlay called"));
 
+	// Clear all saved rooms
 	TArray<LabRoom*> allRooms;
 	AllocatedRoomSpace.GetKeys(allRooms);
-
-	// Clear all saved rooms
 	for (int i = allRooms.Num() - 1; i >= 0; --i)
 		delete allRooms[i];
 }
