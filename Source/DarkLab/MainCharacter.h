@@ -90,7 +90,7 @@ protected:
 
 public:
 	// Sets default values
-	AMainCharacter();
+	AMainCharacter(const FObjectInitializer& ObjectInitializer);
 
 protected:
 	// Called when the game starts or when spawned
