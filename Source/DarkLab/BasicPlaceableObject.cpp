@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BasicPlaceableObject.h"
+#include "MainGameMode.h"
 
 // Returns the size of the object in cells
 FIntVector ABasicPlaceableObject::GetSize_Implementation()
@@ -47,7 +48,10 @@ void ABasicPlaceableObject::Place_Implementation(const FIntVector botLeftLoc, co
 	GridDirection = direction;
 	FIntVector size = Execute_GetSize(this);
 
-	SetActorLocation(FVector(botLeftLoc.Y, botLeftLoc.X, botLeftLoc.Z) * 50 + FVector(size.Y * 25, size.X * 25, ZOffset)); // - FVector(25, 25, 0));
+	FVector location;
+	AMainGameMode::GridToWorld(botLeftLoc.X, botLeftLoc.Y, size.X, size.Y, location.X, location.Y);
+	location.Z = ZOffset;
+	SetActorLocation(location); // - FVector(25, 25, 0));
 
 	float rotation;
 	switch (GridDirection)

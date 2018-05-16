@@ -296,12 +296,29 @@ bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const
 	return !bHit;
 }
 
-// Chanes world location into grid location
-void AMainGameMode::WorldToGrid(const float worldX, const float worldY, int & gridX, int & gridY) const
+// Returns the light level for a passage
+float AMainGameMode::GetPassageLightingAmount(LabPassage * passage, bool oneSide, bool from)
+{
+	return 0.0f;
+}
+
+// Changes world location into grid location
+void AMainGameMode::WorldToGrid(const float worldX, const float worldY, int & gridX, int & gridY)
 {
 	// We reverse x and y
 	gridX = worldY / 50 + (worldY >= 0 ? 0 : -1);
 	gridY = worldX / 50 + (worldX >= 0 ? 0 : -1);
+}
+// Changes grid location into world location
+void AMainGameMode::GridToWorld(const int gridX, const int gridY, float & worldX, float & worldY)
+{
+	GridToWorld(gridX, gridY, 1, 1, worldX, worldY);
+}
+void AMainGameMode::GridToWorld(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, float & worldX, float & worldY)
+{
+	// We reverse x and y
+	worldX = botLeftY * 50.f + sizeY * 25.f; // -25.f
+	worldY = botLeftX * 50.f + sizeX * 25.f; // -25.f
 }
 
 // Places an object on the map

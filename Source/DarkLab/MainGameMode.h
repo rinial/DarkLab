@@ -48,9 +48,16 @@ public:
 	bool CanSee(const FVector location1, const AActor* actor2, const FVector location2, const bool debug = false);
 	bool CanSee(const AActor* actor1, const FVector location1, const AActor* actor2, const FVector location2, const bool debug = false);
 
+protected:
+	// Returns the light level for a passage
+	float GetPassageLightingAmount(LabPassage* passage, bool oneSide = false, bool from = true);
+
 public:
-	// Chanes world location into grid location
-	void WorldToGrid(const float worldX, const float worldY, int& gridX, int& gridY) const;
+	// Changes world location into grid location
+	static void WorldToGrid(const float worldX, const float worldY, int& gridX, int& gridY);
+	// Changes grid location into world location
+	static void GridToWorld(const int gridX, const int gridY, float& worldX, float& worldY);
+	static void GridToWorld(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, float& worldX, float& worldY);
 
 protected:
 	// Places an object on the map
