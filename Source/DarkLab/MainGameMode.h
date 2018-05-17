@@ -31,11 +31,11 @@ public:
 	EDirectionEnum RandDirection();
 
 	// Returns the light level and the location of the brightest light
-	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool debug = false);
-	float GetLightingAmount(FVector& lightLoc, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool debug = false);
-	float GetLightingAmount(FVector& lightLoc, const TArray<FVector> locations, const bool debug = false);
-	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool debug = false);
-	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations, const bool debug = false);
+	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool returnFirstPositive = false, const bool debug = false);
+	float GetLightingAmount(FVector& lightLoc, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool returnFirstPositive = false, const bool debug = false);
+	float GetLightingAmount(FVector& lightLoc, const TArray<FVector> locations, const bool returnFirstPositive = false, const bool debug = false);
+	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool returnFirstPositive = false, const bool debug = false);
+	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations, const bool returnFirstPositive = false, const bool debug = false);
 	// Returns true if one actor/location can see other actor/location
 	// Its not about visibility to human eye, doesn't take light into account
 	bool CanSee(const AActor* actor1, const AActor* actor2, const bool debug = false);
@@ -50,9 +50,11 @@ public:
 
 protected:
 	// Returns the light level for a passage
-	float GetPassageLightingAmount(LabPassage* passage, bool oneSide = false, bool innerSide = true);
+	float GetPassageLightingAmount(LabPassage* passage, bool oneSide = false, bool innerSide = true, const bool returnFirstPositive = false);
 	// Returns the light level for a room
-	float GetRoomLightingAmount(LabRoom* room);
+	float GetRoomLightingAmount(LabRoom* room, const bool returnFirstPositive = false);
+	// Returns true if the room is in light
+	bool IsRoomIlluminated(LabRoom* room);
 
 public:
 	// Changes world location into grid location
@@ -102,8 +104,8 @@ protected:
 	void PoolPassage(LabPassage* passage);
 	void PoolMap();
 	// Pools dark area returning all rooms that now need fixing
-	void PoolDarkness(LabRoom* start, int depth, TArray<LabRoom*>& toFix);
-	void PoolDarkness(LabRoom* start, int depth, TArray<LabRoom*>& toFix, TArray<LabRoom*>& toPool);
+	void PoolDarkness(LabRoom* start, int depth, TArray<LabRoom*>& toFix, bool stopAtFirstIfLit = true);
+	void PoolDarkness(LabRoom* start, int depth, TArray<LabRoom*>& toFix, TArray<LabRoom*>& toPool, bool stopAtFirstIfLit = true);
 
 	// Tries to find a poolable object in a specified array
 	UFUNCTION(BlueprintCallable, Category = "Pools")

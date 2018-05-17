@@ -149,7 +149,7 @@ void ADarkness::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// We check the light level	
-	Luminosity = GameMode->GetLightingAmount(BrightestLightLocation, this, true, Collision->GetScaledSphereRadius() + 10, true, bShowLightDebug);
+	Luminosity = GameMode->GetLightingAmount(BrightestLightLocation, this, true, Collision->GetScaledSphereRadius() + 10, true, false, bShowLightDebug);
 
 	// Increase resistance if stuck in bright light
 	if (Luminosity > LightResistance)

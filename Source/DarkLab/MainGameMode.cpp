@@ -85,21 +85,21 @@ EDirectionEnum AMainGameMode::RandDirection()
 }
 
 // Returns the light level and the location of the brightest light
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool debug)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool returnFirstPositive, const bool debug)
 {
 	if (!actor)
 		return 0.0f;
-	return GetLightingAmount(lightLoc, actor, actor->GetActorLocation(), sixPoints, sixPointsRadius, fourMore, debug);
+	return GetLightingAmount(lightLoc, actor, actor->GetActorLocation(), sixPoints, sixPointsRadius, fourMore, returnFirstPositive, debug);
 }
-float AMainGameMode::GetLightingAmount(FVector & lightLoc, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool debug)
+float AMainGameMode::GetLightingAmount(FVector & lightLoc, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool returnFirstPositive, const bool debug)
 {
-	return GetLightingAmount(lightLoc, nullptr, location, sixPoints, sixPointsRadius, fourMore, debug);
+	return GetLightingAmount(lightLoc, nullptr, location, sixPoints, sixPointsRadius, fourMore, returnFirstPositive, debug);
 }
-float AMainGameMode::GetLightingAmount(FVector & lightLoc, const TArray<FVector> locations, const bool debug)
+float AMainGameMode::GetLightingAmount(FVector & lightLoc, const TArray<FVector> locations, const bool returnFirstPositive, const bool debug)
 {
-	return GetLightingAmount(lightLoc, nullptr, locations, debug);
+	return GetLightingAmount(lightLoc, nullptr, locations, returnFirstPositive, debug);
 }
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool debug)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool returnFirstPositive, const bool debug)
 {
 	TArray<FVector> locations;
 	locations.Add(location);
@@ -126,9 +126,9 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 			locations.Add(location - temp * sixPointsRadius);
 		}
 	}
-	return GetLightingAmount(lightLoc, actor, locations, debug);
+	return GetLightingAmount(lightLoc, actor, locations, returnFirstPositive, debug);
 }
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations, const bool debug)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations, const bool returnFirstPositive, const bool debug)
 {
 	float result = 0.0f;
 
@@ -197,6 +197,8 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 				{
 					result = temp;
 					lightLoc = lightLocation;
+					if (returnFirstPositive)
+						return result;
 				}
 			}
 		}
@@ -297,7 +299,7 @@ bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const
 }
 
 // Returns the light level for a passage
-float AMainGameMode::GetPassageLightingAmount(LabPassage * passage, bool oneSide, bool innerSide)
+float AMainGameMode::GetPassageLightingAmount(LabPassage * passage, bool oneSide, bool innerSide, const bool returnFirstPositive)
 {
 	if (!passage)
 		return 0.f;
@@ -312,8 +314,13 @@ float AMainGameMode::GetPassageLightingAmount(LabPassage * passage, bool oneSide
 	// We create vectors for points assuming GridDirection is Up and innerSide is true
 	// Then we rotate them based on actual direction and bool value
 	TArray<FVector> localPoints;
-	localPoints.Add(FVector(-25, 0, 0));
-	// TODO add more local points here
+	// localPoints.Add(FVector(-25, 0, 0));
+	int step = 2; // TODO make constant
+	for (int x = step; x < passage->Width; x += step)
+	{
+		localPoints.Add(FVector(-25, x * 50.f / 2, 0));
+		localPoints.Add(FVector(-25, -x * 50.f / 2, 0));
+	}
 
 	switch (passage->GridDirection)
 	{
@@ -347,10 +354,10 @@ float AMainGameMode::GetPassageLightingAmount(LabPassage * passage, bool oneSide
 			locations.Add(center - localPoint);
 
 	FVector lightLoc;	
-	return GetLightingAmount(lightLoc, locations, bShowDebug);
+	return GetLightingAmount(lightLoc, locations, returnFirstPositive, bShowDebug);
 }
 // Returns the light level for a room
-float AMainGameMode::GetRoomLightingAmount(LabRoom * room)
+float AMainGameMode::GetRoomLightingAmount(LabRoom * room, const bool returnFirstPositive)
 {
 	if (!room)
 		return 0.f;
@@ -366,8 +373,11 @@ float AMainGameMode::GetRoomLightingAmount(LabRoom * room)
 			continue;
 
 		// TODO shouldn't always be oneSide
-		float temp = GetPassageLightingAmount(passage, true, passage->From == room);
+		float temp = GetPassageLightingAmount(passage, true, passage->From == room, returnFirstPositive);
 		light = temp > light ? temp : light;
+		if (returnFirstPositive && light > 0.f)
+			return light;
+
 	}
 
 	TArray<FVector> locations;
@@ -384,10 +394,15 @@ float AMainGameMode::GetRoomLightingAmount(LabRoom * room)
 		}
 	}
 	FVector lightLoc;
-	float temp = GetLightingAmount(lightLoc, locations, bShowDebug);
+	float temp = GetLightingAmount(lightLoc, locations, returnFirstPositive, bShowDebug);
 	light = temp > light ? temp : light;
 
 	return light;
+}
+// Returns true if the room is in light
+bool AMainGameMode::IsRoomIlluminated(LabRoom * room)
+{
+	return GetRoomLightingAmount(room, true) > 0.f;
 }
 
 // Changes world location into grid location
@@ -475,10 +490,7 @@ LabRoom * AMainGameMode::GetCharacterRoom()
 
 	LabRoom* characterRoom;
 	if (!MapSpaceIsFree(false, true, x, y, 1, 1, characterRoom))
-	{
 		OnEnterRoom(LastRoom, characterRoom);
-		LastRoom = characterRoom;
-	}
 
 	return LastRoom;
 }
@@ -488,6 +500,8 @@ void AMainGameMode::OnEnterRoom(LabRoom* lastRoom, LabRoom* newRoom)
 	if (!newRoom)
 		return;
 
+	LastRoom = newRoom;
+
 	UE_LOG(LogTemp, Warning, TEXT("Entered new room"));
 
 	bool noLastRoom = !lastRoom;
@@ -495,7 +509,7 @@ void AMainGameMode::OnEnterRoom(LabRoom* lastRoom, LabRoom* newRoom)
 	{
 		// TODO shouldn't be like that, should it?
 		TArray<LabRoom*> toFix;
-		PoolDarkness(lastRoom, 2, toFix); // TODO make depth constant
+		PoolDarkness(lastRoom, 2, toFix, false); // TODO make depth constant
 
 		// TODO smth about last room here
 	}
@@ -589,35 +603,6 @@ void AMainGameMode::PoolRoom(LabRoom * room)
 	if (LastRoom == room)
 		LastRoom = nullptr;
 
-	//// TODO manually set nullptrs?
-	//for (int i = room->Passages.Num() - 1; i >= 0; --i)
-	//{
-	//	LabPassage* temp = room->Passages[i];
-	//	room->Passages.RemoveAt(i);
-	//	if (!temp)
-	//		continue;
-
-	//	// We delete passage if it isn't connected to some other room
-	//	// We delete passage's pointer to this room otherwise
-	//	if (temp->From == room)
-	//	{
-	//		/*if (!temp->To)
-	//			delete temp;
-	//		else*/
-	//			temp->From = nullptr;
-	//	}
-	//	else if (temp->To == room)
-	//	{
-	//		/*if (!temp->From)
-	//			delete temp;
-	//		else*/
-	//			temp->To = nullptr;
-	//	}
-	//	// else
-	//	// This is a weird case that should never happen
-	//	// This room is not responsible for the passage is this DOES happen somehow
-	//}
-
 	delete room;
 }
 void AMainGameMode::PoolPassage(LabPassage* passage)
@@ -646,29 +631,34 @@ void AMainGameMode::PoolMap()
 	LastRoom = nullptr;
 }
 // Pools dark area returning all rooms that now need fixing
-void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& toFix)
-{
-	TArray<LabRoom*> toPool;
-	PoolDarkness(start, depth, toFix, toPool);
-
-	for (int i = toPool.Num() - 1; i >= 0; --i)
-		PoolRoom(toPool[i]);
-}
-void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& toFix, TArray<LabRoom*>& toPool)
+void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& toFix, bool stopAtFirstIfLit)
 {
 	if (!start)
 		return;
 
-	// If we found a room that is not in the darkness, we add it for the fix and return, same if depth <= 0
-	if (depth <= 0 || GetRoomLightingAmount(start) > 0.f)
+	TArray<LabRoom*> toPool;
+	PoolDarkness(start, depth, toFix, toPool, stopAtFirstIfLit);
+	if (stopAtFirstIfLit)
+		toFix.Remove(start);
+
+	for (int i = toPool.Num() - 1; i >= 0; --i)
+		PoolRoom(toPool[i]);
+}
+void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& toFix, TArray<LabRoom*>& toPool, bool stopAtFirstIfLit)
+{
+	if (!start)
+		return;
+
+	// If we found a room that is not in the darkness, we add it for the fix and return, same if depth <= 0 or if character is in that room
+	if (depth <= 0 || LastRoom == start || IsRoomIlluminated(start))
 	{
 		toFix.AddUnique(start);
-		return;
+		if(depth <= 0 || stopAtFirstIfLit)
+			return;
 	}
+	else
+		toPool.AddUnique(start);
 
-	toPool.AddUnique(start);
-
-	// For every passage left we continue and save what they have to fix
 	for (LabPassage* passage : start->Passages)
 	{
 		if (passage->From != start)
@@ -676,31 +666,6 @@ void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& t
 		else if (passage->To != start)
 			PoolDarkness(passage->To, depth - 1, toFix, toPool);
 	}
-
-	//// We save room's passages first
-	//TArray<LabPassage*> passages = start->Passages;
-	//for (int i = passages.Num() - 1; i >= 0; --i)
-	//{
-	//	// We remove from the array passages that will get deleted during pooling
-	//	if (!passages[i] || (!passages[i]->From || !passages[i]->To))
-	//		passages.RemoveAt(i);
-	//}
-	//UE_LOG(LogTemp, Warning, TEXT("%d %d"), passages.Num(), start->Passages.Num());
-
-	//// We pool the room
-	//PoolRoom(start);
-	//// Now its not only pooled from the map but also deleted, some of its passages are deleted too, but they shouldn't be in our saved array
-
-	//// For every passage left we continue and save what they have to fix
-	//for (LabPassage* passage : passages)
-	//{
-	//	if (passage->From)
-	//		toFix.Append(PoolDarkness(passage->From, depth - 1));
-	//	else if (passage->To)
-	//		toFix.Append(PoolDarkness(passage->To, depth - 1));
-	//}
-
-	/*return toFix;*/
 }
 
 // Tries to find a poolable object in a specified array
@@ -1969,7 +1934,7 @@ void AMainGameMode::Tick(const float deltaTime)
 		int charX, charY;
 		GetCharacterLocation(charX, charY);
 
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("- Luminosity: %f"), GetRoomLightingAmount(LastRoom)), true);
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("- Luminosity: %f"), GetRoomLightingAmount(LastRoom, true)), true);
 		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Character room: pX: %d, pY: %d, sX: %d, sY: %d"), LastRoom->BotLeftX, LastRoom->BotLeftY, LastRoom->SizeX, LastRoom->SizeY), true);
 		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Character location: x: %d, y: %d"), charX, charY), true);
 
