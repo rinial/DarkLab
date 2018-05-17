@@ -51,6 +51,8 @@ public:
 protected:
 	// Returns the light level for a passage
 	float GetPassageLightingAmount(LabPassage* passage, bool oneSide = false, bool innerSide = true, const bool returnFirstPositive = false);
+	// Returns true if passage is illuminated
+	bool IsPassageIlluminated(LabPassage* passage, bool oneSide = false, bool innerSide = true);
 	// Returns the light level for a room
 	float GetRoomLightingAmount(LabRoom* room, const bool returnFirstPositive = false);
 	// Returns true if the room is in light
@@ -103,9 +105,18 @@ protected:
 	void PoolRoom(LabRoom* room);
 	void PoolPassage(LabPassage* passage);
 	void PoolMap();
+
 	// Pools dark area returning all rooms that now need fixing
 	void PoolDarkness(LabRoom* start, int depth, TArray<LabRoom*>& toFix, bool stopAtFirstIfLit = true);
 	void PoolDarkness(LabRoom* start, int depth, TArray<LabRoom*>& toFix, TArray<LabRoom*>& toPool, bool stopAtFirstIfLit = true);
+
+	// Pools dark area and fixes every room that needs fixing
+	void ReshapeDarkness(LabRoom* start, int depth, bool stopAtFirstIfLit = true);
+	// Reshapes darkness and expands, spawns and fills rooms
+	void CompleteReshapeDarkness(LabRoom* start, bool stopAtFirstIfLit = true);
+
+	// Reshapes darkness in player room
+	void ReshapeDarknessAround();
 
 	// Tries to find a poolable object in a specified array
 	UFUNCTION(BlueprintCallable, Category = "Pools")
@@ -122,6 +133,8 @@ protected:
 	// Spawn full parts of the lab
 	void SpawnRoom(LabRoom* room);
 	void SpawnPassage(LabPassage* passage, LabRoom* room = nullptr);
+	// Despawns room so it can be respawned later
+	void DespawnRoom(LabRoom* room);
 
 	// Room is allocated and can't be allocated again
 	void AllocateRoom(LabRoom* room);
@@ -165,13 +178,21 @@ protected:
 	// Creates starting room
 	LabRoom* CreateStartRoom();
 
+	// Reverses direction
+	EDirectionEnum GetReverseDirection(EDirectionEnum direction);
+
 	// Creates random space for a future passage (not world location but offsets)
 	// Doesn't take other passages into account. Direction is always out
 	FRectSpaceStruct CreateRandomPassageSpace(LabRoom* room, EDirectionEnum& direction, const bool forDoor = false);
+	// Creates a passage space for existing passage
+	FRectSpaceStruct CreatePassageSpaceFromPassage(LabRoom* room, LabPassage* passage);
 
-	// Creates minimum space for a room near passage for tests and allocation
+	// Creates minimum space for a room near passage space for tests and allocation
 	// TODO maybe it should take room size just in case other room gets destroyed
-	FRectSpaceStruct CreateMinimumRoomSpace(LabRoom* room, FRectSpaceStruct passageSpace, EDirectionEnum direction);
+	FRectSpaceStruct CreateMinimumRoomSpace(LabRoom* room, FRectSpaceStruct passageSpace, EDirectionEnum direction, bool widerForDoor = false);
+	// Creates minimum space for a room near passage for tests and allocation
+	FRectSpaceStruct CreateMinimumRoomSpace(LabRoom* room, LabPassage* passage);
+
 	// Creates random room space based on minimum room space
 	FRectSpaceStruct CreateRandomRoomSpace(FRectSpaceStruct minSpace, bool fromPassage = false, EDirectionEnum direction = EDirectionEnum::VE_Up);
 
@@ -192,6 +213,10 @@ protected:
 	// Returns new rooms
 	TArray<LabRoom*> ExpandRoom(LabRoom* room);
 
+	// Fixes room's passages that lead nowhere, creating a room for them or deleting them
+	// Also spawns a wall over previous passage if room was spawned
+	void FixRoom(LabRoom* room);
+
 	// Creates random space in the room with specified size for a future object in the room (not world location but offset)
 	// Returns false if couldn't create
 	bool CreateRandomInsideSpaceOfSize(LabRoom* room, int& xOffset, int& yOffset, const int sizeX, const int sizeY, const bool canBeTaken = false);
@@ -207,10 +232,10 @@ protected:
 
 	// Expands room if it's not spawned yet
 	// Repeats with all adjasent rooms recursively
-	void ExpandDepth(LabRoom* start, int depth, LabPassage* fromPassage = nullptr);
+	void ExpandInDepth(LabRoom* start, int depth, LabPassage* fromPassage = nullptr);
 	// Spawns and fills room if it's not spawned yet
 	// Repeats with all adjasent rooms recursively
-	void SpawnFillDepth(LabRoom* start, int depth, LabPassage* fromPassage = nullptr);
+	void SpawnFillInDepth(LabRoom* start, int depth, LabPassage* fromPassage = nullptr);
 
 public:
 	// Generates map
@@ -259,6 +284,9 @@ protected:
 	TArray<TScriptInterface<IDeactivatable>> FlashlightPool;
 
 	// Constants used for generation
+	static const int ExpandDepth = 5;
+	static const int SpawnFillDepth = 3;
+	static const int ReshapeDarknessDepth = 3;
 	static const int MinRoomSize = 5; // Can't be lower than 4
 	static const int MaxRoomSize = 35;
 	static const int MinRoomArea = 25;
@@ -280,6 +308,7 @@ protected:
 	static const int MaxGenericSpawnTries = 3;
 	// Probabilities
 	static const float ConnectToOtherRoomProbability;
+	static const float DeletePassageToFixProbability;
 	static const float PassageIsDoorProbability;
 	static const float DoorIsNormalProbability;
 	static const float SpawnFlashlightProbability;

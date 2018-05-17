@@ -22,11 +22,6 @@ void ADarknessController::OnDisabling()
 	// Start tracking a new one after a delay
 	FTimerHandle handler;
 	((AActor*)this)->GetWorldTimerManager().SetTimer(handler, this, &ADarknessController::TrackPlayer, 1.0f, false, TrackingRestartDelay);
-
-	// TODO delete later
-	// Can be used somewhere
-	/*FTimerHandle handler;
-	((AActor*)this)->GetWorldTimerManager().SetTimer(handler, this, &ADarknessController::TrackPlayer, 5.0f, true, 0.0f);*/
 }
 
 // Starts following the player

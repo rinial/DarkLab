@@ -24,6 +24,7 @@
 
 // Probabilities
 const float AMainGameMode::ConnectToOtherRoomProbability = 0.8f;
+const float AMainGameMode::DeletePassageToFixProbability = 0.0f; // TODO increase
 const float AMainGameMode::PassageIsDoorProbability = 0.6f;
 const float AMainGameMode::DoorIsNormalProbability = 0.95f;
 const float AMainGameMode::SpawnFlashlightProbability = 0.4f; // TODO make it lower
@@ -356,6 +357,11 @@ float AMainGameMode::GetPassageLightingAmount(LabPassage * passage, bool oneSide
 	FVector lightLoc;	
 	return GetLightingAmount(lightLoc, locations, returnFirstPositive, bShowDebug);
 }
+// Returns true if passage is illuminated
+bool AMainGameMode::IsPassageIlluminated(LabPassage * passage, bool oneSide, bool innerSide)
+{
+	return GetPassageLightingAmount(passage, oneSide, innerSide, true) > 0.f;
+}
 // Returns the light level for a room
 float AMainGameMode::GetRoomLightingAmount(LabRoom * room, const bool returnFirstPositive)
 {
@@ -504,25 +510,23 @@ void AMainGameMode::OnEnterRoom(LabRoom* lastRoom, LabRoom* newRoom)
 
 	UE_LOG(LogTemp, Warning, TEXT("Entered new room"));
 
-	bool noLastRoom = !lastRoom;
+	if (!VisitedRooms.Contains(newRoom))
+	{
+		if (!lastRoom || RandBool(LampsTurnOnOnEnterProbability))
+			ActivateRoomLamps(LastRoom);
+		VisitedRooms.Add(LastRoom);
+	}
+
 	if (lastRoom)
 	{
-		// TODO shouldn't be like that, should it?
-		TArray<LabRoom*> toFix;
-		PoolDarkness(lastRoom, 2, toFix, false); // TODO make depth constant
+		// TODO shouldn't do it here?
+		ReshapeDarkness(lastRoom, ReshapeDarknessDepth, false);
 
 		// TODO smth about last room here
 	}
 
-	if (!VisitedRooms.Contains(newRoom))
-	{
-		if (noLastRoom || RandBool(LampsTurnOnOnEnterProbability))
-			ActivateRoomLamps(newRoom);
-		VisitedRooms.Add(newRoom);
-	}
-
-	ExpandDepth(newRoom, 5);
-	SpawnFillDepth(newRoom, 3);
+	ExpandInDepth(LastRoom, ExpandDepth);
+	SpawnFillInDepth(LastRoom, SpawnFillDepth);
 }
 // Called when character is enabled to reset the map
 void AMainGameMode::OnCharacterEnabled()
@@ -567,35 +571,8 @@ void AMainGameMode::PoolObjects(TArray<TScriptInterface<IDeactivatable>>& object
 // Pool full parts of the lab
 void AMainGameMode::PoolRoom(LabRoom * room)
 {
-	if (!room)
-		return;
+	DespawnRoom(room);
 
-	if (SpawnedRoomObjects.Contains(room))
-	{
-		PoolObjects(SpawnedRoomObjects[room]);
-		for (LabPassage* passage : room->Passages)
-		{
-			if (!passage)
-				continue;
-
-			// We pool passage if it isn't connected to some other spawned room
-			if (passage->From == room)
-			{
-				if (!passage->To || !SpawnedRoomObjects.Contains(passage->To))
-					PoolPassage(passage);
-			}
-			else if (passage->To == room)
-			{
-				if (!passage->From || !SpawnedRoomObjects.Contains(passage->From))
-					PoolPassage(passage);
-			}
-			// else
-			// This is a weird case that should never happen
-			// Room is not responsible for the passage pooling is this DOES happen somehow
-		}
-	}
-
-	SpawnedRoomObjects.Remove(room);
 	AllocatedRoomSpace.Remove(room);
 	ExpandedRooms.Remove(room);
 	VisitedRooms.Remove(room);
@@ -630,6 +607,7 @@ void AMainGameMode::PoolMap()
 	AllocatedRooms.Empty();
 	LastRoom = nullptr;
 }
+
 // Pools dark area returning all rooms that now need fixing
 void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& toFix, bool stopAtFirstIfLit)
 {
@@ -638,11 +616,12 @@ void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& t
 
 	TArray<LabRoom*> toPool;
 	PoolDarkness(start, depth, toFix, toPool, stopAtFirstIfLit);
-	if (stopAtFirstIfLit)
-		toFix.Remove(start);
 
 	for (int i = toPool.Num() - 1; i >= 0; --i)
+	{
+		toFix.Remove(toPool[i]);
 		PoolRoom(toPool[i]);
+	}
 }
 void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& toFix, TArray<LabRoom*>& toPool, bool stopAtFirstIfLit)
 {
@@ -666,6 +645,31 @@ void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& t
 		else if (passage->To != start)
 			PoolDarkness(passage->To, depth - 1, toFix, toPool);
 	}
+}
+
+// Pools dark area and fixes every room that needs fixing
+void AMainGameMode::ReshapeDarkness(LabRoom * start, int depth, bool stopAtFirstIfLit)
+{
+	TArray<LabRoom*> toFix;
+	PoolDarkness(start, depth, toFix, stopAtFirstIfLit);
+	for (LabRoom* roomToFix : toFix)
+		FixRoom(roomToFix);
+}
+// Reshapes darkness and expands, spawns and fills rooms
+void AMainGameMode::CompleteReshapeDarkness(LabRoom * start, bool stopAtFirstIfLit)
+{
+	ReshapeDarkness(start, ReshapeDarknessDepth, stopAtFirstIfLit);
+	ExpandInDepth(start, ExpandDepth);
+	SpawnFillInDepth(start, SpawnFillDepth);
+}
+
+// Reshapes darkness in player room
+void AMainGameMode::ReshapeDarknessAround()
+{
+	if (!LastRoom)
+		return;
+
+	CompleteReshapeDarkness(LastRoom, false);
 }
 
 // Tries to find a poolable object in a specified array
@@ -931,6 +935,42 @@ void AMainGameMode::SpawnPassage(LabPassage* passage, LabRoom* room)
 	}
 
 	// UE_LOG(LogTemp, Warning, TEXT("> Spawned a passage"));
+}
+// Despawns room so it can be respawned later
+void AMainGameMode::DespawnRoom(LabRoom * room)
+{
+	if (!room)
+		return;
+
+	if (SpawnedRoomObjects.Contains(room))
+	{
+		PoolObjects(SpawnedRoomObjects[room]);
+		for (LabPassage* passage : room->Passages)
+		{
+			if (!passage)
+				continue;
+
+			// We pool passage if it isn't connected to some other spawned room
+			if (passage->From == room)
+			{
+				if (!passage->To || !SpawnedRoomObjects.Contains(passage->To))
+					PoolPassage(passage);
+			}
+			else if (passage->To == room)
+			{
+				if (!passage->From || !SpawnedRoomObjects.Contains(passage->From))
+					PoolPassage(passage);
+			}
+			// else
+			// This is a weird case that should never happen
+			// Room is not responsible for the passage pooling is this DOES happen somehow
+		}
+	}
+	SpawnedRoomObjects.Remove(room);
+	AllocatedRoomSpace[room].Empty();
+	ExpandedRooms.Remove(room);
+	VisitedRooms.Remove(room); // ?
+	AllocateRoom(room);
 }
 
 // Room is allocated and can't be allocated again
@@ -1280,6 +1320,24 @@ LabRoom * AMainGameMode::CreateStartRoom()
 	return CreateRandomRoom(minSpace);;
 }
 
+// Reverses direction
+EDirectionEnum AMainGameMode::GetReverseDirection(EDirectionEnum direction)
+{
+	switch (direction)
+	{
+	case EDirectionEnum::VE_Down:
+		return EDirectionEnum::VE_Up;
+	case EDirectionEnum::VE_Left:
+		return EDirectionEnum::VE_Right;
+	case EDirectionEnum::VE_Right:
+		return EDirectionEnum::VE_Left;
+	case EDirectionEnum::VE_Up:
+		return EDirectionEnum::VE_Down;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Somehow reached the end of GetREverseDirection"))
+	return EDirectionEnum::VE_Up;
+}
+
 // Creates random space for a future passage (not world location but offsets)
 // Doesn't take other passages into account. Direction is always out
 FRectSpaceStruct AMainGameMode::CreateRandomPassageSpace(LabRoom * room, EDirectionEnum& direction, const bool forDoor)
@@ -1336,15 +1394,21 @@ FRectSpaceStruct AMainGameMode::CreateRandomPassageSpace(LabRoom * room, EDirect
 
 	return space;
 }
+// Creates a passage space for existing passage
+FRectSpaceStruct AMainGameMode::CreatePassageSpaceFromPassage(LabRoom* room, LabPassage * passage)
+{
+	return FRectSpaceStruct(passage->BotLeftX - room->BotLeftX, passage->BotLeftY - room->BotLeftY, passage->GridDirection == EDirectionEnum::VE_Up || passage->GridDirection == EDirectionEnum::VE_Down ? passage->Width : 1, passage->GridDirection == EDirectionEnum::VE_Up || passage->GridDirection == EDirectionEnum::VE_Down ? 1 : passage->Width);
+}
 
-// Creates minimum space for a room near passage for tests and allocation
+// Creates minimum space for a room near passage space for tests and allocation
 // TODO maybe it should take room size just in case other room gets destroyed
-FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom* room, FRectSpaceStruct passageSpace, EDirectionEnum direction)
+FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom* room, FRectSpaceStruct passageSpace, EDirectionEnum direction, bool widerForDoor)
 {
 	FRectSpaceStruct space;
 
-	// int delta = !forDoor ? MinDistanceBetweenPassages : FMath::Max(MinDistanceBetweenPassages, NormalDoorWidth / 2 + NormalDoorWidth % 2);
-	int delta = MinDistanceBetweenPassages;
+	int width = direction == EDirectionEnum::VE_Left || direction == EDirectionEnum::VE_Right ? passageSpace.SizeY : passageSpace.SizeX;
+	int delta = !widerForDoor ? MinDistanceBetweenPassages : FMath::Max(MinDistanceBetweenPassages, width / 2 + width % 2);
+	// int delta = MinDistanceBetweenPassages;
 
 	switch (direction)
 	{
@@ -1377,6 +1441,24 @@ FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom* room, FRectSpace
 
 	return space;
 }
+// Creates minimum space for a room near passage for tests and allocation
+FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom * room, LabPassage * passage)
+{
+	EDirectionEnum direction = !passage->To ? passage->GridDirection : GetReverseDirection(passage->GridDirection);
+
+	FRectSpaceStruct pasSpace = CreatePassageSpaceFromPassage(room, passage);
+	bool doorOutOfRoomBorders = false;
+	if (passage->bIsDoor)
+	{
+		int extra = passage->Width / 2 + passage->Width % 2;
+		if (direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down)
+			doorOutOfRoomBorders = room->BotLeftX > passage->BotLeftX - extra || room->BotLeftX + room->SizeX < passage->BotLeftX + passage->Width + extra;
+		else
+			doorOutOfRoomBorders = room->BotLeftY > passage->BotLeftY - extra || room->BotLeftY + room->SizeY < passage->BotLeftY + passage->Width + extra;
+	}
+	return CreateMinimumRoomSpace(room, pasSpace, direction, doorOutOfRoomBorders);
+}
+
 // Creates random room space based on minimum room space
 FRectSpaceStruct AMainGameMode::CreateRandomRoomSpace(FRectSpaceStruct minSpace, bool fromPassage, EDirectionEnum direction)
 {
@@ -1552,35 +1634,60 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 	// Find minimum space for a new room on the other side of this passage
 	roomSpace = CreateMinimumRoomSpace(room, pasSpace, direction);
 
-	// Test if it works on the map
+	LabRoom* intersected = nullptr;
 	// Intersects something spawned
-	if (!MapSpaceIsFree(false, true, roomSpace))
+	if (!MapSpaceIsFree(false, true, roomSpace, intersected))
+	{
 		return nullptr;
 
-	LabRoom* intersected = nullptr;
-	// Intersects something allocated
-	bool spaceIsFree = MapSpaceIsFree(true, false, roomSpace, intersected);
-	if (!spaceIsFree)
-	{
 		// If we don't want to connect
 		if (!RandBool(ConnectToOtherRoomProbability))
 			return nullptr;
 
-		// We found something that intersects roomSpace but is not spawned yet
+		// We found something that intersects roomSpace and is spawned
 		// We check if instead of creating new room (which we can't do since we intersected) we can connect to this room instead
 
+		// Room shouldn't be illuminated
+		if (LastRoom != intersected && !IsRoomIlluminated(intersected))
+			return nullptr;
+		
 		// Other room should include the room space
 		if (!IsInside(roomSpace, intersected))
 			return nullptr;
 
-		// TODO maybe we should delete this since other room should always be able to include passage if it includes roomSpace
-		// Now we check if other room can include our passage
-		FRectSpaceStruct pasSpaceForOther = FRectSpaceStruct(pasSpace.BotLeftX - intersected->BotLeftX + room->BotLeftX, pasSpace.BotLeftY - intersected->BotLeftY + room->BotLeftY, pasSpace.SizeX, pasSpace.SizeY);
-		if (!RoomSpaceIsFree(intersected, pasSpaceForOther, true)) // We don't check for door since we already have good walls for sliding door in original room
-			return nullptr;
+		// Despawn that room so it can be respawned later
+		DespawnRoom(intersected);
 
 		// At this point other room should be considered good
 		possibleRoomConnection = intersected;
+	}
+	else
+	{
+		intersected = nullptr;
+		// Intersects something allocated
+		bool spaceIsFree = MapSpaceIsFree(true, false, roomSpace, intersected);
+		if (!spaceIsFree)
+		{
+			// If we don't want to connect
+			if (!RandBool(ConnectToOtherRoomProbability))
+				return nullptr;
+
+			// We found something that intersects roomSpace but is not spawned yet
+			// We check if instead of creating new room (which we can't do since we intersected) we can connect to this room instead
+
+			// Other room should include the room space
+			if (!IsInside(roomSpace, intersected))
+				return nullptr;
+
+			// TODO maybe we should delete this since other room should always be able to include passage if it includes roomSpace
+			// Now we check if other room can include our passage
+			FRectSpaceStruct pasSpaceForOther = FRectSpaceStruct(pasSpace.BotLeftX - intersected->BotLeftX + room->BotLeftX, pasSpace.BotLeftY - intersected->BotLeftY + room->BotLeftY, pasSpace.SizeX, pasSpace.SizeY);
+			if (!RoomSpaceIsFree(intersected, pasSpaceForOther, true)) // We don't check for door since we already have good walls for sliding door in original room
+				return nullptr;
+
+			// At this point other room should be considered good
+			possibleRoomConnection = intersected;
+		}
 	}
 
 	// Add this passage to the room
@@ -1650,6 +1757,135 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 	}
 
 	return newRooms;
+}
+
+// Fixes room's passages that lead nowhere, creating a room for them or deleting them
+// Also spawns a wall over previous passage if room was spawned
+void AMainGameMode::FixRoom(LabRoom * room)
+{
+	if (!room)
+		return;
+
+	for (int i = room->Passages.Num() - 1; i >= 0; --i)
+	{
+		LabPassage* passage = room->Passages[i];
+
+		// We remove anything broken
+		if (!passage)
+		{
+			room->Passages.RemoveAt(i);
+			continue;
+		}
+
+		// TODO shouldn't use try/catch
+		try
+		{
+			// We're not interested in normal passages
+			if (passage->To && passage->From)
+				continue;
+		}
+		catch (...)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("GOT THAT EXCEPTION WITH PASSAGES"));
+			room->Passages.RemoveAt(i);
+			continue;
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("Trying to fix passage: x: %d, y: %d"), passage->BotLeftX, passage->BotLeftY);
+
+		if (!RandBool(DeletePassageToFixProbability) || IsPassageIlluminated(passage))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("> I want to fix it"));
+			// We try to keep passage, though we may still have to delete it
+
+			FRectSpaceStruct minRoomSpace = CreateMinimumRoomSpace(room, passage);	
+			UE_LOG(LogTemp, Warning, TEXT("> Create a room: x: %d, y: %d, sX: %d, sY: %d"), minRoomSpace.BotLeftX, minRoomSpace.BotLeftY, minRoomSpace.SizeX, minRoomSpace.SizeY);
+
+			LabRoom* intersected;
+			if (MapSpaceIsFree(false, true, minRoomSpace, intersected))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("> It doesn't intersect spawned"));
+				// Doesn't intersect anything spawned
+
+				// Intersects something allocated
+				if (MapSpaceIsFree(true, false, minRoomSpace, intersected))
+				{
+					UE_LOG(LogTemp, Warning, TEXT("> It doesn't intersect allocated"));
+					// We create new room from min space, it also allocates room's space
+					LabRoom* newRoom = CreateRandomRoom(minRoomSpace, true, !passage->To ? passage->GridDirection : GetReverseDirection(passage->GridDirection));
+					if (newRoom)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("> And i managed to create a good room for it"));
+						// We add passage to the room
+						newRoom->AddPassage(passage);
+						continue;
+					}
+					// else delete
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("> It intersects allocated"));
+
+					// We found something that intersects roomSpace but is not spawned yet
+					// We check if instead of creating new room (which we can't do since we intersected) we can connect to this room instead
+
+					// Other room should include the room space
+					if (IsInside(minRoomSpace, intersected))
+					{
+						UE_LOG(LogTemp, Warning, TEXT("> It's inside allocated, so ill connect"));
+
+						// At this point other room should be considered good
+						intersected->AddPassage(passage);
+						continue;
+					}
+					// else delete
+				}
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("> It intersects spawned"));
+
+				// We found something that intersects roomSpace and is spawned
+				// We check if instead of creating new room (which we can't do since we intersected) we can connect to this room instead
+
+				// Room shouldn't be illuminated
+				if (LastRoom != intersected && !IsRoomIlluminated(intersected))
+				// if (!IsPassageIlluminated(passage))
+				{
+					// Other room should include the room space
+					if (IsInside(minRoomSpace, intersected))
+					{
+						UE_LOG(LogTemp, Warning, TEXT("> It's inside spawned, so ill connect"));
+
+						// Despawn that room so it can be respawned later
+						DespawnRoom(intersected);
+
+						// At this point other room should be considered good
+						intersected->AddPassage(passage);
+						continue;
+					}
+					// else delete
+				}
+				// else delete
+			}
+		}
+		// else delete
+
+		// We delete passage and spawn a wall if we need to
+		UE_LOG(LogTemp, Warning, TEXT("> Let's delete it instead"));
+
+		// TODO check if this doesn't break ways into unknown
+		// TODO check if at least one connection exists
+
+		room->Passages.RemoveAt(i);
+		// We pool passage and spawn a wall instead
+		if (SpawnedRoomObjects.Contains(room))
+		{
+			PoolPassage(passage);
+			SpawnBasicWall(passage->BotLeftX, passage->BotLeftY, passage->GridDirection == EDirectionEnum::VE_Up || passage->GridDirection == EDirectionEnum::VE_Down ? passage->Width : 1, passage->GridDirection == EDirectionEnum::VE_Up || passage->GridDirection == EDirectionEnum::VE_Down ? 1 : passage->Width, room);
+		}
+		delete passage;
+	}
 }
 
 // Creates random space in the room with specified size for a future object in the room (not world location but offset)
@@ -1746,6 +1982,8 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 // Activates all lamps in a single room
 void AMainGameMode::ActivateRoomLamps(LabRoom * room)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Activate lamps in the room"));
+
 	if (!room)
 		return;
 
@@ -1763,7 +2001,7 @@ void AMainGameMode::ActivateRoomLamps(LabRoom * room)
 
 // Expands room if it's not spawned yet
 // Repeats with all adjasent rooms recursively
-void AMainGameMode::ExpandDepth(LabRoom * start, int depth, LabPassage* fromPassage)
+void AMainGameMode::ExpandInDepth(LabRoom * start, int depth, LabPassage* fromPassage)
 {
 	if (!start)
 		return;
@@ -1783,15 +2021,15 @@ void AMainGameMode::ExpandDepth(LabRoom * start, int depth, LabPassage* fromPass
 			if (passage == fromPassage)
 				continue;
 			if (passage->From != start)
-				ExpandDepth(passage->From, depth - 1, passage);
+				ExpandInDepth(passage->From, depth - 1, passage);
 			if (passage->To != start)
-				ExpandDepth(passage->To, depth - 1, passage);
+				ExpandInDepth(passage->To, depth - 1, passage);
 		}
 	}
 }
 // Spawns and fills room if it's not spawned yet
 // Repeats with all adjasent rooms recursively
-void AMainGameMode::SpawnFillDepth(LabRoom * start, int depth, LabPassage* fromPassage)
+void AMainGameMode::SpawnFillInDepth(LabRoom * start, int depth, LabPassage* fromPassage)
 {
 	if (!start)
 		return;
@@ -1814,9 +2052,9 @@ void AMainGameMode::SpawnFillDepth(LabRoom * start, int depth, LabPassage* fromP
 			if (passage == fromPassage)
 				continue;
 			if (passage->From != start)
-				SpawnFillDepth(passage->From, depth - 1, passage);
+				SpawnFillInDepth(passage->From, depth - 1, passage);
 			if (passage->To != start)
-				SpawnFillDepth(passage->To, depth - 1, passage);
+				SpawnFillInDepth(passage->To, depth - 1, passage);
 		}
 	}
 }
@@ -1895,28 +2133,9 @@ void AMainGameMode::BeginPlay()
 	// Finally we generate map
 	GenerateMap();
 
-	// Tests
-	/*
-	// Testing room pooling
-	LabRoom* room1 = CreateRoom(-50, -50, 100, 100);
-	room1->AddPassage(9, -50, EDirectionEnum::VE_Down, true);
-	SpawnRoom(room1);
-	PoolRoom(room1);
-
-	// Testing wall pooling
-	PoolObject(SpawnBasicWall(2, 3, 5, 1)); // This makes no sense except for testing
-
-	// Testing hallways
-	LabHallway* hallway1 = new LabHallway(4, -4, EDirectionEnum::VE_Right, 46, 4, startRoom, nullptr, 2, 2);
-	LabHallway* hallway2 = new LabHallway(-5, -25, EDirectionEnum::VE_Right, 50, 12, nullptr, nullptr, false, true, FLinearColor::White, FLinearColor::Black, 10, 6);
-	SpawnRoom(hallway1);
-	SpawnRoom(hallway2);
-
-	// Testing basic room parts
-	SpawnBasicFloor(-20, -20, 40, 40);
-	SpawnBasicWall(-7, -5, 1, 9);
-	SpawnBasicDoor(-6, 3, EDirectionEnum::VE_Up, FLinearColor::Red);
-	*/
+	// Make world reshape a bit every few seconds even if character doesn't change rooms
+	/*FTimerHandle handler;
+	((AActor*)this)->GetWorldTimerManager().SetTimer(handler, this, &AMainGameMode::ReshapeDarknessAround, 5.0f, true, 5.0f);*/
 }
 
 // Called every frame
@@ -1934,7 +2153,7 @@ void AMainGameMode::Tick(const float deltaTime)
 		int charX, charY;
 		GetCharacterLocation(charX, charY);
 
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("- Luminosity: %f"), GetRoomLightingAmount(LastRoom, true)), true);
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("- Luminosity: %f"), GetRoomLightingAmount(LastRoom)), true);
 		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Character room: pX: %d, pY: %d, sX: %d, sY: %d"), LastRoom->BotLeftX, LastRoom->BotLeftY, LastRoom->SizeX, LastRoom->SizeY), true);
 		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Character location: x: %d, y: %d"), charX, charY), true);
 

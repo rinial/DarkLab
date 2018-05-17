@@ -9,5 +9,6 @@ public class DarkLabTarget : TargetRules
 	{
 		Type = TargetType.Game;
 		ExtraModuleNames.Add("DarkLab");
-	}
+        bForceEnableExceptions = true;
+    }
 }
