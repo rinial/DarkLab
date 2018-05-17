@@ -1638,7 +1638,7 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 	// Intersects something spawned
 	if (!MapSpaceIsFree(false, true, roomSpace, intersected))
 	{
-		return nullptr;
+		// return nullptr;
 
 		// If we don't want to connect
 		if (!RandBool(ConnectToOtherRoomProbability))
@@ -1648,7 +1648,7 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 		// We check if instead of creating new room (which we can't do since we intersected) we can connect to this room instead
 
 		// Room shouldn't be illuminated
-		if (LastRoom != intersected && !IsRoomIlluminated(intersected))
+		if (LastRoom == intersected || IsRoomIlluminated(intersected))
 			return nullptr;
 		
 		// Other room should include the room space
