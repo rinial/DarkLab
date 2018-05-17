@@ -27,7 +27,7 @@ const float AMainGameMode::ConnectToOtherRoomProbability = 0.8f;
 const float AMainGameMode::PassageIsDoorProbability = 0.6f;
 const float AMainGameMode::DoorIsNormalProbability = 0.95f;
 const float AMainGameMode::SpawnFlashlightProbability = 0.4f; // TODO make it lower
-const float AMainGameMode::LampsTurnOnOnEnterProbability = 0.8f;
+const float AMainGameMode::LampsTurnOnOnEnterProbability = 0.0f; // TODO set to 0.8
 const float AMainGameMode::BlueProbability = 0.2f;
 const float AMainGameMode::GreenProbability = 0.15f;
 const float AMainGameMode::YellowProbability = 0.1f;
@@ -357,8 +357,11 @@ float AMainGameMode::GetRoomLightingAmount(LabRoom * room)
 
 	float light = 0.f;
 
-	for (LabPassage* passage : room->Passages)
+	// for (LabPassage* passage : room->Passages)
+	for (int i = 0; i < room->Passages.Num(); ++i)
 	{
+		LabPassage* passage = room->Passages[i];
+
 		if (!passage)
 			continue;
 
@@ -366,6 +369,23 @@ float AMainGameMode::GetRoomLightingAmount(LabRoom * room)
 		float temp = GetPassageLightingAmount(passage, true, passage->From == room);
 		light = temp > light ? temp : light;
 	}
+
+	TArray<FVector> locations;
+	int step = 2; // TODO make constant
+	for (int x = step; x < room->SizeX - 1; x += step)
+	{
+		for (int y = step; y < room->SizeY - 1; y += step)
+		{
+			float pointX, pointY;
+			GridToWorld(room->BotLeftX + x, room->BotLeftY + y, pointX, pointY);
+			FVector point = FVector(pointX, pointY, 30); // Z is set to avoid interferance with floor
+
+			locations.Add(point);
+		}
+	}
+	FVector lightLoc;
+	float temp = GetLightingAmount(lightLoc, locations, bShowDebug);
+	light = temp > light ? temp : light;
 
 	return light;
 }
@@ -454,9 +474,7 @@ LabRoom * AMainGameMode::GetCharacterRoom()
 		return LastRoom;
 
 	LabRoom* characterRoom;
-	MapSpaceIsFree(false, true, x, y, 1, 1, characterRoom);
-
-	if (characterRoom)
+	if (!MapSpaceIsFree(false, true, x, y, 1, 1, characterRoom))
 	{
 		OnEnterRoom(LastRoom, characterRoom);
 		LastRoom = characterRoom;
@@ -472,14 +490,19 @@ void AMainGameMode::OnEnterRoom(LabRoom* lastRoom, LabRoom* newRoom)
 
 	UE_LOG(LogTemp, Warning, TEXT("Entered new room"));
 
+	bool noLastRoom = !lastRoom;
 	if (lastRoom)
 	{
+		// TODO shouldn't be like that, should it?
+		TArray<LabRoom*> toFix;
+		PoolDarkness(lastRoom, 2, toFix); // TODO make depth constant
+
 		// TODO smth about last room here
 	}
 
 	if (!VisitedRooms.Contains(newRoom))
 	{
-		if (!lastRoom || RandBool(LampsTurnOnOnEnterProbability))
+		if (noLastRoom || RandBool(LampsTurnOnOnEnterProbability))
 			ActivateRoomLamps(newRoom);
 		VisitedRooms.Add(newRoom);
 	}
@@ -566,6 +589,35 @@ void AMainGameMode::PoolRoom(LabRoom * room)
 	if (LastRoom == room)
 		LastRoom = nullptr;
 
+	//// TODO manually set nullptrs?
+	//for (int i = room->Passages.Num() - 1; i >= 0; --i)
+	//{
+	//	LabPassage* temp = room->Passages[i];
+	//	room->Passages.RemoveAt(i);
+	//	if (!temp)
+	//		continue;
+
+	//	// We delete passage if it isn't connected to some other room
+	//	// We delete passage's pointer to this room otherwise
+	//	if (temp->From == room)
+	//	{
+	//		/*if (!temp->To)
+	//			delete temp;
+	//		else*/
+	//			temp->From = nullptr;
+	//	}
+	//	else if (temp->To == room)
+	//	{
+	//		/*if (!temp->From)
+	//			delete temp;
+	//		else*/
+	//			temp->To = nullptr;
+	//	}
+	//	// else
+	//	// This is a weird case that should never happen
+	//	// This room is not responsible for the passage is this DOES happen somehow
+	//}
+
 	delete room;
 }
 void AMainGameMode::PoolPassage(LabPassage* passage)
@@ -592,6 +644,63 @@ void AMainGameMode::PoolMap()
 	VisitedRooms.Empty();
 	AllocatedRooms.Empty();
 	LastRoom = nullptr;
+}
+// Pools dark area returning all rooms that now need fixing
+void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& toFix)
+{
+	TArray<LabRoom*> toPool;
+	PoolDarkness(start, depth, toFix, toPool);
+
+	for (int i = toPool.Num() - 1; i >= 0; --i)
+		PoolRoom(toPool[i]);
+}
+void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& toFix, TArray<LabRoom*>& toPool)
+{
+	if (!start)
+		return;
+
+	// If we found a room that is not in the darkness, we add it for the fix and return, same if depth <= 0
+	if (depth <= 0 || GetRoomLightingAmount(start) > 0.f)
+	{
+		toFix.AddUnique(start);
+		return;
+	}
+
+	toPool.AddUnique(start);
+
+	// For every passage left we continue and save what they have to fix
+	for (LabPassage* passage : start->Passages)
+	{
+		if (passage->From != start)
+			PoolDarkness(passage->From, depth - 1, toFix, toPool);
+		else if (passage->To != start)
+			PoolDarkness(passage->To, depth - 1, toFix, toPool);
+	}
+
+	//// We save room's passages first
+	//TArray<LabPassage*> passages = start->Passages;
+	//for (int i = passages.Num() - 1; i >= 0; --i)
+	//{
+	//	// We remove from the array passages that will get deleted during pooling
+	//	if (!passages[i] || (!passages[i]->From || !passages[i]->To))
+	//		passages.RemoveAt(i);
+	//}
+	//UE_LOG(LogTemp, Warning, TEXT("%d %d"), passages.Num(), start->Passages.Num());
+
+	//// We pool the room
+	//PoolRoom(start);
+	//// Now its not only pooled from the map but also deleted, some of its passages are deleted too, but they shouldn't be in our saved array
+
+	//// For every passage left we continue and save what they have to fix
+	//for (LabPassage* passage : passages)
+	//{
+	//	if (passage->From)
+	//		toFix.Append(PoolDarkness(passage->From, depth - 1));
+	//	else if (passage->To)
+	//		toFix.Append(PoolDarkness(passage->To, depth - 1));
+	//}
+
+	/*return toFix;*/
 }
 
 // Tries to find a poolable object in a specified array
@@ -887,6 +996,8 @@ void AMainGameMode::AllocateRoomSpace(LabRoom * room, const int xOffset, const i
 }
 void AMainGameMode::AllocateRoomSpace(LabRoom * room, const int xOffset, const int yOffset, const int sizeX, const int sizeY, bool local)
 {
+	if (!room || !AllocatedRoomSpace.Contains(room))
+		return;
 	if (local)
 		AllocatedRoomSpace[room].Add(FRectSpaceStruct(xOffset, yOffset, sizeX, sizeY));
 	else
@@ -1199,8 +1310,7 @@ LabRoom* AMainGameMode::CreateRoom(const int botLeftX, const int botLeftY, const
 // Creates starting room
 LabRoom * AMainGameMode::CreateStartRoom()
 {
-	// TODO should be different
-	FRectSpaceStruct minSpace(-5, -5, 10, 10);
+	FRectSpaceStruct minSpace(-4, -4, 9, 9);
 
 	return CreateRandomRoom(minSpace);;
 }

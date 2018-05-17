@@ -101,6 +101,9 @@ protected:
 	void PoolRoom(LabRoom* room);
 	void PoolPassage(LabPassage* passage);
 	void PoolMap();
+	// Pools dark area returning all rooms that now need fixing
+	void PoolDarkness(LabRoom* start, int depth, TArray<LabRoom*>& toFix);
+	void PoolDarkness(LabRoom* start, int depth, TArray<LabRoom*>& toFix, TArray<LabRoom*>& toPool);
 
 	// Tries to find a poolable object in a specified array
 	UFUNCTION(BlueprintCallable, Category = "Pools")
