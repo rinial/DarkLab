@@ -3,15 +3,6 @@
 #include "DarknessController.h"
 #include "Darkness.h"
 #include "GameFramework/PawnMovementComponent.h"
-// For on screen debug
-#include "EngineGlobals.h"
-#include "Engine/Engine.h"
-
-// Shows/hides debug
-void ADarknessController::SetShowDebug(bool show)
-{
-	Darkness->bShowLightDebug = show;
-}
 
 // Called on disabling a character
 void ADarknessController::OnDisabling()
@@ -77,26 +68,5 @@ void ADarknessController::Tick(const float deltaTime)
 			Darkness->IntoDarkness();
 			break;
 		}
-	}
-
-	// TODO delete later: used for debug
-	if (GEngine)
-	{
-		FString state = "Unknown";
-		switch (State)
-		{
-		case EDarkStateEnum::VE_Passive:
-			state = "Passive";
-			break;
-		case EDarkStateEnum::VE_Hunting:
-			state = "Hunting";
-			break;
-		case EDarkStateEnum::VE_Retreating:
-			state = "Retreating";
-			break;
-		}
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Darkness state: %s"), *state), true);
-
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT(""), true);
 	}
 }

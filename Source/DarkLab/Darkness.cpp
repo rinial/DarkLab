@@ -7,9 +7,6 @@
 #include "DarknessController.h"
 #include "MainCharacter.h"
 #include "MainGameMode.h"
-// For on screen debug
-#include "EngineGlobals.h"
-#include "Engine/Engine.h"
 
 // Movement functions
 void ADarkness::Move(const FVector direction)
@@ -149,7 +146,7 @@ void ADarkness::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// We check the light level	
-	Luminosity = GameMode->GetLightingAmount(BrightestLightLocation, this, true, Collision->GetScaledSphereRadius() + 10, true, false, bShowLightDebug);
+	Luminosity = GameMode->GetLightingAmount(BrightestLightLocation, this, true, Collision->GetScaledSphereRadius() + 30, true); // , false, bShowLightDebug);
 
 	// Increase resistance if stuck in bright light
 	if (Luminosity > LightResistance)
@@ -159,12 +156,4 @@ void ADarkness::Tick(float DeltaTime)
 		LightResistance -= DeltaTime * LightResLossSpeed;
 	if (LightResistance < 0.0f)
 		LightResistance = 0.0f;
-
-	// TODO delete later: used for debug
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Light resistance: %f"), LightResistance), true);
-
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Darkness luminosity: %f"), Luminosity), true);
-	}
 }

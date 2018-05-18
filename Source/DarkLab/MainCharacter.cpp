@@ -11,9 +11,6 @@
 #include "Informative.h"
 #include "MainPlayerController.h"
 #include "MainGameMode.h"
-// For on screen debug
-#include "EngineGlobals.h"
-#include "Engine/Engine.h"
 
 // Movement functions
 void AMainCharacter::Move(FVector direction, const float value)
@@ -218,36 +215,4 @@ void AMainCharacter::Tick(const float deltaTime)
 	// TODO delete
 	// We check the light level
 	// GameMode->GetLightingAmount(this, true);
-
-	// TODO delete later: used for debug
-	if (GEngine)
-	{
-		TArray<IInformative*> informativeObjects;
-		TArray<FString> informativeNames;
-
-		// Activatable in front
-		TScriptInterface<IActivatable> activatable = GetActivatable();
-		informativeObjects.Add(activatable ? Cast<IInformative>(activatable->_getUObject()) : nullptr);
-		informativeNames.Add("Activatable");
-
-		// Currently equipped
-		informativeObjects.Add(EquipedObject ? Cast<IInformative>(EquipedObject->_getUObject()) : nullptr);
-		informativeNames.Add("Equipped");
-
-		for (int i = 0; i < informativeObjects.Num(); ++i)
-		{
-			IInformative* informative = informativeObjects[i];
-			FString name = informativeNames[i];
-
-			if (informative)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("    %s"), *(informative->Execute_GetBasicInfo(informative->_getUObject())).ToString()), true);
-				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("%s: %s"), *name, *(informative->Execute_GetName(informative->_getUObject())).ToString()), true);
-			}
-			else
-				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("%s: %s"), *name, TEXT("None")), true);
-		}
-
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT(""), true);
-	}
 }

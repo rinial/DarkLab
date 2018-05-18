@@ -54,12 +54,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Main Character: Overlap")
 	void OnActivatorEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-protected:
 	// Returns an activatable object in front of the character
 	UFUNCTION(BlueprintCallable, Category = "Main Character")
 	TScriptInterface<class IActivatable> GetActivatable();
 
-public:
 	// TODO move somewhere, its not bound to character
 	// Sets outline for an actor
 	void SetOutline(UObject* object, bool showOutline) const;

@@ -84,7 +84,7 @@ protected:
 	// Returns the room the character is in
 	LabRoom* GetCharacterRoom();
 	// Called when character enters new room
-	void OnEnterRoom(LabRoom* lastRoom, LabRoom* newRoom);
+	void OnEnterRoom(); // LabRoom* lastRoom, LabRoom* newRoom);
 
 public:
 	// Called when character is enabled to reset the map
@@ -274,8 +274,9 @@ protected:
 	// Rooms that have their lamps turned on
 	TArray<LabRoom*> RoomsWithLampsOn;
 
-	// The last room character was in
-	LabRoom* PlayerRoom;
+	// The room the character is in
+	LabRoom* PlayerRoom; // Has an offset helping to avoid getting stuck in passage
+	LabRoom* ActualPlayerRoom; 
 
 	// Spawned map parts
 	// Does not include pickupable objects
@@ -297,8 +298,8 @@ protected:
 	TArray<TScriptInterface<IDeactivatable>> FlashlightPool;
 
 	// Constants used for generation
-	static const int ExpandDepth = 4;
-	static const int SpawnFillDepth = 3;
+	static const int ExpandDepth = 5;
+	static const int SpawnFillDepth = 4;
 	static const int ReshapeDarknessDepth = 3;
 	static const int MinRoomSize = 5;
 	static const int MaxRoomSize = 35;

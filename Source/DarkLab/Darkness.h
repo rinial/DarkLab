@@ -37,8 +37,6 @@ public:
 	// TODO delete, this is only used for debug
 	UPROPERTY(EditAnywhere, Category = "Darkness: Debug")
 	bool bIsStationary = false;
-	UPROPERTY(EditAnywhere, Category = "Darkness: Debug")
-	bool bShowLightDebug = false;
 
 protected:
 	// Tracking parameters
@@ -49,15 +47,17 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Tracking")
 	FVector TrackedLocation;
 
+public:
 	// The amount of light the darkness is in
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
 	float Luminosity = 0.0f;
-	// The amount of light the darkness is in
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
-	FVector BrightestLightLocation;
 	// The darkness's resistance to light
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
 	float LightResistance = 0.0f;
+protected:
+	// The amount of light the darkness is in
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
+	FVector BrightestLightLocation;
 	// The speed of resistance rising if in light higher than resistance
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
 	float LightResGainSpeed = 0.01f;
@@ -79,9 +79,10 @@ protected:
 	class UFloatingPawnMovement* Movement;
 
 private:
-	// A reference to the game mode
+	// A pointer to the game mode
 	UPROPERTY()
 	class AMainGameMode* GameMode;
+	// A pointer to the controller
 	UPROPERTY()
 	class ADarknessController* DarknessController;
 

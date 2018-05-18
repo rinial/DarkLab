@@ -16,6 +16,7 @@
 #include "LabRoom.h"
 #include "LabHallway.h"
 #include "DarknessController.h"
+#include "Darkness.h"
 #include "MainPlayerController.h"
 #include "MainCharacter.h"
 // For on screen debug
@@ -30,7 +31,7 @@ const float AMainGameMode::LampsTurnOffPerSecondProbability = 0.04f;
 const float AMainGameMode::AllLampsInRoomTurnOffProbability = 0.15f;
 const float AMainGameMode::ConnectToOtherRoomProbability = 0.8f;
 const float AMainGameMode::DeletePassageToFixProbability = 0.0f; // TODO inrease or delete?
-const float AMainGameMode::PassageIsDoorProbability = 0.6f;
+const float AMainGameMode::PassageIsDoorProbability = 0.45f;
 const float AMainGameMode::DoorIsNormalProbability = 0.95f;
 const float AMainGameMode::SpawnFlashlightProbability = 0.4f; // TODO decrease
 const float AMainGameMode::BlueProbability = 0.2f;
@@ -160,7 +161,7 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 	// We find local results for all locations
 	for (FVector location : locations)
 	{
-		if (debug)
+		if (debug || bShowDebug)
 			DrawDebugPoint(gameWorld, location, 5, FColor::Red);
 
 		// This will be used for the spot lights
@@ -184,7 +185,7 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 			// If location could be lit
 			if (CanSee(actor, location, lightLocation))
 			{
-				if (debug)
+				if (debug || bShowDebug)
 					DrawDebugLine(gameWorld, location, lightLocation, FColor::Cyan);
 
 				// 1 if near the edge of light, 0 if in center
@@ -289,7 +290,7 @@ bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const
 			params.AddIgnoredComponent(Cast<UPrimitiveComponent>(component));
 	}
 
-	if (debug)
+	if (debug || bShowDebug)
 	{
 		DrawDebugPoint(gameWorld, location1, 5, FColor::Red);
 		DrawDebugPoint(gameWorld, location2, 5, FColor::Red);
@@ -301,7 +302,7 @@ bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const
 	if (!bHit)
 		bHit = gameWorld->LineTraceTestByChannel(location2, location1, ECC_Visibility, params);
 
-	if (debug && !bHit)
+	if ((debug || bShowDebug) && !bHit)
 		DrawDebugLine(gameWorld, location1, location2, FColor::Cyan);
 
 	return !bHit;
@@ -498,28 +499,29 @@ LabRoom * AMainGameMode::GetCharacterRoom()
 	int x, y;
 	GetCharacterLocation(x, y);
 
+	// Actual room is not same as last
+	if (!(ActualPlayerRoom && ActualPlayerRoom->BotLeftX <= x && ActualPlayerRoom->BotLeftY <= y && ActualPlayerRoom->BotLeftX + ActualPlayerRoom->SizeX - 1 >= x && ActualPlayerRoom->BotLeftY + ActualPlayerRoom->SizeY - 1 >= y))
+		MapSpaceIsFree(false, true, x, y, 1, 1, ActualPlayerRoom);
+
 	int d = 1; // Used to avoid situations when character is stuck in passage
 	// Still in last room
 	if (PlayerRoom && PlayerRoom->BotLeftX - d <= x && PlayerRoom->BotLeftY - d <= y && PlayerRoom->BotLeftX + PlayerRoom->SizeX - 1 + d >= x && PlayerRoom->BotLeftY + PlayerRoom->SizeY - 1 + d >= y)
 		return PlayerRoom;
 
-	LabRoom* characterRoom;
-	if (!MapSpaceIsFree(false, true, x, y, 1, 1, characterRoom))
-		OnEnterRoom(PlayerRoom, characterRoom);
+	if (ActualPlayerRoom)
+		OnEnterRoom(); // PlayerRoom, characterRoom);
 
 	return PlayerRoom;
 }
 // Called when character enters new room
-void AMainGameMode::OnEnterRoom(LabRoom* lastRoom, LabRoom* newRoom)
+void AMainGameMode::OnEnterRoom() // LabRoom* lastRoom, LabRoom* newRoom)
 {
-	if (!newRoom)
-		return;
+	LabRoom* lastRoom = PlayerRoom;
+	PlayerRoom = ActualPlayerRoom;
 
-	PlayerRoom = newRoom;
+	// UE_LOG(LogTemp, Warning, TEXT("Entered new room"));
 
-	UE_LOG(LogTemp, Warning, TEXT("Entered new room"));
-
-	if (!VisitedRooms.Contains(newRoom))
+	if (!VisitedRooms.Contains(PlayerRoom))
 	{
 		if(!lastRoom || RandBool(LampsTurnOnOnEnterProbability))
 			ActivateRoomLamps(PlayerRoom);
@@ -590,6 +592,8 @@ void AMainGameMode::PoolRoom(LabRoom * room)
 	AllocatedRooms.Remove(room);
 	if (PlayerRoom == room)
 		PlayerRoom = nullptr;
+	if (ActualPlayerRoom == room)
+		ActualPlayerRoom = nullptr;
 
 	delete room;
 }
@@ -618,6 +622,7 @@ void AMainGameMode::PoolMap()
 	RoomsWithLampsOn.Empty();
 	AllocatedRooms.Empty();
 	PlayerRoom = nullptr;
+	ActualPlayerRoom = nullptr;
 }
 
 // Pools dark area returning all rooms that now need fixing
@@ -641,7 +646,7 @@ void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& t
 		return;
 
 	// If we found a room that is not in the darkness, we add it for the fix and return, same if depth <= 0 or if character is in that room
-	if (depth <= 0 || PlayerRoom == start || IsRoomIlluminated(start))
+	if (depth <= 0 || PlayerRoom == start || ActualPlayerRoom == start || IsRoomIlluminated(start))
 	{
 		toFix.AddUnique(start);
 		if(depth <= 0 || stopAtFirstIfLit)
@@ -696,7 +701,7 @@ void AMainGameMode::ReshapeAllDarkness()
 	for (LabRoom* room : allRooms)
 	{
 		// If we found a room that is not in the darkness, we add it for the fix and continue, same if character is in that room
-		if (PlayerRoom == room || IsRoomIlluminated(room))
+		if (PlayerRoom == room || ActualPlayerRoom == room || IsRoomIlluminated(room))
 			toFix.AddUnique(room);
 		else
 			toPool.AddUnique(room);
@@ -707,6 +712,7 @@ void AMainGameMode::ReshapeAllDarkness()
 	
 	// We want player's room to be fixed first so nothing interferes with it
 	FixRoom(PlayerRoom);
+	FixRoom(ActualPlayerRoom);
 	for (LabRoom* roomToFix : toFix)
 		FixRoom(roomToFix);
 }
@@ -1729,7 +1735,7 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 		// We check if instead of creating new room (which we can't do since we intersected) we can connect to this room instead
 
 		// Room shouldn't be illuminated
-		if (PlayerRoom == intersected || IsRoomIlluminated(intersected))
+		if (PlayerRoom == intersected || ActualPlayerRoom == intersected || IsRoomIlluminated(intersected))
 			return nullptr;
 		
 		// Other room should include the room space
@@ -1877,8 +1883,8 @@ void AMainGameMode::FixRoom(LabRoom * room)
 
 		// UE_LOG(LogTemp, Warning, TEXT("Trying to fix passage: x: %d, y: %d"), passage->BotLeftX, passage->BotLeftY);
 
-		bool absolutelyUndeleteable = room == PlayerRoom && room->Passages.Num() <= 1;
-		bool canNotDelete = IsPassageIlluminated(passage);
+		bool absolutelyUndeleteable = (room == PlayerRoom || room == ActualPlayerRoom) && room->Passages.Num() <= 1;
+		bool canNotDelete = absolutelyUndeleteable || IsPassageIlluminated(passage);
 		if (canNotDelete || !RandBool(DeletePassageToFixProbability))
 		{
 			// We try to keep passage, though we may still have to delete it
@@ -1915,9 +1921,10 @@ void AMainGameMode::FixRoom(LabRoom * room)
 						intersected->AddPassage(passage);
 						continue;
 					}
-					else if (canNotDelete)
+					/*else if (canNotDelete)
 					{
-						UE_LOG(LogTemp, Warning, TEXT("> Can not delete"));
+						// UE_LOG(LogTemp, Warning, TEXT("> Can not delete"));
+
 						// TODO
 						// if (TryEnlargeRoomToIncludeSpace(intersected, minRoomSpace)
 						// {
@@ -1927,16 +1934,28 @@ void AMainGameMode::FixRoom(LabRoom * room)
 						// else
 						// {
 						bool noImportantPassages = true;
+						bool noAbsolutelyUndeleteable = true;
 						for (LabPassage* passage : intersected->Passages)
 						{
+							if (intersected == PlayerRoom && intersected->Passages.Num() <= 1)
+							{
+								noAbsolutelyUndeleteable = false;
+								noImportantPassages = false;
+								break;
+							}
 							if (IsPassageIlluminated(passage))
 							{
 								noImportantPassages = false;
 								break;
 							}
 						}
-						if (noImportantPassages || absolutelyUndeleteable)
+						if (noAbsolutelyUndeleteable && (noImportantPassages || absolutelyUndeleteable))
 						{
+							if (absolutelyUndeleteable && !noImportantPassages)
+							{
+								UE_LOG(LogTemp, Warning, TEXT("> Forced refix"));
+							}
+
 							TArray<LabRoom*> toFix;
 							for (LabPassage* passage : intersected->Passages)
 							{
@@ -1962,7 +1981,7 @@ void AMainGameMode::FixRoom(LabRoom * room)
 						// else delete
 						// }
 						// else delete
-					}
+					}*/
 					// else delete
 				}
 			}
@@ -1972,7 +1991,7 @@ void AMainGameMode::FixRoom(LabRoom * room)
 				// We check if instead of creating new room (which we can't do since we intersected) we can connect to this room instead
 
 				// Room shouldn't be illuminated
-				if (PlayerRoom != intersected && !IsRoomIlluminated(intersected))
+				if (PlayerRoom != intersected && ActualPlayerRoom != intersected && !IsRoomIlluminated(intersected))
 				{
 					// Other room should include the room space
 					if (IsInside(minRoomSpace, intersected))
@@ -2226,7 +2245,8 @@ void AMainGameMode::ExpandInDepth(LabRoom * start, int depth)
 		{
 			if (expandTries >= MinExpandTriesBeforeReshaping)
 				ReshapeAllDarkness(); // We do his to prevend being stuck
-			ExpandInDepth(start, depth + expandTries / 2, nullptr, true);
+			// ExpandInDepth(start, depth + expandTries / 2, nullptr, true);
+			ExpandInDepth(start, depth, nullptr, true);
 
 			++expandTries;
 		}
@@ -2290,9 +2310,6 @@ void AMainGameMode::ResetMap()
 void AMainGameMode::ShowHideDebug()
 {
 	bShowDebug = !bShowDebug;
-	if (DarknessController)
-		DarknessController->SetShowDebug(bShowDebug);
-	// TODO same for character controller
 }
 
 // Sets default values
@@ -2323,6 +2340,9 @@ AMainGameMode::AMainGameMode()
 void AMainGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// TODO remove before shipping
+	// ShowHideDebug();
 
 	// We find darkness controller
 	UWorld* gameWorld = GetWorld();
@@ -2368,19 +2388,104 @@ void AMainGameMode::Tick(const float deltaTime)
 			ActivateRoomLamps(room);
 	}
 
-	// TODO delete later: used for debug
-	if (GEngine)
+	// On screen debug
+	if (bShowDebug && GEngine)
 	{
-		// Character's location
-		int charX, charY;
-		GetCharacterLocation(charX, charY);
+		// Pools debug
+		// GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Pools: default: %d, floor: %d, wall: %d, door: %d, lamp: %d, flashlight: %d"), DefaultPool.Num(), BasicFloorPool.Num(), BasicWallPool.Num(), BasicDoorPool.Num(), WallLampPool.Num(), FlashlightPool.Num()), true);
 
-		/*GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Pools: default: %d, floor: %d, wall: %d, door: %d, lamp: %d, flashlight: %d"), DefaultPool.Num(), BasicFloorPool.Num(), BasicWallPool.Num(), BasicDoorPool.Num(), WallLampPool.Num(), FlashlightPool.Num()), true);*/
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("- Luminosity: %f"), GetRoomLightingAmount(PlayerRoom)), true);
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Character room: pX: %d, pY: %d, sX: %d, sY: %d"), PlayerRoom->BotLeftX, PlayerRoom->BotLeftY, PlayerRoom->SizeX, PlayerRoom->SizeY), true);
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Character location: x: %d, y: %d"), charX, charY), true);
+		// Darkness debug
+		APawn* tempDarkness = DarknessController->GetPawn();
+		if (tempDarkness)
+		{
+			ADarkness* darkness = Cast<ADarkness>(tempDarkness);
 
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT(""), true);
+			// Title
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT("Darkness:"), false);
+			
+			// Current location
+			int darkX, darkY;
+			FVector darknessLocation = darkness->GetActorLocation();
+			WorldToGrid(darknessLocation.X, darknessLocation.Y, darkX, darkY);
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("> Location: X: %d, Y: %d"), darkX, darkY), false);
+			
+			// Current state
+			FString state = "Unknown";
+			switch (DarknessController->State)
+			{
+			case EDarkStateEnum::VE_Passive:
+				state = "Passive";
+				break;
+			case EDarkStateEnum::VE_Hunting:
+				state = "Hunting";
+				break;
+			case EDarkStateEnum::VE_Retreating:
+				state = "Retreating";
+				break;
+			}
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("> State: %s"), *state), false);
+
+			// Current luminosity
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("> Luminosity: %f"), darkness->Luminosity), false);
+
+			// Light resistance
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("> Resistance: %f"), darkness->LightResistance), false);
+
+			// Empty line
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT(""), false);
+		}
+
+		// Character debug
+		ACharacter* tempCharacter = MainPlayerController->GetCharacter();
+		if (tempCharacter)
+		{
+			AMainCharacter* character = Cast<AMainCharacter>(tempCharacter);
+
+			// Title
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT("Character:"), false);
+
+			// Current location
+			int charX, charY;
+			GetCharacterLocation(charX, charY);
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("> Location: X: %d, Y: %d"), charX, charY), false);
+
+			// Current room
+			// GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("> Room: X: %d, Y: %d, sX: %d, sY: %d"), PlayerRoom->BotLeftX, PlayerRoom->BotLeftY, PlayerRoom->SizeX, PlayerRoom->SizeY), false);
+
+			// Light in current room
+			// GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("> room luminosity: %f"), GetRoomLightingAmount(PlayerRoom)), true);
+
+			// Number of "lives" left
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("> Lives: %d"), MainPlayerController->Lives), false);
+
+			// Activatable and equipped
+			TArray<IInformative*> informativeObjects;
+			TArray<FString> informativeNames;
+			// Get activatable
+			TScriptInterface<IActivatable> activatable = character->GetActivatable();
+			informativeObjects.Add(activatable ? Cast<IInformative>(activatable->_getUObject()) : nullptr);
+			informativeNames.Add("> Activatable");
+			// Get equipped
+			informativeObjects.Add(character->EquipedObject ? Cast<IInformative>(character->EquipedObject->_getUObject()) : nullptr);
+			informativeNames.Add("> Equipped");
+			// Finally print
+			for (int i = 0; i < informativeObjects.Num(); ++i)
+			{
+				IInformative* informative = informativeObjects[i];
+				FString name = informativeNames[i];
+
+				if (informative)
+				{
+					GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("%s: %s"), *name, *(informative->Execute_GetName(informative->_getUObject())).ToString()), false);
+					GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("   > %s"), *(informative->Execute_GetBasicInfo(informative->_getUObject())).ToString()), false);
+				}
+				else
+					GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("%s: %s"), *name, TEXT("None")), false);
+			}
+
+			// Empty line
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT(""), false);
+		}
 	}
 }
 

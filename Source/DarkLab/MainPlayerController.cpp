@@ -4,9 +4,6 @@
 #include "MainCharacter.h"
 #include "GameFramework/GameModeBase.h"
 #include "MainGameMode.h"
-// For on screen debug
-#include "EngineGlobals.h"
-#include "Engine/Engine.h"
 
 // Movement controls
 void AMainPlayerController::MoveUp(const float value)
@@ -205,12 +202,4 @@ void AMainPlayerController::PlayerTick(const float deltaTime)
 	// We try to look with stick anyway
 	// If we get input, we start looking with stick
 	LookWithStick();
-
-	// TODO delete later: used for debug
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Player lives: %d"), Lives), true);
-
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT(""), true);
-	}
 }

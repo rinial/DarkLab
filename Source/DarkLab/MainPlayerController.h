@@ -17,14 +17,15 @@ private:
 	UPROPERTY()
 	class AMainCharacter* MainCharacter;
 
+public:
+	// The number of character's 'lives'
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Player Controller")
+	int Lives = 3;
+
 protected:
 	// While true rotation is controled with mouse
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Player Controller")
 	bool bLookWithMouse = true;
-
-	// The number of character's 'lives'
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Player Controller")
-	int Lives = 3;
 
 	// The time between a character 'death' and respawn
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Player Controller")
