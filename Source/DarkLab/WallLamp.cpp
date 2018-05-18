@@ -9,7 +9,7 @@
 // Called when the object is activated
 void AWallLamp::ActivateObject(AMainCharacter * character)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Toggled lamp"));
+	// UE_LOG(LogTemp, Warning, TEXT("Toggled lamp"));
 
 	Light->ToggleVisibility();
 	UpdateMeshColor(Light->IsVisible() ? Color : FLinearColor::Black);

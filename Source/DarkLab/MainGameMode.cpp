@@ -26,10 +26,10 @@
 const float AMainGameMode::ReshapeDarknessOnEnterProbability = 0.7f;
 const float AMainGameMode::ReshapeDarknessOnTickProbability = 0.6f;
 const float AMainGameMode::LampsTurnOnOnEnterProbability = 0.45f;
-const float AMainGameMode::LampsTurnOffPerSecondProbability = 0.03f;
-const float AMainGameMode::AllLampsInRoomTurnOffProbability = 0.5f;
+const float AMainGameMode::LampsTurnOffPerSecondProbability = 0.04f;
+const float AMainGameMode::AllLampsInRoomTurnOffProbability = 0.15f;
 const float AMainGameMode::ConnectToOtherRoomProbability = 0.8f;
-const float AMainGameMode::DeletePassageToFixProbability = 0.2f; // TODO increase
+const float AMainGameMode::DeletePassageToFixProbability = 0.0f; // TODO inrease or delete?
 const float AMainGameMode::PassageIsDoorProbability = 0.6f;
 const float AMainGameMode::DoorIsNormalProbability = 0.95f;
 const float AMainGameMode::SpawnFlashlightProbability = 0.4f; // TODO decrease
@@ -685,6 +685,8 @@ void AMainGameMode::CompleteReshapeDarknessAround()
 // Pools all dark rooms on the map and fixes every room that needs fixing
 void AMainGameMode::ReshapeAllDarkness()
 {
+	// UE_LOG(LogTemp, Warning, TEXT("Reshaped all darkness"));
+
 	TArray<LabRoom*> allRooms;
 	AllocatedRoomSpace.GetKeys(allRooms);	
 
@@ -722,10 +724,7 @@ void AMainGameMode::CompleteReshapeAllDarknessAround()
 void AMainGameMode::CompleteReshapeAllDarknessAroundOnTick()
 {
 	if (RandBool(ReshapeDarknessOnTickProbability))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Changed room on tick"));
 		CompleteReshapeAllDarknessAround();
-	}
 }
 
 // Tries to find a poolable object in a specified array
@@ -1392,7 +1391,7 @@ LabRoom* AMainGameMode::CreateRoom(const int botLeftX, const int botLeftY, const
 // Creates starting room
 LabRoom * AMainGameMode::CreateStartRoom()
 {
-	FRectSpaceStruct minSpace(-4, -4, 9, 9);
+	FRectSpaceStruct minSpace(-3, -3, 7, 7);
 
 	return CreateRandomRoom(minSpace);;
 }
@@ -1699,6 +1698,8 @@ LabRoom * AMainGameMode::CreateRandomRoom(FRectSpaceStruct minSpace, bool fromPa
 // Creates and adds a random passage to the room, returns passage or nullptr, also allocates room space and returns allocated room space by reference
 LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpaceStruct & roomSpace, LabRoom*& possibleRoomConnection)
 {
+	 //bool roomIsSpawned = SpawnedRoomObjects.Contains(room);
+
 	bool forDoor = RandBool(PassageIsDoorProbability);
 	EDirectionEnum direction;
 
@@ -1706,6 +1707,9 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 	FRectSpaceStruct pasSpace = CreateRandomPassageSpace(room, direction, forDoor);
 	// Test if it works in the room
 	if (!RoomSpaceIsFree(room, pasSpace, true, forDoor))
+		// || (roomIsSpawned 
+		// 	&& (IsPassageIlluminated(&LabPassage(room->BotLeftX + pasSpace.BotLeftX, room->BotLeftY + pasSpace.BotLeftY, direction)) 
+		//		|| )))
 		return nullptr;
 
 	// Find minimum space for a new room on the other side of this passage
@@ -1779,13 +1783,16 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 		passage = room->AddPassage(room->BotLeftX + pasSpace.BotLeftX, room->BotLeftY + pasSpace.BotLeftY, direction, possibleRoomConnection, forDoor, color, direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down ? pasSpace.SizeX : pasSpace.SizeY);
 	}
 
+	// if (roomIsSpawned)
+	// 	RespawnRoomWalls(room); // Doesn't spawn new passage
+
 	return passage;
 }
 
 // Creates new passages in the room
 // Create new rooms for passages 
 // Returns new rooms
-TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
+TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room, int desiredNumOfPassagesOverride)
 {
 	ExpandedRooms.AddUnique(room);
 
@@ -1793,7 +1800,7 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room)
 
 	// The number of passages we want to have in the room
 	// These are not just new but overall
-	int desiredNumOfPassages = FMath::RandRange(MinRoomNumOfPassages, MaxRoomNumOfPassages);
+	int desiredNumOfPassages = desiredNumOfPassagesOverride < MinRoomNumOfPassages ?FMath::RandRange(MinRoomNumOfPassages, MaxRoomNumOfPassages) : desiredNumOfPassagesOverride;
 	// UE_LOG(LogTemp, Warning, TEXT("Trying to add %d passages"), desiredNumOfPassages);
 
 	// Maximum number of tries
@@ -1858,8 +1865,8 @@ void AMainGameMode::FixRoom(LabRoom * room)
 		//try
 		//{
 			// We're not interested in normal passages
-			if (passage->To && passage->From)
-				continue;
+		if (passage->To && passage->From)
+			continue;
 		//}
 		//catch (...)
 		//{
@@ -1870,6 +1877,7 @@ void AMainGameMode::FixRoom(LabRoom * room)
 
 		// UE_LOG(LogTemp, Warning, TEXT("Trying to fix passage: x: %d, y: %d"), passage->BotLeftX, passage->BotLeftY);
 
+		bool absolutelyUndeleteable = room == PlayerRoom && room->Passages.Num() <= 1;
 		bool canNotDelete = IsPassageIlluminated(passage);
 		if (canNotDelete || !RandBool(DeletePassageToFixProbability))
 		{
@@ -1927,7 +1935,7 @@ void AMainGameMode::FixRoom(LabRoom * room)
 								break;
 							}
 						}
-						if (noImportantPassages)
+						if (noImportantPassages || absolutelyUndeleteable)
 						{
 							TArray<LabRoom*> toFix;
 							for (LabPassage* passage : intersected->Passages)
@@ -2153,31 +2161,79 @@ void AMainGameMode::ActivateRoomLamps(LabRoom * room)
 	}
 }
 
+// Returns true if unexpanded rooms are reachable from here
+bool AMainGameMode::CanReachUnexpanded(LabRoom * start, TArray<LabRoom*>& checkedRooms)
+{
+	if (!start)
+		return false;
+
+	checkedRooms.Add(start);
+
+	if (!ExpandedRooms.Contains(start))
+		return true;
+
+	for (LabPassage* passage : start->Passages)
+	{
+		if (passage->From != start && !checkedRooms.Contains(passage->From))
+			if (CanReachUnexpanded(passage->From, checkedRooms))
+				return true;
+		if (passage->To != start && !checkedRooms.Contains(passage->To))
+			if (CanReachUnexpanded(passage->To, checkedRooms))
+				return true;;
+	}
+
+	return false;
+}
+bool AMainGameMode::CanReachUnexpanded(LabRoom * start)
+{
+	TArray<LabRoom*> checkedRooms;
+	return CanReachUnexpanded(start, checkedRooms);
+}
+
 // Expands room if it's not spawned yet
 // Repeats with all adjasent rooms recursively
-void AMainGameMode::ExpandInDepth(LabRoom * start, int depth, LabPassage* fromPassage)
+void AMainGameMode::ExpandInDepth(LabRoom* start, int depth, LabPassage* fromPassage, bool expandExpanded)
 {
 	if (!start)
 		return;
 
-	// If not spawned and not expanded
-	if (!ExpandedRooms.Contains(start) && !SpawnedRoomObjects.Contains(start))
+	// If not spawned and not expanded (unless we expand expanded)
+	if ((expandExpanded || !ExpandedRooms.Contains(start)) && !SpawnedRoomObjects.Contains(start))
 		ExpandRoom(start);
 
 	if (depth <= 1)
 		return;
-	else
+	
+	// We need a copy to avoid errors during expansion
+	TArray<LabPassage*> passagesCopy = start->Passages;
+	for (LabPassage* passage : passagesCopy)
 	{
-		// We need a copy to avoid errors during expansion
-		TArray<LabPassage*> passagesCopy = start->Passages;
-		for (LabPassage* passage : passagesCopy)
+		if (passage == fromPassage)
+			continue;
+		if (passage->From != start)
+			ExpandInDepth(passage->From, depth - 1, passage, expandExpanded);
+		if (passage->To != start)
+			ExpandInDepth(passage->To, depth - 1, passage, expandExpanded);
+	}
+}
+void AMainGameMode::ExpandInDepth(LabRoom * start, int depth)
+{
+	ExpandInDepth(start, depth, nullptr);
+	int expandTries = 1;
+	while (!CanReachUnexpanded(start))
+	{
+		if (expandTries <= MaxExpandTriesOverall)
 		{
-			if (passage == fromPassage)
-				continue;
-			if (passage->From != start)
-				ExpandInDepth(passage->From, depth - 1, passage);
-			if (passage->To != start)
-				ExpandInDepth(passage->To, depth - 1, passage);
+			if (expandTries >= MinExpandTriesBeforeReshaping)
+				ReshapeAllDarkness(); // We do his to prevend being stuck
+			ExpandInDepth(start, depth + expandTries / 2, nullptr, true);
+
+			++expandTries;
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("!!! Failed to get a pass to unexpanded"));
+			break;
 		}
 	}
 }
@@ -2217,7 +2273,7 @@ void AMainGameMode::SpawnFillInDepth(LabRoom * start, int depth, LabPassage* fro
 void AMainGameMode::GenerateMap()
 {
 	LabRoom* startRoom = CreateStartRoom();
-	ExpandRoom(startRoom);
+	ExpandRoom(startRoom, 1);
 	SpawnRoom(startRoom);
 	FillRoom(startRoom, 1);
 	MainPlayerController->GetCharacter()->SetActorLocation(FVector(25, 25, 90)); //, false, nullptr, ETeleportType::TeleportPhysics);

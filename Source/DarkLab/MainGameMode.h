@@ -216,7 +216,7 @@ protected:
 	// Creates new passages in the room
 	// Create new rooms for passages 
 	// Returns new rooms
-	TArray<LabRoom*> ExpandRoom(LabRoom* room);
+	TArray<LabRoom*> ExpandRoom(LabRoom* room, int desiredNumOfPassagesOverride = 0);
 
 	// Fixes room's passages that lead nowhere, creating a room for them or deleting them
 	// Also spawns a wall over previous passage if room was spawned
@@ -235,9 +235,14 @@ protected:
 	// Activates all lamps in a single room
 	void ActivateRoomLamps(LabRoom* room);
 
+	// Returns true if unexpanded rooms are reachable from here
+	bool CanReachUnexpanded(LabRoom* start, TArray<LabRoom*>& checkedRooms);
+	bool CanReachUnexpanded(LabRoom* start);
+
 	// Expands room if it's not spawned yet
 	// Repeats with all adjasent rooms recursively
-	void ExpandInDepth(LabRoom* start, int depth, LabPassage* fromPassage = nullptr);
+	void ExpandInDepth(LabRoom* start, int depth, LabPassage* fromPassage, bool expandExpanded = false);
+	void ExpandInDepth(LabRoom* start, int depth);
 	// Spawns and fills room if it's not spawned yet
 	// Repeats with all adjasent rooms recursively
 	void SpawnFillInDepth(LabRoom* start, int depth, LabPassage* fromPassage = nullptr);
@@ -300,7 +305,7 @@ protected:
 	static const int MinRoomArea = 25;
 	static const int MaxRoomArea = 250;
 	static const int MinRoomNumOfPassages = 1; // Can't be lower than 1
-	static const int MaxRoomNumOfPassages = 10; 
+	static const int MaxRoomNumOfPassages = 10;
 	static const int MaxRoomPassageCreationTriesPerDesired = 2; 
 	static const int MinPassageWidth = 3; // Can't be lower than 2
 	static const int MaxPassageWidth = 10; 
@@ -314,6 +319,8 @@ protected:
 	static const int MinLampWidth = 1;
 	static const int MaxLampWidth = 2;
 	static const int MaxGenericSpawnTries = 3;
+	static const int MinExpandTriesBeforeReshaping = 3;
+	static const int MaxExpandTriesOverall = 10;
 	// Probabilities
 	static const float ReshapeDarknessOnEnterProbability;
 	static const float ReshapeDarknessOnTickProbability;
