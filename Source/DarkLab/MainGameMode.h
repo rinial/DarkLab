@@ -114,9 +114,14 @@ protected:
 	void ReshapeDarkness(LabRoom* start, int depth, bool stopAtFirstIfLit = true);
 	// Reshapes darkness and expands, spawns and fills rooms
 	void CompleteReshapeDarkness(LabRoom* start, bool stopAtFirstIfLit = true);
-
 	// Reshapes darkness in player room
-	void ReshapeDarknessAround();
+	void CompleteReshapeDarknessAround();
+	// Pools all dark rooms on the map and fixes every room that needs fixing
+	void ReshapeAllDarkness();
+	// Reshapes all darkness and also expands spawns and fills around player's room
+	void CompleteReshapeAllDarknessAround();
+	// Calls CompleteReshapeAllDarknessAround with specified probability
+	void CompleteReshapeAllDarknessAroundOnTick();
 
 	// Tries to find a poolable object in a specified array
 	UFUNCTION(BlueprintCallable, Category = "Pools")
@@ -262,7 +267,7 @@ protected:
 	TArray<LabRoom*> VisitedRooms;
 
 	// The last room character was in
-	LabRoom* LastRoom;
+	LabRoom* PlayerRoom;
 
 	// Spawned map parts
 	// Does not include pickupable objects
@@ -284,10 +289,10 @@ protected:
 	TArray<TScriptInterface<IDeactivatable>> FlashlightPool;
 
 	// Constants used for generation
-	static const int ExpandDepth = 5;
+	static const int ExpandDepth = 4;
 	static const int SpawnFillDepth = 3;
 	static const int ReshapeDarknessDepth = 3;
-	static const int MinRoomSize = 5; // Can't be lower than 4
+	static const int MinRoomSize = 5;
 	static const int MaxRoomSize = 35;
 	static const int MinRoomArea = 25;
 	static const int MaxRoomArea = 250;
@@ -307,6 +312,8 @@ protected:
 	static const int MaxLampWidth = 2;
 	static const int MaxGenericSpawnTries = 3;
 	// Probabilities
+	static const float ReshapeDarknessOnEnterProbability;
+	static const float ReshapeDarknessOnTickProbability;
 	static const float ConnectToOtherRoomProbability;
 	static const float DeletePassageToFixProbability;
 	static const float PassageIsDoorProbability;
@@ -318,6 +325,8 @@ protected:
 	static const float YellowProbability;
 	static const float RedProbability;
 	static const float BlackProbability;
+	// Other constants
+	static const float ReshapeDarknessTick;
 
 	// Pointers to existing controllers
 	class ADarknessController* DarknessController;

@@ -23,22 +23,28 @@
 #include "Engine/Engine.h"
 
 // Probabilities
+const float AMainGameMode::ReshapeDarknessOnEnterProbability = 0.7f; // TODO decrease
+const float AMainGameMode::ReshapeDarknessOnTickProbability = 0.7f; // TODO decrease
 const float AMainGameMode::ConnectToOtherRoomProbability = 0.8f;
-const float AMainGameMode::DeletePassageToFixProbability = 0.0f; // TODO increase
+const float AMainGameMode::DeletePassageToFixProbability = 0.2f; // TODO increase
 const float AMainGameMode::PassageIsDoorProbability = 0.6f;
 const float AMainGameMode::DoorIsNormalProbability = 0.95f;
-const float AMainGameMode::SpawnFlashlightProbability = 0.4f; // TODO make it lower
-const float AMainGameMode::LampsTurnOnOnEnterProbability = 0.0f; // TODO set to 0.8
+const float AMainGameMode::SpawnFlashlightProbability = 0.4f; // TODO decrease
+const float AMainGameMode::LampsTurnOnOnEnterProbability = 0.45f;
 const float AMainGameMode::BlueProbability = 0.2f;
 const float AMainGameMode::GreenProbability = 0.15f;
 const float AMainGameMode::YellowProbability = 0.1f;
 const float AMainGameMode::RedProbability = 0.05f;
 const float AMainGameMode::BlackProbability = 0.02f;
+// Other constants
+const float AMainGameMode::ReshapeDarknessTick = 4.f;
 
 // Returns true with certain probability
 bool AMainGameMode::RandBool(const float probability)
 {
-	return FMath::FRand() <= probability;
+	float temp = FMath::FRand();
+	temp = temp >= 1.f ? 0.f : temp;
+	return temp < probability;
 }
 // Returns random color with certain probabilities
 FLinearColor AMainGameMode::RandColor()
@@ -317,10 +323,10 @@ float AMainGameMode::GetPassageLightingAmount(LabPassage * passage, bool oneSide
 	TArray<FVector> localPoints;
 	// localPoints.Add(FVector(-25, 0, 0));
 	int step = 2; // TODO make constant
-	for (int x = step; x < passage->Width; x += step)
+	for (int x = step; 2 * x - step < passage->Width; x += step)
 	{
-		localPoints.Add(FVector(-25, x * 50.f / 2, 0));
-		localPoints.Add(FVector(-25, -x * 50.f / 2, 0));
+		localPoints.Add(FVector(-25, x * 50.f - step * 50.f / 2, 0));
+		localPoints.Add(FVector(-25, -x * 50.f + step * 50.f / 2, 0));
 	}
 
 	switch (passage->GridDirection)
@@ -490,15 +496,16 @@ LabRoom * AMainGameMode::GetCharacterRoom()
 	int x, y;
 	GetCharacterLocation(x, y);
 
+	int d = 1; // Used to avoid situations when character is stuck in passage
 	// Still in last room
-	if (LastRoom && LastRoom->BotLeftX <= x && LastRoom->BotLeftY <= y && LastRoom->BotLeftX + LastRoom->SizeX - 1 >= x && LastRoom->BotLeftY + LastRoom->SizeY - 1 >= y)
-		return LastRoom;
+	if (PlayerRoom && PlayerRoom->BotLeftX - d <= x && PlayerRoom->BotLeftY - d <= y && PlayerRoom->BotLeftX + PlayerRoom->SizeX - 1 + d >= x && PlayerRoom->BotLeftY + PlayerRoom->SizeY - 1 + d >= y)
+		return PlayerRoom;
 
 	LabRoom* characterRoom;
 	if (!MapSpaceIsFree(false, true, x, y, 1, 1, characterRoom))
-		OnEnterRoom(LastRoom, characterRoom);
+		OnEnterRoom(PlayerRoom, characterRoom);
 
-	return LastRoom;
+	return PlayerRoom;
 }
 // Called when character enters new room
 void AMainGameMode::OnEnterRoom(LabRoom* lastRoom, LabRoom* newRoom)
@@ -506,28 +513,32 @@ void AMainGameMode::OnEnterRoom(LabRoom* lastRoom, LabRoom* newRoom)
 	if (!newRoom)
 		return;
 
-	LastRoom = newRoom;
+	PlayerRoom = newRoom;
 
 	UE_LOG(LogTemp, Warning, TEXT("Entered new room"));
 
 	if (!VisitedRooms.Contains(newRoom))
 	{
-		if (!lastRoom || RandBool(LampsTurnOnOnEnterProbability))
-			ActivateRoomLamps(LastRoom);
-		VisitedRooms.Add(LastRoom);
+		if(!lastRoom || RandBool(LampsTurnOnOnEnterProbability))
+			ActivateRoomLamps(PlayerRoom);
+		VisitedRooms.Add(PlayerRoom);
 	}
 
 	if (lastRoom)
 	{
-		// TODO shouldn't do it here?
-		ReshapeDarkness(lastRoom, ReshapeDarknessDepth, false);
+		// ReshapeDarkness(lastRoom, ReshapeDarknessDepth, false);
 
 		// TODO smth about last room here
 	}
 
-	ExpandInDepth(LastRoom, ExpandDepth);
-	SpawnFillInDepth(LastRoom, SpawnFillDepth);
+	// CompleteReshapeAllDarknessAround();
+
+	if(RandBool(ReshapeDarknessOnEnterProbability))
+		ReshapeAllDarkness();
+	ExpandInDepth(PlayerRoom, ExpandDepth);
+	SpawnFillInDepth(PlayerRoom, SpawnFillDepth);
 }
+
 // Called when character is enabled to reset the map
 void AMainGameMode::OnCharacterEnabled()
 {
@@ -577,8 +588,8 @@ void AMainGameMode::PoolRoom(LabRoom * room)
 	ExpandedRooms.Remove(room);
 	VisitedRooms.Remove(room);
 	AllocatedRooms.Remove(room);
-	if (LastRoom == room)
-		LastRoom = nullptr;
+	if (PlayerRoom == room)
+		PlayerRoom = nullptr;
 
 	delete room;
 }
@@ -605,7 +616,7 @@ void AMainGameMode::PoolMap()
 	ExpandedRooms.Empty();
 	VisitedRooms.Empty();
 	AllocatedRooms.Empty();
-	LastRoom = nullptr;
+	PlayerRoom = nullptr;
 }
 
 // Pools dark area returning all rooms that now need fixing
@@ -624,12 +635,12 @@ void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& t
 	}
 }
 void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& toFix, TArray<LabRoom*>& toPool, bool stopAtFirstIfLit)
-{
+{	
 	if (!start)
 		return;
 
 	// If we found a room that is not in the darkness, we add it for the fix and return, same if depth <= 0 or if character is in that room
-	if (depth <= 0 || LastRoom == start || IsRoomIlluminated(start))
+	if (depth <= 0 || PlayerRoom == start || IsRoomIlluminated(start))
 	{
 		toFix.AddUnique(start);
 		if(depth <= 0 || stopAtFirstIfLit)
@@ -641,9 +652,9 @@ void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& t
 	for (LabPassage* passage : start->Passages)
 	{
 		if (passage->From != start)
-			PoolDarkness(passage->From, depth - 1, toFix, toPool);
+			PoolDarkness(passage->From, depth - 1, toFix, toPool, stopAtFirstIfLit); // !!
 		else if (passage->To != start)
-			PoolDarkness(passage->To, depth - 1, toFix, toPool);
+			PoolDarkness(passage->To, depth - 1, toFix, toPool, stopAtFirstIfLit); // !!
 	}
 }
 
@@ -662,14 +673,58 @@ void AMainGameMode::CompleteReshapeDarkness(LabRoom * start, bool stopAtFirstIfL
 	ExpandInDepth(start, ExpandDepth);
 	SpawnFillInDepth(start, SpawnFillDepth);
 }
-
 // Reshapes darkness in player room
-void AMainGameMode::ReshapeDarknessAround()
+void AMainGameMode::CompleteReshapeDarknessAround()
 {
-	if (!LastRoom)
+	if (!PlayerRoom)
 		return;
 
-	CompleteReshapeDarkness(LastRoom, false);
+	CompleteReshapeDarkness(PlayerRoom, false);
+}
+// Pools all dark rooms on the map and fixes every room that needs fixing
+void AMainGameMode::ReshapeAllDarkness()
+{
+	TArray<LabRoom*> allRooms;
+	AllocatedRoomSpace.GetKeys(allRooms);	
+
+	TArray<LabRoom*> toPool;
+	TArray<LabRoom*> toFix;
+
+	for (LabRoom* room : allRooms)
+	{
+		// If we found a room that is not in the darkness, we add it for the fix and continue, same if character is in that room
+		if (PlayerRoom == room || IsRoomIlluminated(room))
+			toFix.AddUnique(room);
+		else
+			toPool.AddUnique(room);
+	}
+
+	for (int i = toPool.Num() - 1; i >= 0; --i)
+		PoolRoom(toPool[i]);
+	
+	// We want player's room to be fixed first so nothing interferes with it
+	FixRoom(PlayerRoom);
+	for (LabRoom* roomToFix : toFix)
+		FixRoom(roomToFix);
+}
+// Reshapes all darkness and also expands spawns and fills around player's room
+void AMainGameMode::CompleteReshapeAllDarknessAround()
+{
+	if (!PlayerRoom)
+		return;
+
+	ReshapeAllDarkness();
+	ExpandInDepth(PlayerRoom, ExpandDepth);
+	SpawnFillInDepth(PlayerRoom, SpawnFillDepth);
+}
+// Calls CompleteReshapeAllDarknessAround with specified probability
+void AMainGameMode::CompleteReshapeAllDarknessAroundOnTick()
+{
+	if (RandBool(ReshapeDarknessOnTickProbability))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Changed room on tick"));
+		CompleteReshapeAllDarknessAround();
+	}
 }
 
 // Tries to find a poolable object in a specified array
@@ -702,7 +757,7 @@ UObject* AMainGameMode::TryGetPoolable(UClass* cl)
 
 	object = pool[index];
 	UObject* obj = object->_getUObject();
-	object->Execute_SetActive(obj, true);
+	// object->Execute_SetActive(obj, true);
 	pool.RemoveAt(index);
 	return obj;
 }
@@ -712,9 +767,13 @@ ABasicFloor* AMainGameMode::SpawnBasicFloor(const int botLeftX, const int botLef
 {
 	ABasicFloor* floor = Cast<ABasicFloor>(TryGetPoolable(BasicFloorBP));
 	if (!floor)
+	{
 		floor = GetWorld()->SpawnActor<ABasicFloor>(BasicFloorBP);
+		floor->Execute_SetActive(floor, false);
+	}
 
 	PlaceObject(floor, botLeftX, botLeftY, sizeX, sizeY);
+	floor->Execute_SetActive(floor, true);
 
 	if (room && SpawnedRoomObjects.Contains(room))
 		SpawnedRoomObjects[room].Add(floor);
@@ -735,9 +794,13 @@ ABasicWall* AMainGameMode::SpawnBasicWall(const int botLeftX, const int botLeftY
 {
 	ABasicWall* wall = Cast<ABasicWall>(TryGetPoolable(BasicWallBP));
 	if (!wall)
+	{
 		wall = GetWorld()->SpawnActor<ABasicWall>(BasicWallBP);
+		wall->Execute_SetActive(wall, false);
+	}
 
 	PlaceObject(wall, botLeftX, botLeftY, sizeX, sizeY);
+	wall->Execute_SetActive(wall, true);
 
 	if (room && SpawnedRoomObjects.Contains(room))
 		SpawnedRoomObjects[room].Add(wall);
@@ -750,11 +813,15 @@ ABasicDoor * AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeft
 {
 	ABasicDoor* door = Cast<ABasicDoor>(TryGetPoolable(BasicDoorBP));
 	if (!door)
+	{
 		door = GetWorld()->SpawnActor<ABasicDoor>(BasicDoorBP);
+		door->Execute_SetActive(door, false);
+	}
 
 	door->Reset(); // Clothes the door if it was open
 	door->DoorColor = color; // Sets wall's color
 	PlaceObject(door, botLeftX, botLeftY, direction, width);
+	door->Execute_SetActive(door, true);
 
 	if (passage && SpawnedPassageObjects.Contains(passage))
 		SpawnedPassageObjects[passage].Add(door);
@@ -767,11 +834,15 @@ AWallLamp * AMainGameMode::SpawnWallLamp(const int botLeftX, const int botLeftY,
 {
 	AWallLamp* lamp = Cast<AWallLamp>(TryGetPoolable(WallLampBP));
 	if (!lamp)
+	{
 		lamp = GetWorld()->SpawnActor<AWallLamp>(WallLampBP);
+		lamp->Execute_SetActive(lamp, false);
+	}
 
 	lamp->Reset(); // Disables light if it was on
 	lamp->SetColor(color); // Sets correct color
 	PlaceObject(lamp, botLeftX, botLeftY, direction, width);
+	lamp->Execute_SetActive(lamp, true);
 
 	if (room)
 	{
@@ -789,10 +860,14 @@ AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLef
 {
 	AFlashlight* flashlight = Cast<AFlashlight>((TryGetPoolable(FlashlightBP)));
 	if (!flashlight)
+	{
 		flashlight = GetWorld()->SpawnActor<AFlashlight>(FlashlightBP);
+		flashlight->Execute_SetActive(flashlight, false);
+	}
 
 	flashlight->Reset(); // Disables light if it was on
 	PlaceObject(flashlight, botLeftX, botLeftY, direction);
+	flashlight->Execute_SetActive(flashlight, true);
 
 	// UE_LOG(LogTemp, Warning, TEXT("Spawned a flashlight"));
 
@@ -1648,7 +1723,7 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 		// We check if instead of creating new room (which we can't do since we intersected) we can connect to this room instead
 
 		// Room shouldn't be illuminated
-		if (LastRoom == intersected || IsRoomIlluminated(intersected))
+		if (PlayerRoom == intersected || IsRoomIlluminated(intersected))
 			return nullptr;
 		
 		// Other room should include the room space
@@ -1778,44 +1853,40 @@ void AMainGameMode::FixRoom(LabRoom * room)
 		}
 
 		// TODO shouldn't use try/catch
-		try
-		{
+		//try
+		//{
 			// We're not interested in normal passages
 			if (passage->To && passage->From)
 				continue;
-		}
-		catch (...)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("GOT THAT EXCEPTION WITH PASSAGES"));
-			room->Passages.RemoveAt(i);
-			continue;
-		}
+		//}
+		//catch (...)
+		//{
+		//	UE_LOG(LogTemp, Warning, TEXT("GOT THAT EXCEPTION WITH PASSAGES"));
+		//	room->Passages.RemoveAt(i);
+		//	continue;
+		//}
 
-		UE_LOG(LogTemp, Warning, TEXT("Trying to fix passage: x: %d, y: %d"), passage->BotLeftX, passage->BotLeftY);
+		// UE_LOG(LogTemp, Warning, TEXT("Trying to fix passage: x: %d, y: %d"), passage->BotLeftX, passage->BotLeftY);
 
-		if (!RandBool(DeletePassageToFixProbability) || IsPassageIlluminated(passage))
+		bool canNotDelete = IsPassageIlluminated(passage);
+		if (canNotDelete || !RandBool(DeletePassageToFixProbability))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("> I want to fix it"));
 			// We try to keep passage, though we may still have to delete it
 
 			FRectSpaceStruct minRoomSpace = CreateMinimumRoomSpace(room, passage);	
-			UE_LOG(LogTemp, Warning, TEXT("> Create a room: x: %d, y: %d, sX: %d, sY: %d"), minRoomSpace.BotLeftX, minRoomSpace.BotLeftY, minRoomSpace.SizeX, minRoomSpace.SizeY);
+			// UE_LOG(LogTemp, Warning, TEXT("> Create a room: x: %d, y: %d, sX: %d, sY: %d"), minRoomSpace.BotLeftX, minRoomSpace.BotLeftY, minRoomSpace.SizeX, minRoomSpace.SizeY);
 
 			LabRoom* intersected;
+			// Intersects something spawned
 			if (MapSpaceIsFree(false, true, minRoomSpace, intersected))
 			{
-				UE_LOG(LogTemp, Warning, TEXT("> It doesn't intersect spawned"));
-				// Doesn't intersect anything spawned
-
 				// Intersects something allocated
 				if (MapSpaceIsFree(true, false, minRoomSpace, intersected))
 				{
-					UE_LOG(LogTemp, Warning, TEXT("> It doesn't intersect allocated"));
 					// We create new room from min space, it also allocates room's space
 					LabRoom* newRoom = CreateRandomRoom(minRoomSpace, true, !passage->To ? passage->GridDirection : GetReverseDirection(passage->GridDirection));
 					if (newRoom)
 					{
-						UE_LOG(LogTemp, Warning, TEXT("> And i managed to create a good room for it"));
 						// We add passage to the room
 						newRoom->AddPassage(passage);
 						continue;
@@ -1824,39 +1895,78 @@ void AMainGameMode::FixRoom(LabRoom * room)
 				}
 				else
 				{
-					UE_LOG(LogTemp, Warning, TEXT("> It intersects allocated"));
-
 					// We found something that intersects roomSpace but is not spawned yet
 					// We check if instead of creating new room (which we can't do since we intersected) we can connect to this room instead
 
 					// Other room should include the room space
 					if (IsInside(minRoomSpace, intersected))
 					{
-						UE_LOG(LogTemp, Warning, TEXT("> It's inside allocated, so ill connect"));
-
 						// At this point other room should be considered good
 						intersected->AddPassage(passage);
 						continue;
+					}
+					else if (canNotDelete)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("> Can not delete"));
+						// TODO
+						// if (TryEnlargeRoomToIncludeSpace(intersected, minRoomSpace)
+						// {
+						//   intersected->AddPassage(passage);
+						//   continue;
+						// }
+						// else
+						// {
+						bool noImportantPassages = true;
+						for (LabPassage* passage : intersected->Passages)
+						{
+							if (IsPassageIlluminated(passage))
+							{
+								noImportantPassages = false;
+								break;
+							}
+						}
+						if (noImportantPassages)
+						{
+							TArray<LabRoom*> toFix;
+							for (LabPassage* passage : intersected->Passages)
+							{
+								if (passage->To && passage->To != intersected)
+									toFix.Add(passage->To);
+								if (passage->From && passage->From != intersected)
+									toFix.Add(passage->From);
+							}
+							PoolRoom(intersected);
+
+							// We create new room from min space
+							LabRoom* newRoom = CreateRandomRoom(minRoomSpace, true, !passage->To ? passage->GridDirection : GetReverseDirection(passage->GridDirection));
+							for (LabRoom* roomToFix : toFix)
+								FixRoom(roomToFix);
+							if (newRoom)
+							{
+								// We add passage to the room
+								newRoom->AddPassage(passage);
+								continue;
+							}
+							// else delete
+						}
+						// else delete
+						// }
+						// else delete
 					}
 					// else delete
 				}
 			}
 			else
 			{
-				UE_LOG(LogTemp, Warning, TEXT("> It intersects spawned"));
-
 				// We found something that intersects roomSpace and is spawned
 				// We check if instead of creating new room (which we can't do since we intersected) we can connect to this room instead
 
 				// Room shouldn't be illuminated
-				if (LastRoom != intersected && !IsRoomIlluminated(intersected))
-				// if (!IsPassageIlluminated(passage))
+				if (PlayerRoom != intersected && !IsRoomIlluminated(intersected))
 				{
 					// Other room should include the room space
 					if (IsInside(minRoomSpace, intersected))
 					{
-						UE_LOG(LogTemp, Warning, TEXT("> It's inside spawned, so ill connect"));
-
 						// Despawn that room so it can be respawned later
 						DespawnRoom(intersected);
 
@@ -1864,21 +1974,19 @@ void AMainGameMode::FixRoom(LabRoom * room)
 						intersected->AddPassage(passage);
 						continue;
 					}
+					// TODO add same as in intersection above?
 					// else delete
-				}
+				}				
 				// else delete
 			}
 		}
 		// else delete
 
-		// We delete passage and spawn a wall if we need to
-		UE_LOG(LogTemp, Warning, TEXT("> Let's delete it instead"));
-
 		// TODO check if this doesn't break ways into unknown
 		// TODO check if at least one connection exists
 
 		room->Passages.RemoveAt(i);
-		// We pool passage and spawn a wall instead
+		// We pool and delete passage and spawn a wall instead
 		if (SpawnedRoomObjects.Contains(room))
 		{
 			PoolPassage(passage);
@@ -1956,6 +2064,8 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 		{
 			// TODO color should depend on the room
 			FLinearColor color = RandColor();
+			while (color == FLinearColor::Black && spawnedActors.Num() < minNumOfLampsOverride)
+				color = RandColor();
 			AWallLamp* lamp = SpawnWallLamp(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, color, width, room);
 			spawnedActors.Add(lamp);
 		}
@@ -1982,8 +2092,6 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 // Activates all lamps in a single room
 void AMainGameMode::ActivateRoomLamps(LabRoom * room)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Activate lamps in the room"));
-
 	if (!room)
 		return;
 
@@ -2066,8 +2174,8 @@ void AMainGameMode::GenerateMap()
 	ExpandRoom(startRoom);
 	SpawnRoom(startRoom);
 	FillRoom(startRoom, 1);
-	MainPlayerController->GetCharacter()->SetActorLocation(FVector(25, 25, 90));
-	GetCharacterRoom();
+	MainPlayerController->GetCharacter()->SetActorLocation(FVector(25, 25, 90)); //, false, nullptr, ETeleportType::TeleportPhysics);
+	// GetCharacterRoom();
 }
 // Resets the map
 void AMainGameMode::ResetMap()
@@ -2082,6 +2190,7 @@ void AMainGameMode::ShowHideDebug()
 	bShowDebug = !bShowDebug;
 	if (DarknessController)
 		DarknessController->SetShowDebug(bShowDebug);
+	// TODO same for character controller
 }
 
 // Sets default values
@@ -2127,15 +2236,17 @@ void AMainGameMode::BeginPlay()
 
 	// Then we find the character controller
 	APlayerController* controller = gameWorld->GetFirstPlayerController();
-	if (controller)
-		MainPlayerController = Cast<AMainPlayerController>(controller);
+	MainPlayerController = Cast<AMainPlayerController>(controller);
 
 	// Finally we generate map
 	GenerateMap();
+	
+	// Make world reshape every few seconds even if character doesn't change rooms
+	FTimerHandle handler;
+	((AActor*)this)->GetWorldTimerManager().SetTimer(handler, this, &AMainGameMode::CompleteReshapeAllDarknessAroundOnTick, ReshapeDarknessTick, true, ReshapeDarknessTick);
 
-	// Make world reshape a bit every few seconds even if character doesn't change rooms
-	/*FTimerHandle handler;
-	((AActor*)this)->GetWorldTimerManager().SetTimer(handler, this, &AMainGameMode::ReshapeDarknessAround, 5.0f, true, 5.0f);*/
+	// TODO delete, used only for tests sometimes
+	/*((AActor*)this)->GetWorldTimerManager().SetTimer(handler, this, &AMainGameMode::ResetMap, 2, true, 2);*/
 }
 
 // Called every frame
@@ -2143,7 +2254,7 @@ void AMainGameMode::Tick(const float deltaTime)
 {
 	Super::Tick(deltaTime);
 
-	// Updates LastRoom, calles OnEnterRoom
+	// Updates PlayerRoom, calles OnEnterRoom
 	GetCharacterRoom();
 
 	// TODO delete later: used for debug
@@ -2153,8 +2264,9 @@ void AMainGameMode::Tick(const float deltaTime)
 		int charX, charY;
 		GetCharacterLocation(charX, charY);
 
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("- Luminosity: %f"), GetRoomLightingAmount(LastRoom)), true);
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Character room: pX: %d, pY: %d, sX: %d, sY: %d"), LastRoom->BotLeftX, LastRoom->BotLeftY, LastRoom->SizeX, LastRoom->SizeY), true);
+		/*GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Pools: default: %d, floor: %d, wall: %d, door: %d, lamp: %d, flashlight: %d"), DefaultPool.Num(), BasicFloorPool.Num(), BasicWallPool.Num(), BasicDoorPool.Num(), WallLampPool.Num(), FlashlightPool.Num()), true);*/
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("- Luminosity: %f"), GetRoomLightingAmount(PlayerRoom)), true);
+		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Character room: pX: %d, pY: %d, sX: %d, sY: %d"), PlayerRoom->BotLeftX, PlayerRoom->BotLeftY, PlayerRoom->SizeX, PlayerRoom->SizeY), true);
 		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Character location: x: %d, y: %d"), charX, charY), true);
 
 		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT(""), true);

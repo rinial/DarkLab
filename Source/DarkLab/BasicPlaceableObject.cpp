@@ -51,7 +51,7 @@ void ABasicPlaceableObject::Place_Implementation(const FIntVector botLeftLoc, co
 	FVector location;
 	AMainGameMode::GridToWorld(botLeftLoc.X, botLeftLoc.Y, size.X, size.Y, location.X, location.Y);
 	location.Z = ZOffset;
-	SetActorLocation(location); // - FVector(25, 25, 0));
+	SetActorLocation(location); //, false, nullptr, ETeleportType::TeleportPhysics);
 
 	float rotation;
 	switch (GridDirection)
