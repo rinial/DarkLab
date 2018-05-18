@@ -266,6 +266,9 @@ protected:
 	// Rooms that were visited by player
 	TArray<LabRoom*> VisitedRooms;
 
+	// Rooms that have their lamps turned on
+	TArray<LabRoom*> RoomsWithLampsOn;
+
 	// The last room character was in
 	LabRoom* PlayerRoom;
 
@@ -314,12 +317,14 @@ protected:
 	// Probabilities
 	static const float ReshapeDarknessOnEnterProbability;
 	static const float ReshapeDarknessOnTickProbability;
+	static const float LampsTurnOnOnEnterProbability;
+	static const float LampsTurnOffPerSecondProbability;
+	static const float AllLampsInRoomTurnOffProbability;
 	static const float ConnectToOtherRoomProbability;
 	static const float DeletePassageToFixProbability;
 	static const float PassageIsDoorProbability;
 	static const float DoorIsNormalProbability;
 	static const float SpawnFlashlightProbability;
-	static const float LampsTurnOnOnEnterProbability;
 	static const float BlueProbability;
 	static const float GreenProbability;
 	static const float YellowProbability;

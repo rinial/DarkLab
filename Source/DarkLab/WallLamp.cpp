@@ -36,6 +36,13 @@ FLinearColor AWallLamp::GetColor()
 {
 	return Color;
 }
+
+// Returns true if lamp is on
+bool AWallLamp::IsOn()
+{
+	return Light->IsVisible();
+}
+
 // Update's the color of the lamp mesh
 void AWallLamp::UpdateMeshColor(FLinearColor color)
 {

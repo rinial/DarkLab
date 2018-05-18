@@ -29,6 +29,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Lamp")
 	FLinearColor GetColor();
 
+	// Returns true if lamp is on
+	UFUNCTION(BlueprintCallable, Category = "Lamp")
+	bool IsOn();
+
 private:
 	// Update's the color of the lamp mesh
 	UFUNCTION()

@@ -23,14 +23,16 @@
 #include "Engine/Engine.h"
 
 // Probabilities
-const float AMainGameMode::ReshapeDarknessOnEnterProbability = 0.7f; // TODO decrease
-const float AMainGameMode::ReshapeDarknessOnTickProbability = 0.7f; // TODO decrease
+const float AMainGameMode::ReshapeDarknessOnEnterProbability = 0.7f;
+const float AMainGameMode::ReshapeDarknessOnTickProbability = 0.6f;
+const float AMainGameMode::LampsTurnOnOnEnterProbability = 0.45f;
+const float AMainGameMode::LampsTurnOffPerSecondProbability = 0.03f;
+const float AMainGameMode::AllLampsInRoomTurnOffProbability = 0.5f;
 const float AMainGameMode::ConnectToOtherRoomProbability = 0.8f;
 const float AMainGameMode::DeletePassageToFixProbability = 0.2f; // TODO increase
 const float AMainGameMode::PassageIsDoorProbability = 0.6f;
 const float AMainGameMode::DoorIsNormalProbability = 0.95f;
 const float AMainGameMode::SpawnFlashlightProbability = 0.4f; // TODO decrease
-const float AMainGameMode::LampsTurnOnOnEnterProbability = 0.45f;
 const float AMainGameMode::BlueProbability = 0.2f;
 const float AMainGameMode::GreenProbability = 0.15f;
 const float AMainGameMode::YellowProbability = 0.1f;
@@ -585,8 +587,6 @@ void AMainGameMode::PoolRoom(LabRoom * room)
 	DespawnRoom(room);
 
 	AllocatedRoomSpace.Remove(room);
-	ExpandedRooms.Remove(room);
-	VisitedRooms.Remove(room);
 	AllocatedRooms.Remove(room);
 	if (PlayerRoom == room)
 		PlayerRoom = nullptr;
@@ -615,6 +615,7 @@ void AMainGameMode::PoolMap()
 	AllocatedRoomSpace.Empty();
 	ExpandedRooms.Empty();
 	VisitedRooms.Empty();
+	RoomsWithLampsOn.Empty();
 	AllocatedRooms.Empty();
 	PlayerRoom = nullptr;
 }
@@ -1045,6 +1046,7 @@ void AMainGameMode::DespawnRoom(LabRoom * room)
 	AllocatedRoomSpace[room].Empty();
 	ExpandedRooms.Remove(room);
 	VisitedRooms.Remove(room); // ?
+	RoomsWithLampsOn.Remove(room);
 	AllocateRoom(room);
 }
 
@@ -2098,12 +2100,56 @@ void AMainGameMode::ActivateRoomLamps(LabRoom * room)
 	if (!SpawnedRoomObjects.Contains(room))
 		return;
 
-	for (TScriptInterface<IDeactivatable> obj : SpawnedRoomObjects[room])
+	// Turn on
+	if (!RoomsWithLampsOn.Contains(room))
 	{
-		AWallLamp* lamp = Cast<AWallLamp>(obj->_getUObject());
-		if (!lamp)
-			continue;
-		lamp->Execute_ActivateIndirectly(lamp);
+		bool atLeastOneLamp = false;
+		for (TScriptInterface<IDeactivatable> obj : SpawnedRoomObjects[room])
+		{
+			AWallLamp* lamp = Cast<AWallLamp>(obj->_getUObject());
+			if (!lamp)
+				continue;
+			atLeastOneLamp = true;
+			lamp->Execute_ActivateIndirectly(lamp);
+		}
+		if(atLeastOneLamp)
+			RoomsWithLampsOn.Add(room);
+	}
+	// Turn off
+	else
+	{
+		bool turnedOffOne = false;
+		bool atLeastOneLampLeft = false;
+		bool turnOffAll = RandBool(AllLampsInRoomTurnOffProbability);
+		for (TScriptInterface<IDeactivatable> obj : SpawnedRoomObjects[room])
+		{
+			AWallLamp* lamp = Cast<AWallLamp>(obj->_getUObject());
+			if (!lamp)
+				continue;
+			if (turnOffAll)
+			{
+				if (lamp->IsOn())
+					lamp->Execute_ActivateIndirectly(lamp);
+			}
+			else if (!turnedOffOne)
+			{
+				if (lamp->IsOn())
+				{
+					lamp->Execute_ActivateIndirectly(lamp);
+					turnedOffOne = true;
+				}
+			}
+			else
+			{
+				if (lamp->IsOn())
+				{
+					atLeastOneLampLeft = true;
+					break;
+				}
+			}
+		}
+		if (turnOffAll || !atLeastOneLampLeft)
+			RoomsWithLampsOn.Remove(room);
 	}
 }
 
@@ -2253,9 +2299,18 @@ void AMainGameMode::BeginPlay()
 void AMainGameMode::Tick(const float deltaTime)
 {
 	Super::Tick(deltaTime);
-
+	
 	// Updates PlayerRoom, calles OnEnterRoom
 	GetCharacterRoom();
+
+	// TODO make a separate method
+	// Turns off some lamps from time to time
+	for (int i = RoomsWithLampsOn.Num() - 1; i >= 0; --i)
+	{
+		LabRoom* room = RoomsWithLampsOn[i];
+		if (RandBool(LampsTurnOffPerSecondProbability * deltaTime))
+			ActivateRoomLamps(room);
+	}
 
 	// TODO delete later: used for debug
 	if (GEngine)
