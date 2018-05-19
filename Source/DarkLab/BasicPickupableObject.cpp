@@ -2,15 +2,15 @@
 
 #include "BasicPickupableObject.h"
 #include "MainCharacter.h"
+#include "MainGameMode.h"
 
 void ABasicPickupableObject::PickUp_Implementation(AMainCharacter * character)
 {
 	// We disable the object
 	Execute_SetActive(this, false);
-
-	// TODO
-	// add to inventory
-	// tell gameMode to delete it from pool
+	
+	character->Inventory.Add(this);
+	Cast<AMainGameMode>(GetWorld()->GetAuthGameMode())->OnPickUp(this);
 
 	UE_LOG(LogTemp, Warning, TEXT("Picked up %s"), *(Name.ToString()));
 }

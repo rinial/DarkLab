@@ -572,6 +572,25 @@ void AMainGameMode::OnCharacterEnabled()
 {
 	ResetMap();
 }
+// Called when character picks up an object to delete it from arrays without pooling
+void AMainGameMode::OnPickUp(TScriptInterface<class IPickupable> object)
+{
+	AActor* actor = Cast<AActor>(object->_getUObject());
+	if (!actor)
+		return;
+
+	FVector location = actor->GetActorLocation();
+	int x, y;
+	WorldToGrid(location.X, location.Y, x, y);
+	LabRoom* room;
+	if (!MapSpaceIsFree(false, true, x, y, 1, 1, room))
+	{
+		if (SpawnedRoomObjects.Contains(room))
+			SpawnedRoomObjects[room].Remove(object->_getUObject());
+
+		// TODO also deallocate room space
+	}
+}
 
 // Gets the pool for the object/class
 TArray<TScriptInterface<IDeactivatable>>& AMainGameMode::GetCorrectPool(TScriptInterface<IDeactivatable> object)
@@ -886,7 +905,7 @@ AWallLamp * AMainGameMode::SpawnWallLamp(const int botLeftX, const int botLeftY,
 
 	return lamp;
 }
-AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction)
+AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction, LabRoom* room)
 {
 	AFlashlight* flashlight = Cast<AFlashlight>((TryGetPoolable(FlashlightBP)));
 	if (!flashlight)
@@ -898,6 +917,14 @@ AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLef
 	flashlight->Reset(); // Disables light if it was on
 	PlaceObject(flashlight, botLeftX, botLeftY, direction);
 	flashlight->Execute_SetActive(flashlight, true);
+
+	if (room)
+	{
+		if (SpawnedRoomObjects.Contains(room))
+			SpawnedRoomObjects[room].Add(flashlight);
+		if (AllocatedRoomSpace.Contains(room))
+			AllocateRoomSpace(room, botLeftX, botLeftY, 1, 1, false);
+	}
 
 	// UE_LOG(LogTemp, Warning, TEXT("Spawned a flashlight"));
 
@@ -1951,7 +1978,7 @@ void AMainGameMode::FixRoom(LabRoom * room, int depth)
 					}					
 					else if (canNotDelete)
 					{
-						UE_LOG(LogTemp, Warning, TEXT("> Can not delete"));
+						// UE_LOG(LogTemp, Warning, TEXT("> Can not delete"));
 
 						// TODO
 						// if (TryEnlargeRoomToIncludeSpace(intersected, minRoomSpace)
@@ -1980,7 +2007,7 @@ void AMainGameMode::FixRoom(LabRoom * room, int depth)
 
 							if (noImportantPassages || absolutelyUndeleteable)
 							{
-								UE_LOG(LogTemp, Warning, TEXT("> Forced refix"));
+								// UE_LOG(LogTemp, Warning, TEXT("> Forced refix"));
 
 								TArray<LabRoom*> toFix;
 								for (LabPassage* interPassage : intersected->Passages)
@@ -2134,7 +2161,7 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 		if (CreateRandomInsideSpaceOfSize(room, xOff, yOff, 1, 1, true))
 		{
 			EDirectionEnum direction = RandDirection();
-			AFlashlight* flashlight = SpawnFlashlight(room->BotLeftX + xOff, room->BotLeftY + yOff, direction);
+			AFlashlight* flashlight = SpawnFlashlight(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, room);
 			spawnedActors.Add(flashlight);
 			break; // We only spawn once
 		}

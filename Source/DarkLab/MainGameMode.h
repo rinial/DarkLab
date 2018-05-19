@@ -93,6 +93,8 @@ protected:
 public:
 	// Called when character is enabled to reset the map
 	void OnCharacterEnabled();
+	// Called when character picks up an object to delete it from arrays without pooling
+	void OnPickUp(TScriptInterface<class IPickupable> object);
 
 protected:
 	// Gets the pool for the object/class
@@ -142,7 +144,7 @@ protected:
 	ABasicWall* SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, LabRoom* room = nullptr);
 	ABasicDoor* SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White, const int width = 4, LabPassage* passage = nullptr);
 	AWallLamp* SpawnWallLamp(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White, const int width = 1, LabRoom* room = nullptr);
-	AFlashlight* SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction = EDirectionEnum::VE_Up);
+	AFlashlight* SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction = EDirectionEnum::VE_Up, LabRoom* room = nullptr);
 
 	// Spawn full parts of the lab
 	void SpawnRoom(LabRoom* room);
@@ -293,7 +295,6 @@ protected:
 	LabRoom* ActualPlayerRoom; 
 
 	// Spawned map parts
-	// Does not include pickupable objects
 	TMap<LabRoom*, TArray<TScriptInterface<IDeactivatable>>> SpawnedRoomObjects;
 	TMap<LabPassage*, TArray<TScriptInterface<IDeactivatable>>> SpawnedPassageObjects;
 

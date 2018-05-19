@@ -77,6 +77,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character")
 	TScriptInterface<class IEquipable> EquipedObject;
 
+	// Objects in character's inventory
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character")
+	TArray<TScriptInterface<class IPickupable>> Inventory;
+
 	// Objects currently inside the activator volume
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character")
 	TArray<TScriptInterface<class IActivatable>> ActivatableObjects;

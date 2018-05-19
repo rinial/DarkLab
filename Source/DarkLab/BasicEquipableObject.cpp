@@ -27,11 +27,11 @@ void ABasicEquipableObject::Equip_Implementation(AMainCharacter* character, cons
 // Called when the object is to be unequiped
 void ABasicEquipableObject::Unequip_Implementation(AMainCharacter* character)
 {
-	// No need to destroy it
-	character->EquipedObject = nullptr;
-
 	// We disable the object
 	Execute_SetActive(this, false);
+
+	// No need to destroy it
+	character->EquipedObject = nullptr;
 
 	UE_LOG(LogTemp, Warning, TEXT("Unequiped %s"), *(Name.ToString()));
 }
