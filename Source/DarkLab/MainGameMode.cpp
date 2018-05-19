@@ -499,9 +499,28 @@ LabRoom * AMainGameMode::GetCharacterRoom()
 	int x, y;
 	GetCharacterLocation(x, y);
 
-	// Actual room is not same as last
-	if (!(ActualPlayerRoom && ActualPlayerRoom->BotLeftX <= x && ActualPlayerRoom->BotLeftY <= y && ActualPlayerRoom->BotLeftX + ActualPlayerRoom->SizeX - 1 >= x && ActualPlayerRoom->BotLeftY + ActualPlayerRoom->SizeY - 1 >= y))
+	if (!ActualPlayerRoom || !PlayerRoom)
 		MapSpaceIsFree(false, true, x, y, 1, 1, ActualPlayerRoom);
+	else
+	{
+		// On left passage
+		if (PlayerRoom->BotLeftX == x)
+			MapSpaceIsFree(false, true, x - 1, y, 1, 1, ActualPlayerRoom);
+		// On bottom passage
+		else if (PlayerRoom->BotLeftY == y)
+			MapSpaceIsFree(false, true, x, y - 1, 1, 1, ActualPlayerRoom);
+		// On right passage
+		else if (PlayerRoom->BotLeftX + PlayerRoom->SizeX - 1 == x)
+			MapSpaceIsFree(false, true, x + 1, y, 1, 1, ActualPlayerRoom);
+		// On top passage
+		else if (PlayerRoom->BotLeftY + PlayerRoom->SizeY - 1 == y)
+			MapSpaceIsFree(false, true, x, y + 1, 1, 1, ActualPlayerRoom);
+		// Not on the passage
+		else
+			MapSpaceIsFree(false, true, x, y, 1, 1, ActualPlayerRoom);
+	}
+	/*if (!(ActualPlayerRoom && ActualPlayerRoom->BotLeftX <= x && ActualPlayerRoom->BotLeftY <= y && ActualPlayerRoom->BotLeftX + ActualPlayerRoom->SizeX - 1 >= x && ActualPlayerRoom->BotLeftY + ActualPlayerRoom->SizeY - 1 >= y))
+		MapSpaceIsFree(false, true, x, y, 1, 1, ActualPlayerRoom);*/
 
 	int d = 1; // Used to avoid situations when character is stuck in passage
 	// Still in last room
@@ -1892,6 +1911,7 @@ void AMainGameMode::FixRoom(LabRoom * room)
 			FRectSpaceStruct minRoomSpace = CreateMinimumRoomSpace(room, passage);	
 			// UE_LOG(LogTemp, Warning, TEXT("> Create a room: x: %d, y: %d, sX: %d, sY: %d"), minRoomSpace.BotLeftX, minRoomSpace.BotLeftY, minRoomSpace.SizeX, minRoomSpace.SizeY);
 
+
 			LabRoom* intersected;
 			// Intersects something spawned
 			if (MapSpaceIsFree(false, true, minRoomSpace, intersected))
@@ -1921,7 +1941,7 @@ void AMainGameMode::FixRoom(LabRoom * room)
 						intersected->AddPassage(passage);
 						continue;
 					}
-					/*else if (canNotDelete)
+					else if (canNotDelete)
 					{
 						// UE_LOG(LogTemp, Warning, TEXT("> Can not delete"));
 
@@ -1933,55 +1953,54 @@ void AMainGameMode::FixRoom(LabRoom * room)
 						// }
 						// else
 						// {
-						bool noImportantPassages = true;
-						bool noAbsolutelyUndeleteable = true;
-						for (LabPassage* passage : intersected->Passages)
+
+						// If intersected can't be deleted
+						if (!((intersected == PlayerRoom || intersected == ActualPlayerRoom) && intersected->Passages.Num() <= 1))
 						{
-							if (intersected == PlayerRoom && intersected->Passages.Num() <= 1)
+							bool noImportantPassages = true;
+							for (LabPassage* interPassage : intersected->Passages)
 							{
-								noAbsolutelyUndeleteable = false;
-								noImportantPassages = false;
-								break;
-							}
-							if (IsPassageIlluminated(passage))
-							{
-								noImportantPassages = false;
-								break;
-							}
-						}
-						if (noAbsolutelyUndeleteable && (noImportantPassages || absolutelyUndeleteable))
-						{
-							if (absolutelyUndeleteable && !noImportantPassages)
-							{
-								UE_LOG(LogTemp, Warning, TEXT("> Forced refix"));
+								if (IsPassageIlluminated(interPassage))
+								{
+									noImportantPassages = false;
+									break;
+								}
 							}
 
-							TArray<LabRoom*> toFix;
-							for (LabPassage* passage : intersected->Passages)
+							if (noImportantPassages || absolutelyUndeleteable)
 							{
-								if (passage->To && passage->To != intersected)
-									toFix.Add(passage->To);
-								if (passage->From && passage->From != intersected)
-									toFix.Add(passage->From);
-							}
-							PoolRoom(intersected);
+								if (absolutelyUndeleteable && !noImportantPassages)
+								{
+									UE_LOG(LogTemp, Warning, TEXT("> Forced refix"));
+								}
 
-							// We create new room from min space
-							LabRoom* newRoom = CreateRandomRoom(minRoomSpace, true, !passage->To ? passage->GridDirection : GetReverseDirection(passage->GridDirection));
-							for (LabRoom* roomToFix : toFix)
-								FixRoom(roomToFix);
-							if (newRoom)
-							{
-								// We add passage to the room
-								newRoom->AddPassage(passage);
-								continue;
+								TArray<LabRoom*> toFix;
+								for (LabPassage* interPassage : intersected->Passages)
+								{
+									if (interPassage->To && interPassage->To != intersected)
+										toFix.Add(interPassage->To);
+									if (interPassage->From && interPassage->From != intersected)
+										toFix.Add(interPassage->From);
+								}
+								PoolRoom(intersected);
+
+								// We create new room from min space
+								LabRoom* newRoom = CreateRandomRoom(minRoomSpace, true, !passage->To ? passage->GridDirection : GetReverseDirection(passage->GridDirection));
+								for (LabRoom* roomToFix : toFix)
+									FixRoom(roomToFix);
+								if (newRoom)
+								{
+									// We add passage to the room
+									newRoom->AddPassage(passage);
+									continue;
+								}
+								// else delete
 							}
-							// else delete
 						}
 						// else delete
 						// }
 						// else delete
-					}*/
+					}
 					// else delete
 				}
 			}

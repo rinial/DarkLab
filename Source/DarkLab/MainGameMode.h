@@ -24,10 +24,13 @@ class DARKLAB_API AMainGameMode : public AGameModeBase
 
 public:
 	// Returns true with certain probability
+	UFUNCTION(BlueprintCallable, Category = "Generic functions")
 	bool RandBool(const float probability);
 	// Returns random color with certain probabilities
+	UFUNCTION(BlueprintCallable, Category = "Generic functions")
 	FLinearColor RandColor();
 	// Returns random direction 
+	UFUNCTION(BlueprintCallable, Category = "Generic functions")
 	EDirectionEnum RandDirection();
 
 	// Returns the light level and the location of the brightest light
@@ -80,6 +83,7 @@ protected:
 	void PlaceObject(TScriptInterface<IPlaceable> object, const FIntVector botLeftLoc, const EDirectionEnum direction, const int sizeX, const int sizeY, const int sizeZ);
 
 	// Returns by reference character's location on the grid
+	UFUNCTION(BlueprintCallable, Category = "Generic functions")
 	void GetCharacterLocation(int& x, int& y);
 	// Returns the room the character is in
 	LabRoom* GetCharacterRoom();
@@ -104,6 +108,7 @@ protected:
 	// Pool full parts of the lab
 	void PoolRoom(LabRoom* room);
 	void PoolPassage(LabPassage* passage);
+	UFUNCTION(BlueprintCallable, Category = "Pools")
 	void PoolMap();
 
 	// Pools dark area returning all rooms that now need fixing
@@ -115,12 +120,16 @@ protected:
 	// Reshapes darkness and expands, spawns and fills rooms
 	void CompleteReshapeDarkness(LabRoom* start, bool stopAtFirstIfLit = true);
 	// Reshapes darkness in player room
+	UFUNCTION(BlueprintCallable, Category = "Reshape")
 	void CompleteReshapeDarknessAround();
 	// Pools all dark rooms on the map and fixes every room that needs fixing
+	UFUNCTION(BlueprintCallable, Category = "Reshape")
 	void ReshapeAllDarkness();
 	// Reshapes all darkness and also expands spawns and fills around player's room
+	UFUNCTION(BlueprintCallable, Category = "Reshape")
 	void CompleteReshapeAllDarknessAround();
 	// Calls CompleteReshapeAllDarknessAround with specified probability
+	UFUNCTION(BlueprintCallable, Category = "Reshape")
 	void CompleteReshapeAllDarknessAroundOnTick();
 
 	// Tries to find a poolable object in a specified array
@@ -184,6 +193,7 @@ protected:
 	LabRoom* CreateStartRoom();
 
 	// Reverses direction
+	UFUNCTION(BlueprintCallable, Category = "Generic functions")
 	EDirectionEnum GetReverseDirection(EDirectionEnum direction);
 
 	// Creates random space for a future passage (not world location but offsets)
@@ -249,10 +259,13 @@ protected:
 
 public:
 	// Generates map
+	UFUNCTION(BlueprintCallable, Category = "Map generation")
 	void GenerateMap();
 	// Resets the map
+	UFUNCTION(BlueprintCallable, Category = "Map generation")
 	void ResetMap();
 	// Shows/hides debug
+	UFUNCTION(BlueprintCallable, Category = "Debug")
 	void ShowHideDebug();
 
 protected:
@@ -342,7 +355,9 @@ protected:
 	static const float ReshapeDarknessTick;
 
 	// Pointers to existing controllers
+	UPROPERTY()
 	class ADarknessController* DarknessController;
+	UPROPERTY()
 	class AMainPlayerController* MainPlayerController;
 	
 private:
