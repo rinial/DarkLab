@@ -1906,6 +1906,11 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room, int desiredNumOfPassa
 		{
 			if (!possibleRoomConnection)
 			{
+				// TODO it shouldn't be like this
+				// For start room
+				if (desiredNumOfPassagesOverride >= MinRoomNumOfPassages)
+					passage->Color = FLinearColor::White;
+
 				// UE_LOG(LogTemp, Warning, TEXT("> %s"), TEXT("success"));
 
 				// We create new room from min space, it also allocates room's space
@@ -2198,21 +2203,42 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 		}
 	}
 	
-	// TODO spawn doorcards in specific locations
 	// Creates a doorcard
-	bool shouldSpawnDoorcard = RandBool(SpawnDoorcardProbability);
+	FLinearColor cardColor;
+	bool colorIsDetermined = false;
+	// In rooms with only one door that also isn't white card is almost always given and it has next level
+	if (room->Passages.Num() == 1 && room->Passages[0]->Color != FLinearColor::White)
+	{
+		colorIsDetermined = true;
+
+		FLinearColor roomColor = room->Passages[0]->Color;
+		if (roomColor == FLinearColor::FromSRGBColor(FColor(30, 144, 239)))
+			cardColor = FLinearColor::Green;
+		else if (roomColor == FLinearColor::Green)
+			cardColor = FLinearColor::Yellow;
+		else if (roomColor == FLinearColor::Yellow)
+			cardColor = FLinearColor::Red;
+		else if (roomColor == FLinearColor::Red)
+			cardColor = FLinearColor::Black;
+		else
+			colorIsDetermined = false;
+	}
+	bool shouldSpawnDoorcard = colorIsDetermined || RandBool(SpawnDoorcardProbability);
 	for (int i = 0; shouldSpawnDoorcard && i < MaxGenericSpawnTries; ++i)
 	{
 		int xOff;
 		int yOff;
 		if (CreateRandomInsideSpaceOfSize(room, xOff, yOff, 1, 1, false)) // we don't want to spawn over flashlights
 		{
-			// TODO color should depend on the room
-			FLinearColor color = RandColor();
-			while (color == FLinearColor::White)
-				color = RandColor();
+			// In random rooms cards are almost always blue
+			if (!colorIsDetermined)
+				cardColor = FLinearColor::FromSRGBColor(FColor(30, 144, 239));
+			// TODO add a chance of nonblue card in random room
+			/*cardColor = RandColor();
+			while (cardColor == FLinearColor::White)
+				cardColor = RandColor();*/
 			EDirectionEnum direction = RandDirection();
-			ADoorcard* doorcard = SpawnDoorcard(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, color, room);
+			ADoorcard* doorcard = SpawnDoorcard(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, cardColor, room);
 			spawnedActors.Add(doorcard);
 			break; // We only spawn once
 		}

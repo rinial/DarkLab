@@ -162,14 +162,6 @@ int AMainCharacter::CountDoorcardsOfColor(FLinearColor color)
 		ADoorcard* doorcard = Cast<ADoorcard>(pickupable->_getUObject());
 		if (doorcard && doorcard->GetColor().Equals(color))
 			++count;
-		/*{
-			FLinearColor col = doorcard->GetColor();
-			UE_LOG(LogTemp, Warning, TEXT("Colors:"));
-			UE_LOG(LogTemp, Warning, TEXT("> sent color: R: %f, G: %f, B: %f, A: %f"), color.R, color.G, color.B, color.A);
-			UE_LOG(LogTemp, Warning, TEXT("> card color: R: %f, G: %f, B: %f, A: %f"), col.R, col.G, col.B, col.A);
-			if (col == color)
-				++count;
-		}*/
 	}
 	return count;
 }
