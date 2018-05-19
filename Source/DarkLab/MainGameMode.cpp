@@ -12,6 +12,7 @@
 #include "BasicDoor.h"
 #include "WallLamp.h"
 #include "Flashlight.h"
+#include "Doorcard.h"
 #include "LabPassage.h"
 #include "LabRoom.h"
 #include "LabHallway.h"
@@ -34,6 +35,7 @@ const float AMainGameMode::DeletePassageToFixProbability = 0.0f; // TODO inrease
 const float AMainGameMode::PassageIsDoorProbability = 0.45f;
 const float AMainGameMode::DoorIsNormalProbability = 0.95f;
 const float AMainGameMode::SpawnFlashlightProbability = 0.4f; // TODO decrease
+const float AMainGameMode::SpawnDoorcardProbability = 0.4f; // TODO decrease
 const float AMainGameMode::BlueProbability = 0.2f;
 const float AMainGameMode::GreenProbability = 0.15f;
 const float AMainGameMode::YellowProbability = 0.1f;
@@ -52,6 +54,8 @@ bool AMainGameMode::RandBool(const float probability)
 // Returns random color with certain probabilities
 FLinearColor AMainGameMode::RandColor()
 {
+	// TODO make colors constants somewhere
+
 	// Blue
 	float temp = FMath::FRand();
 	if (temp <= BlueProbability)
@@ -611,6 +615,8 @@ TArray<TScriptInterface<IDeactivatable>>& AMainGameMode::GetCorrectPool(UClass *
 		return WallLampPool;
 	if (cl == FlashlightBP)
 		return FlashlightPool;
+	if (cl == DoorcardBP)
+		return DoorcardPool;
 	return DefaultPool;
 }
 
@@ -929,6 +935,31 @@ AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLef
 	// UE_LOG(LogTemp, Warning, TEXT("Spawned a flashlight"));
 
 	return flashlight;
+}
+ADoorcard* AMainGameMode::SpawnDoorcard(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color, LabRoom* room)
+{
+	ADoorcard* doorcard = Cast<ADoorcard>((TryGetPoolable(DoorcardBP)));
+	if (!doorcard)
+	{
+		doorcard = GetWorld()->SpawnActor<ADoorcard>(DoorcardBP);
+		doorcard->Execute_SetActive(doorcard, false);
+	}
+
+	doorcard->SetColor(color); // Sets correct color
+	PlaceObject(doorcard, botLeftX, botLeftY, direction);
+	doorcard->Execute_SetActive(doorcard, true);
+
+	if (room)
+	{
+		if (SpawnedRoomObjects.Contains(room))
+			SpawnedRoomObjects[room].Add(doorcard);
+		if (AllocatedRoomSpace.Contains(room))
+			AllocateRoomSpace(room, botLeftX, botLeftY, 1, 1, false);
+	}
+
+	// UE_LOG(LogTemp, Warning, TEXT("Spawned a flashlight"));
+
+	return doorcard;
 }
 
 // Spawn full parts of the lab
@@ -2158,11 +2189,31 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 	{
 		int xOff;
 		int yOff;
-		if (CreateRandomInsideSpaceOfSize(room, xOff, yOff, 1, 1, true))
+		if (CreateRandomInsideSpaceOfSize(room, xOff, yOff, 1, 1, true)) // we can spawn flashlight over (under) lamps
 		{
 			EDirectionEnum direction = RandDirection();
 			AFlashlight* flashlight = SpawnFlashlight(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, room);
 			spawnedActors.Add(flashlight);
+			break; // We only spawn once
+		}
+	}
+	
+	// TODO spawn doorcards in specific locations
+	// Creates a doorcard
+	bool shouldSpawnDoorcard = RandBool(SpawnDoorcardProbability);
+	for (int i = 0; shouldSpawnDoorcard && i < MaxGenericSpawnTries; ++i)
+	{
+		int xOff;
+		int yOff;
+		if (CreateRandomInsideSpaceOfSize(room, xOff, yOff, 1, 1, false)) // we don't want to spawn over flashlights
+		{
+			// TODO color should depend on the room
+			FLinearColor color = RandColor();
+			while (color == FLinearColor::White)
+				color = RandColor();
+			EDirectionEnum direction = RandDirection();
+			ADoorcard* doorcard = SpawnDoorcard(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, color, room);
+			spawnedActors.Add(doorcard);
 			break; // We only spawn once
 		}
 	}
@@ -2426,6 +2477,9 @@ AMainGameMode::AMainGameMode()
 	static ConstructorHelpers::FObjectFinder<UClass> flashlightBP(TEXT("Class'/Game/Blueprints/FlashlightBP.FlashlightBP_C'"));
 	if (flashlightBP.Succeeded())
 		FlashlightBP = flashlightBP.Object;
+	static ConstructorHelpers::FObjectFinder<UClass> doorcardBP(TEXT("Class'/Game/Blueprints/DoorcardBP.DoorcardBP_C'"));
+	if (doorcardBP.Succeeded())
+		DoorcardBP = doorcardBP.Object;
 
 	// Set to call Tick() every frame
 	PrimaryActorTick.bCanEverTick = true;
@@ -2552,6 +2606,19 @@ void AMainGameMode::Tick(const float deltaTime)
 
 			// Number of "lives" left
 			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("> Lives: %d"), MainPlayerController->Lives), false);
+
+			// Number of doorcards
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("> Doorcards:")), false);
+			// Blue
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("   > Blue: %d"), character->CountDoorcardsOfColor(FLinearColor::FromSRGBColor(FColor(30, 144, 239)))), false);
+			// Green
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("   > Green: %d"), character->CountDoorcardsOfColor(FLinearColor::Green)), false);
+			// Yellow
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("   > Yellow: %d"), character->CountDoorcardsOfColor(FLinearColor::Yellow)), false);
+			// Red
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("   > Red: %d"), character->CountDoorcardsOfColor(FLinearColor::Red)), false);
+			// Black
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("   > Black: %d"), character->CountDoorcardsOfColor(FLinearColor::Black)), false);
 
 			// Activatable and equipped
 			TArray<IInformative*> informativeObjects;

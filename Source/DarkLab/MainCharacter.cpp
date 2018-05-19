@@ -9,6 +9,7 @@
 #include "Usable.h"
 #include "Activatable.h"
 #include "Informative.h"
+#include "Doorcard.h"
 #include "MainPlayerController.h"
 #include "MainGameMode.h"
 
@@ -139,6 +140,38 @@ TScriptInterface<class IActivatable> AMainCharacter::GetActivatable()
 		}
 	}
 	return currentSelected;
+}
+
+// Returns true if character has a card of specified color
+bool AMainCharacter::HasDoorcardOfColor(FLinearColor color)
+{
+	for (TScriptInterface<IPickupable> pickupable : Inventory)
+	{
+		ADoorcard* doorcard = Cast<ADoorcard>(pickupable->_getUObject());
+		if (doorcard && doorcard->GetColor().Equals(color))
+			return true;
+	}
+	return false;
+}
+// Returns the number of cards of specified color the character has
+int AMainCharacter::CountDoorcardsOfColor(FLinearColor color)
+{
+	int count = 0;
+	for (TScriptInterface<IPickupable> pickupable : Inventory)
+	{
+		ADoorcard* doorcard = Cast<ADoorcard>(pickupable->_getUObject());
+		if (doorcard && doorcard->GetColor().Equals(color))
+			++count;
+		/*{
+			FLinearColor col = doorcard->GetColor();
+			UE_LOG(LogTemp, Warning, TEXT("Colors:"));
+			UE_LOG(LogTemp, Warning, TEXT("> sent color: R: %f, G: %f, B: %f, A: %f"), color.R, color.G, color.B, color.A);
+			UE_LOG(LogTemp, Warning, TEXT("> card color: R: %f, G: %f, B: %f, A: %f"), col.R, col.G, col.B, col.A);
+			if (col == color)
+				++count;
+		}*/
+	}
+	return count;
 }
 
 // TODO move somewhere, its not bound to character

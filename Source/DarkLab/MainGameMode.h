@@ -13,6 +13,7 @@ class ABasicWall;
 class ABasicDoor;
 class AWallLamp;
 class AFlashlight;
+class ADoorcard;
 class LabRoom;
 class LabPassage;
 
@@ -144,7 +145,8 @@ protected:
 	ABasicWall* SpawnBasicWall(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, LabRoom* room = nullptr);
 	ABasicDoor* SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White, const int width = 4, LabPassage* passage = nullptr);
 	AWallLamp* SpawnWallLamp(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White, const int width = 1, LabRoom* room = nullptr);
-	AFlashlight* SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction = EDirectionEnum::VE_Up, LabRoom* room = nullptr);
+	AFlashlight* SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction, LabRoom* room = nullptr);
+	ADoorcard* SpawnDoorcard(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color, LabRoom* room = nullptr);
 
 	// Spawn full parts of the lab
 	void SpawnRoom(LabRoom* room);
@@ -311,6 +313,8 @@ protected:
 	TArray<TScriptInterface<IDeactivatable>> WallLampPool;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
 	TArray<TScriptInterface<IDeactivatable>> FlashlightPool;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
+	TArray<TScriptInterface<IDeactivatable>> DoorcardPool;
 
 	// Constants used for generation
 	static const int ExpandDepth = 5;
@@ -329,7 +333,7 @@ protected:
 	static const int NormalDoorWidth = 4; // Can't be lower than 2
 	static const int BigDoorWidth = 6;
 	static const int MinDistanceBetweenPassages = 1; // Can't be lower than 1
-	static const int MinDistanceInsideToPassage = 1; // Maybe it should be 2
+	static const int MinDistanceInsideToPassage = 2; // Maybe it should be 1
 	static const int MinRoomNumOfLamps = 0; 
 	static const int MaxRoomNumOfLampsPerHundredArea = 2;
 	static const int MaxRoomLampCreationTriesPerDesired = 2;
@@ -349,6 +353,7 @@ protected:
 	static const float PassageIsDoorProbability;
 	static const float DoorIsNormalProbability;
 	static const float SpawnFlashlightProbability;
+	static const float SpawnDoorcardProbability;
 	static const float BlueProbability;
 	static const float GreenProbability;
 	static const float YellowProbability;
@@ -370,6 +375,7 @@ private:
 	TSubclassOf<ABasicDoor> BasicDoorBP;
 	TSubclassOf<AWallLamp> WallLampBP;
 	TSubclassOf<AFlashlight> FlashlightBP;
+	TSubclassOf<ADoorcard> DoorcardBP;
 
 public:
 	// Sets default values

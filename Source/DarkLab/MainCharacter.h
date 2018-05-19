@@ -58,6 +58,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Main Character")
 	TScriptInterface<class IActivatable> GetActivatable();
 
+	// Returns true if character has a card of specified color
+	bool HasDoorcardOfColor(FLinearColor color);
+	// Returns the number of cards of specified color the character has
+	int CountDoorcardsOfColor(FLinearColor color);
+
 	// TODO move somewhere, its not bound to character
 	// Sets outline for an actor
 	void SetOutline(UObject* object, bool showOutline) const;
