@@ -8,7 +8,7 @@
 // Enables or disables light
 void AFlashlight::Use_Implementation()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Toggled flashlight"));
+	UE_LOG(LogTemp, Warning, TEXT("Toggled %s"), *(Name.ToString()));
 
 	MainLight->ToggleVisibility();
 	ExtraLight->ToggleVisibility();

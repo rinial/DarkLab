@@ -19,17 +19,21 @@ void ABasicEquipableObject::Equip_Implementation(AMainCharacter* character, cons
 	character->EquipedObject = this;
 	character->SetOutline(this, false);
 
-	UE_LOG(LogTemp, Warning, TEXT("Equiped"));
+	// Finally we activate it to be seen 
+	Execute_SetActive(this, true);
+
+	UE_LOG(LogTemp, Warning, TEXT("Equiped %s"), *(Name.ToString()));
 }
 // Called when the object is to be unequiped
 void ABasicEquipableObject::Unequip_Implementation(AMainCharacter* character)
 {
+	// No need to destroy it
 	character->EquipedObject = nullptr;
 
-	// TODO just move to inventory
-	this->Destroy();
+	// We disable the object
+	Execute_SetActive(this, false);
 
-	UE_LOG(LogTemp, Warning, TEXT("Unequiped"));
+	UE_LOG(LogTemp, Warning, TEXT("Unequiped %s"), *(Name.ToString()));
 }
 
 // Called when the object is activated (picked up in the laboratory)
@@ -38,21 +42,17 @@ void ABasicEquipableObject::ActivateObject(AMainCharacter* character)
 	if (!character)
 		return;
 
-	// TODO add object name
-	// UE_LOG(LogTemp, Warning, FString::Printf(TEXT("Picked up %s"), *Name.ToString()));
-	UE_LOG(LogTemp, Warning, TEXT("Picked up"));
+	// Pick up first
+	Super::ActivateObject(character);
 
-	// It's not activatable animore
-	character->ActivatableObjects.Remove(this);
-
-	// TODO this should put item into inventory, not instantly equip it
+	// Then equip
 	Execute_Equip(this, character, FName("LeftHand"));
 }
 
-// Sets default values
-ABasicEquipableObject::ABasicEquipableObject()
-{
-	// Set activatable parameters
-	bActivatableDirectly = true;
-	bActivatableIndirectly = false;
-}
+//// Sets default values
+//ABasicEquipableObject::ABasicEquipableObject()
+//{
+//	// Set activatable parameters
+//	bActivatableDirectly = true;
+//	bActivatableIndirectly = false;
+//}

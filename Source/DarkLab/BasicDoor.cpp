@@ -12,13 +12,13 @@ void ABasicDoor::ActivateObject(AMainCharacter * character)
 	if (DoorDriver->GetPlaybackPosition() == 0.0f
 		|| DoorDriver->IsReversing())
 	{
-		// UE_LOG(LogTemp, Warning, TEXT("Opened door"));
+		// UE_LOG(LogTemp, Warning, TEXT("Opened %s"), *(Name.ToString()));
 		DoorDriver->Play();
 	}
 	else if (DoorDriver->GetPlaybackPosition() == DoorDriver->GetTimelineLength()
 		|| DoorDriver->IsPlaying())
 	{
-		// UE_LOG(LogTemp, Warning, TEXT("Closed door"));
+		// UE_LOG(LogTemp, Warning, TEXT("Closed %s"), *(Name.ToString()));
 		DoorDriver->Reverse();
 	}
 }
