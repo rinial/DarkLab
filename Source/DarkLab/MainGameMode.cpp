@@ -95,21 +95,21 @@ EDirectionEnum AMainGameMode::RandDirection()
 }
 
 // Returns the light level and the location of the brightest light
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool returnFirstPositive, const bool debug)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool returnFirstPositive)
 {
 	if (!actor)
 		return 0.0f;
-	return GetLightingAmount(lightLoc, actor, actor->GetActorLocation(), sixPoints, sixPointsRadius, fourMore, returnFirstPositive, debug);
+	return GetLightingAmount(lightLoc, actor, actor->GetActorLocation(), sixPoints, sixPointsRadius, fourMore, returnFirstPositive);
 }
-float AMainGameMode::GetLightingAmount(FVector & lightLoc, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool returnFirstPositive, const bool debug)
+float AMainGameMode::GetLightingAmount(FVector & lightLoc, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool returnFirstPositive)
 {
-	return GetLightingAmount(lightLoc, nullptr, location, sixPoints, sixPointsRadius, fourMore, returnFirstPositive, debug);
+	return GetLightingAmount(lightLoc, nullptr, location, sixPoints, sixPointsRadius, fourMore, returnFirstPositive);
 }
-float AMainGameMode::GetLightingAmount(FVector & lightLoc, const TArray<FVector> locations, const bool returnFirstPositive, const bool debug)
+float AMainGameMode::GetLightingAmount(FVector & lightLoc, const TArray<FVector> locations, const bool returnFirstPositive)
 {
-	return GetLightingAmount(lightLoc, nullptr, locations, returnFirstPositive, debug);
+	return GetLightingAmount(lightLoc, nullptr, locations, returnFirstPositive);
 }
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool returnFirstPositive, const bool debug)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints, const float sixPointsRadius, const bool fourMore, const bool returnFirstPositive)
 {
 	TArray<FVector> locations;
 	locations.Add(location);
@@ -136,9 +136,9 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 			locations.Add(location - temp * sixPointsRadius);
 		}
 	}
-	return GetLightingAmount(lightLoc, actor, locations, returnFirstPositive, debug);
+	return GetLightingAmount(lightLoc, actor, locations, returnFirstPositive);
 }
-float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations, const bool returnFirstPositive, const bool debug)
+float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations, const bool returnFirstPositive)
 {
 	float result = 0.0f;
 
@@ -161,7 +161,7 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 	// We find local results for all locations
 	for (FVector location : locations)
 	{
-		if (debug || bShowDebug)
+		if (bShowDebug)
 			DrawDebugPoint(gameWorld, location, 5, FColor::Red);
 
 		// This will be used for the spot lights
@@ -185,8 +185,8 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 			// If location could be lit
 			if (CanSee(actor, location, lightLocation))
 			{
-				if (debug || bShowDebug)
-					DrawDebugLine(gameWorld, location, lightLocation, FColor::Cyan);
+				/*if (bShowDebug)
+					DrawDebugLine(gameWorld, location, lightLocation, FColor::Cyan);*/
 
 				// 1 if near the edge of light, 0 if in center
 				float temp = distance / lightRadius;
@@ -219,54 +219,54 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 }
 // Returns true if one actor/location can see other actor/location
 // Its not about visibility to human eye, doesn't take light into account
-bool AMainGameMode::CanSee(const AActor * actor1, const AActor * actor2, const bool debug)
+bool AMainGameMode::CanSee(const AActor * actor1, const AActor * actor2)
 {
 	if (!actor1 || !actor2)
 		return false;
 
-	return CanSee(actor1, actor1->GetActorLocation(), actor2, actor2->GetActorLocation(), debug);
+	return CanSee(actor1, actor1->GetActorLocation(), actor2, actor2->GetActorLocation());
 }
-bool AMainGameMode::CanSee(const FVector location1, const AActor * actor2, const bool debug)
+bool AMainGameMode::CanSee(const FVector location1, const AActor * actor2)
 {
 	if (!actor2)
 		return false;
 
-	return CanSee(nullptr, location1, actor2, actor2->GetActorLocation(), debug);
+	return CanSee(nullptr, location1, actor2, actor2->GetActorLocation());
 }
-bool AMainGameMode::CanSee(const AActor * actor1, const FVector location2, const bool debug)
+bool AMainGameMode::CanSee(const AActor * actor1, const FVector location2)
 {
 	if (!actor1)
 		return false;
 
-	return CanSee(actor1, actor1->GetActorLocation(), nullptr, location2, debug);
+	return CanSee(actor1, actor1->GetActorLocation(), nullptr, location2);
 }
-bool AMainGameMode::CanSee(const FVector location1, const FVector location2, const bool debug)
+bool AMainGameMode::CanSee(const FVector location1, const FVector location2)
 {
-	return CanSee(nullptr, location1, nullptr, location2, debug);
+	return CanSee(nullptr, location1, nullptr, location2);
 }
-bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const AActor * actor2, const bool debug)
+bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const AActor * actor2)
 {
 	if (!actor2)
 		return false;
 
-	return CanSee(actor1, location1, actor2, actor2->GetActorLocation(), debug);
+	return CanSee(actor1, location1, actor2, actor2->GetActorLocation());
 }
-bool AMainGameMode::CanSee(const AActor * actor1, const AActor * actor2, const FVector location2, const bool debug)
+bool AMainGameMode::CanSee(const AActor * actor1, const AActor * actor2, const FVector location2)
 {
 	if (!actor1)
 		return false;
 
-	return CanSee(actor1, actor1->GetActorLocation(), actor2, location2, debug);
+	return CanSee(actor1, actor1->GetActorLocation(), actor2, location2);
 }
-bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const FVector location2, const bool debug)
+bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const FVector location2)
 {
-	return CanSee(actor1, location1, nullptr, location2, debug);
+	return CanSee(actor1, location1, nullptr, location2);
 }
-bool AMainGameMode::CanSee(const FVector location1, const AActor * actor2, const FVector location2, const bool debug)
+bool AMainGameMode::CanSee(const FVector location1, const AActor * actor2, const FVector location2)
 {
-	return CanSee(nullptr, location1, actor2, location2, debug);
+	return CanSee(nullptr, location1, actor2, location2);
 }
-bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const AActor * actor2, const FVector location2, const bool debug)
+bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const AActor * actor2, const FVector location2)
 {
 	UWorld* gameWorld = GetWorld();
 	if (!gameWorld)
@@ -290,7 +290,7 @@ bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const
 			params.AddIgnoredComponent(Cast<UPrimitiveComponent>(component));
 	}
 
-	if (debug || bShowDebug)
+	if (bShowDebug)
 	{
 		DrawDebugPoint(gameWorld, location1, 5, FColor::Red);
 		DrawDebugPoint(gameWorld, location2, 5, FColor::Red);
@@ -302,7 +302,7 @@ bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const
 	if (!bHit)
 		bHit = gameWorld->LineTraceTestByChannel(location2, location1, ECC_Visibility, params);
 
-	if ((debug || bShowDebug) && !bHit)
+	if (bShowDebug && !bHit)
 		DrawDebugLine(gameWorld, location1, location2, FColor::Cyan);
 
 	return !bHit;
@@ -364,7 +364,7 @@ float AMainGameMode::GetPassageLightingAmount(LabPassage * passage, bool oneSide
 			locations.Add(center - localPoint);
 
 	FVector lightLoc;	
-	return GetLightingAmount(lightLoc, locations, returnFirstPositive, bShowDebug);
+	return GetLightingAmount(lightLoc, locations, returnFirstPositive);
 }
 // Returns true if passage is illuminated
 bool AMainGameMode::IsPassageIlluminated(LabPassage * passage, bool oneSide, bool innerSide)
@@ -409,7 +409,7 @@ float AMainGameMode::GetRoomLightingAmount(LabRoom * room, const bool returnFirs
 		}
 	}
 	FVector lightLoc;
-	float temp = GetLightingAmount(lightLoc, locations, returnFirstPositive, bShowDebug);
+	float temp = GetLightingAmount(lightLoc, locations, returnFirstPositive);
 	light = temp > light ? temp : light;
 
 	return light;
@@ -540,10 +540,12 @@ void AMainGameMode::OnEnterRoom() // LabRoom* lastRoom, LabRoom* newRoom)
 
 	// UE_LOG(LogTemp, Warning, TEXT("Entered new room"));
 
+	bool toActivateLamps = false;
 	if (!VisitedRooms.Contains(PlayerRoom))
 	{
-		if(!lastRoom || RandBool(LampsTurnOnOnEnterProbability))
-			ActivateRoomLamps(PlayerRoom);
+		if (!lastRoom || RandBool(LampsTurnOnOnEnterProbability))
+			toActivateLamps = true;
+			// ActivateRoomLamps(PlayerRoom);
 		VisitedRooms.Add(PlayerRoom);
 	}
 
@@ -560,6 +562,9 @@ void AMainGameMode::OnEnterRoom() // LabRoom* lastRoom, LabRoom* newRoom)
 		ReshapeAllDarkness();
 	ExpandInDepth(PlayerRoom, ExpandDepth);
 	SpawnFillInDepth(PlayerRoom, SpawnFillDepth);
+
+	if (toActivateLamps)
+		ActivateRoomLamps(PlayerRoom);
 }
 
 // Called when character is enabled to reset the map
@@ -1870,8 +1875,11 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room, int desiredNumOfPassa
 
 // Fixes room's passages that lead nowhere, creating a room for them or deleting them
 // Also spawns a wall over previous passage if room was spawned
-void AMainGameMode::FixRoom(LabRoom * room)
+void AMainGameMode::FixRoom(LabRoom * room, int depth)
 {
+	if (depth > MaxFixDepth)
+		return;
+
 	if (!room)
 		return;
 
@@ -1902,7 +1910,7 @@ void AMainGameMode::FixRoom(LabRoom * room)
 
 		// UE_LOG(LogTemp, Warning, TEXT("Trying to fix passage: x: %d, y: %d"), passage->BotLeftX, passage->BotLeftY);
 
-		bool absolutelyUndeleteable = (room == PlayerRoom || room == ActualPlayerRoom) && room->Passages.Num() <= 1;
+		bool absolutelyUndeleteable = (room == PlayerRoom || room == ActualPlayerRoom);// && room->Passages.Num() <= 1;
 		bool canNotDelete = absolutelyUndeleteable || IsPassageIlluminated(passage);
 		if (canNotDelete || !RandBool(DeletePassageToFixProbability))
 		{
@@ -1940,10 +1948,10 @@ void AMainGameMode::FixRoom(LabRoom * room)
 						// At this point other room should be considered good
 						intersected->AddPassage(passage);
 						continue;
-					}
+					}					
 					else if (canNotDelete)
 					{
-						// UE_LOG(LogTemp, Warning, TEXT("> Can not delete"));
+						UE_LOG(LogTemp, Warning, TEXT("> Can not delete"));
 
 						// TODO
 						// if (TryEnlargeRoomToIncludeSpace(intersected, minRoomSpace)
@@ -1954,25 +1962,25 @@ void AMainGameMode::FixRoom(LabRoom * room)
 						// else
 						// {
 
-						// If intersected can't be deleted
-						if (!((intersected == PlayerRoom || intersected == ActualPlayerRoom) && intersected->Passages.Num() <= 1))
+						// If intersected can be deleted
+						if (!((intersected == PlayerRoom || intersected == ActualPlayerRoom))) // && intersected->Passages.Num() <= 1))
 						{
 							bool noImportantPassages = true;
-							for (LabPassage* interPassage : intersected->Passages)
+							if (!absolutelyUndeleteable)
 							{
-								if (IsPassageIlluminated(interPassage))
+								for (LabPassage* interPassage : intersected->Passages)
 								{
-									noImportantPassages = false;
-									break;
+									if (IsPassageIlluminated(interPassage))
+									{
+										noImportantPassages = false;
+										break;
+									}
 								}
 							}
 
 							if (noImportantPassages || absolutelyUndeleteable)
 							{
-								if (absolutelyUndeleteable && !noImportantPassages)
-								{
-									UE_LOG(LogTemp, Warning, TEXT("> Forced refix"));
-								}
+								UE_LOG(LogTemp, Warning, TEXT("> Forced refix"));
 
 								TArray<LabRoom*> toFix;
 								for (LabPassage* interPassage : intersected->Passages)
@@ -1986,14 +1994,12 @@ void AMainGameMode::FixRoom(LabRoom * room)
 
 								// We create new room from min space
 								LabRoom* newRoom = CreateRandomRoom(minRoomSpace, true, !passage->To ? passage->GridDirection : GetReverseDirection(passage->GridDirection));
-								for (LabRoom* roomToFix : toFix)
-									FixRoom(roomToFix);
 								if (newRoom)
-								{
-									// We add passage to the room
 									newRoom->AddPassage(passage);
+								for (LabRoom* roomToFix : toFix)
+									FixRoom(roomToFix, depth + 1);
+								if (newRoom)
 									continue;
-								}
 								// else delete
 							}
 						}
@@ -2256,12 +2262,17 @@ void AMainGameMode::ExpandInDepth(LabRoom* start, int depth, LabPassage* fromPas
 }
 void AMainGameMode::ExpandInDepth(LabRoom * start, int depth)
 {
+	// UE_LOG(LogTemp, Warning, TEXT("Expanding:"));
+	// UE_LOG(LogTemp, Warning, TEXT("> Try 1"));
+
 	ExpandInDepth(start, depth, nullptr);
-	int expandTries = 1;
+	int expandTries = 2;
 	while (!CanReachUnexpanded(start))
 	{
 		if (expandTries <= MaxExpandTriesOverall)
 		{
+			// UE_LOG(LogTemp, Warning, TEXT("> Try %d"), expandTries);
+
 			if (expandTries >= MinExpandTriesBeforeReshaping)
 				ReshapeAllDarkness(); // We do his to prevend being stuck
 			// ExpandInDepth(start, depth + expandTries / 2, nullptr, true);
@@ -2271,14 +2282,14 @@ void AMainGameMode::ExpandInDepth(LabRoom * start, int depth)
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("!!! Failed to get a pass to unexpanded"));
+			UE_LOG(LogTemp, Warning, TEXT("> !!! Failed to get a pass to unexpanded"));
 			break;
 		}
 	}
 }
 // Spawns and fills room if it's not spawned yet
 // Repeats with all adjasent rooms recursively
-void AMainGameMode::SpawnFillInDepth(LabRoom * start, int depth, LabPassage* fromPassage)
+void AMainGameMode::SpawnFillInDepth(LabRoom * start, int depth, LabPassage* fromPassage, FVector initialPasLoc)
 {
 	if (!start)
 		return;
@@ -2292,19 +2303,57 @@ void AMainGameMode::SpawnFillInDepth(LabRoom * start, int depth, LabPassage* fro
 
 	if (depth <= 1)
 		return;
-	else
+	
+	for (LabPassage* passage : start->Passages)
 	{
-		// We need a copy to avoid errors during expansion
-		TArray<LabPassage*> passagesCopy = start->Passages;
-		for (LabPassage* passage : passagesCopy)
+		if (passage == fromPassage)
+			continue;
+
+		// location of the floor
+		FVector pasLoc = Cast<AActor>(SpawnedPassageObjects[passage][0]->_getUObject())->GetActorLocation() + FVector(0, 0, 30);
+
+		if (CanSee(initialPasLoc, pasLoc))
 		{
-			if (passage == fromPassage)
-				continue;
 			if (passage->From != start)
-				SpawnFillInDepth(passage->From, depth - 1, passage);
+				SpawnFillInDepth(passage->From, depth - 1, passage, initialPasLoc);
 			if (passage->To != start)
-				SpawnFillInDepth(passage->To, depth - 1, passage);
+				SpawnFillInDepth(passage->To, depth - 1, passage, initialPasLoc);
 		}
+	}
+}
+void AMainGameMode::SpawnFillInDepth(LabRoom* start, int depth)
+{
+	if (!start)
+		return;
+
+	// If not spawned
+	if (!SpawnedRoomObjects.Contains(start))
+	{
+		SpawnRoom(start);
+		FillRoom(start);
+	}
+
+	if (depth <= 1)
+		return;
+
+	for (LabPassage* passage : start->Passages)
+	{
+		// floor or door
+		AActor* initialPasActor = Cast<AActor>(SpawnedPassageObjects[passage][!passage->bIsDoor ? 0 : 1]->_getUObject());
+		FVector initialPasLoc = initialPasActor->GetActorLocation() + FVector(0, 0, 30);
+		if ((passage->From == start && passage->GridDirection == EDirectionEnum::VE_Right) || (passage->To == start && passage->GridDirection == EDirectionEnum::VE_Left))
+			initialPasLoc += FVector(0, 25, 0);
+		else if ((passage->From == start && passage->GridDirection == EDirectionEnum::VE_Left) || (passage->To == start && passage->GridDirection == EDirectionEnum::VE_Right))
+			initialPasLoc += FVector(0, -25, 0);
+		else if ((passage->From == start && passage->GridDirection == EDirectionEnum::VE_Up) || (passage->To == start && passage->GridDirection == EDirectionEnum::VE_Down))
+			initialPasLoc += FVector(25, 0, 0);
+		else if ((passage->From == start && passage->GridDirection == EDirectionEnum::VE_Down) || (passage->To == start && passage->GridDirection == EDirectionEnum::VE_Up))
+			initialPasLoc += FVector(-25, 0, 0);
+		
+		if (passage->From != start)
+			SpawnFillInDepth(passage->From, depth - 1, passage, initialPasLoc);
+		if (passage->To != start)
+			SpawnFillInDepth(passage->To, depth - 1, passage, initialPasLoc);
 	}
 }
 

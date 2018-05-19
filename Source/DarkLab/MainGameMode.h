@@ -34,22 +34,22 @@ public:
 	EDirectionEnum RandDirection();
 
 	// Returns the light level and the location of the brightest light
-	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool returnFirstPositive = false, const bool debug = false);
-	float GetLightingAmount(FVector& lightLoc, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool returnFirstPositive = false, const bool debug = false);
-	float GetLightingAmount(FVector& lightLoc, const TArray<FVector> locations, const bool returnFirstPositive = false, const bool debug = false);
-	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool returnFirstPositive = false, const bool debug = false);
-	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations, const bool returnFirstPositive = false, const bool debug = false);
+	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool returnFirstPositive = false);
+	float GetLightingAmount(FVector& lightLoc, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool returnFirstPositive = false);
+	float GetLightingAmount(FVector& lightLoc, const TArray<FVector> locations, const bool returnFirstPositive = false);
+	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const FVector location, const bool sixPoints = false, const float sixPointsRadius = 30.0f, const bool fourMore = false, const bool returnFirstPositive = false);
+	float GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations, const bool returnFirstPositive = false);
 	// Returns true if one actor/location can see other actor/location
 	// Its not about visibility to human eye, doesn't take light into account
-	bool CanSee(const AActor* actor1, const AActor* actor2, const bool debug = false);
-	bool CanSee(const FVector location, const AActor* actor, const bool debug = false);
-	bool CanSee(const AActor* actor, const FVector location, const bool debug = false);
-	bool CanSee(const FVector location1, const FVector location2, const bool debug = false);
-	bool CanSee(const AActor* actor1, const FVector location1, const AActor* actor2, const bool debug = false);
-	bool CanSee(const AActor* actor1, const AActor* actor2, const FVector location2, const bool debug = false);
-	bool CanSee(const AActor* actor1, const FVector location1, const FVector location2, const bool debug = false);
-	bool CanSee(const FVector location1, const AActor* actor2, const FVector location2, const bool debug = false);
-	bool CanSee(const AActor* actor1, const FVector location1, const AActor* actor2, const FVector location2, const bool debug = false);
+	bool CanSee(const AActor* actor1, const AActor* actor2);
+	bool CanSee(const FVector location, const AActor* actor);
+	bool CanSee(const AActor* actor, const FVector location);
+	bool CanSee(const FVector location1, const FVector location2);
+	bool CanSee(const AActor* actor1, const FVector location1, const AActor* actor2);
+	bool CanSee(const AActor* actor1, const AActor* actor2, const FVector location2);
+	bool CanSee(const AActor* actor1, const FVector location1, const FVector location2);
+	bool CanSee(const FVector location1, const AActor* actor2, const FVector location2);
+	bool CanSee(const AActor* actor1, const FVector location1, const AActor* actor2, const FVector location2);
 
 protected:
 	// Returns the light level for a passage
@@ -230,7 +230,7 @@ protected:
 
 	// Fixes room's passages that lead nowhere, creating a room for them or deleting them
 	// Also spawns a wall over previous passage if room was spawned
-	void FixRoom(LabRoom* room);
+	void FixRoom(LabRoom* room, int depth = 1);
 
 	// Creates random space in the room with specified size for a future object in the room (not world location but offset)
 	// Returns false if couldn't create
@@ -255,7 +255,8 @@ protected:
 	void ExpandInDepth(LabRoom* start, int depth);
 	// Spawns and fills room if it's not spawned yet
 	// Repeats with all adjasent rooms recursively
-	void SpawnFillInDepth(LabRoom* start, int depth, LabPassage* fromPassage = nullptr);
+	void SpawnFillInDepth(LabRoom* start, int depth, LabPassage* fromPassage, FVector initialPasLoc);
+	void SpawnFillInDepth(LabRoom* start, int depth);
 
 public:
 	// Generates map
@@ -314,12 +315,13 @@ protected:
 	static const int ExpandDepth = 5;
 	static const int SpawnFillDepth = 4;
 	static const int ReshapeDarknessDepth = 3;
+	static const int MaxFixDepth = 4;
 	static const int MinRoomSize = 5;
 	static const int MaxRoomSize = 35;
 	static const int MinRoomArea = 25;
 	static const int MaxRoomArea = 250;
 	static const int MinRoomNumOfPassages = 1; // Can't be lower than 1
-	static const int MaxRoomNumOfPassages = 10;
+	static const int MaxRoomNumOfPassages = 8;
 	static const int MaxRoomPassageCreationTriesPerDesired = 2; 
 	static const int MinPassageWidth = 3; // Can't be lower than 2
 	static const int MaxPassageWidth = 10; 
