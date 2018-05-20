@@ -91,7 +91,7 @@ void AMainPlayerController::ShowHideMenu()
 // Resets map, only used for debug
 void AMainPlayerController::ResetMap()
 {
-	UE_LOG(LogTemp, Warning, TEXT("ResetMap called"));
+	// UE_LOG(LogTemp, Warning, TEXT("ResetMap called"));
 
 	Cast<AMainGameMode>(GetWorld()->GetAuthGameMode())->ResetMap();
 }
@@ -123,7 +123,7 @@ void AMainPlayerController::CalculateLoss()
 // Called on loss
 void AMainPlayerController::OnLoss()
 {
-	UE_LOG(LogTemp, Warning, TEXT("You actually lost!"));
+	Cast<AMainGameMode>(GetWorld()->GetAuthGameMode())->OnLoss();
 
 	// TODO
 }

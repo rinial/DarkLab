@@ -35,6 +35,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door: Components")
 	class UTimelineComponent* DoorDriver;
 
+	// If true, this is an exit door
+	bool bIsExit = false;
+
 public:
 	// The color of panels on the door
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")

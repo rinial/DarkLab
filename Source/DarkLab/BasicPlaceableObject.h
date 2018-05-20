@@ -38,6 +38,7 @@ protected:
 	UPROPERTY()
 	FIntVector BaseSize = FIntVector(1, 1, 1);
 
+public:
 	UPROPERTY()
 	EDirectionEnum GridDirection = EDirectionEnum::VE_Up;
 

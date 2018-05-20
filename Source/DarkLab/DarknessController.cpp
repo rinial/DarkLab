@@ -2,6 +2,7 @@
 
 #include "DarknessController.h"
 #include "Darkness.h"
+#include "MainPlayerController.h"
 #include "GameFramework/PawnMovementComponent.h"
 
 // Called on disabling a character
@@ -9,6 +10,17 @@ void ADarknessController::OnDisabling()
 {
 	State = EDarkStateEnum::VE_Retreating;
 	Darkness->Stop();
+
+	APlayerController* controller = GetWorld()->GetFirstPlayerController();
+	if (!controller)
+		return;
+	AMainPlayerController* mainController = Cast<AMainPlayerController>(controller);
+	if (!mainController)
+		return;
+
+	// Don't hunt anymore
+	if (mainController->Lives <= 0)
+		return;
 
 	// Start tracking a new one after a delay
 	FTimerHandle handler;
@@ -40,7 +52,7 @@ void ADarknessController::BeginPlay()
 	// We first find the darkness
 	Darkness = Cast<ADarkness>(GetPawn());	
 	if (!Darkness)
-		UE_LOG(LogTemp, Warning, TEXT("NoDarkness"));
+		UE_LOG(LogTemp, Warning, TEXT("No Darkness"));
 
 	// Then we initiate the tracking
 	TrackPlayer();

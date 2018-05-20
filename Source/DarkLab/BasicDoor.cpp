@@ -5,6 +5,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/TimelineComponent.h"
 #include "MainCharacter.h"
+#include "MainGameMode.h"
 
 // Called when the object is activated
 void ABasicDoor::ActivateObject(AMainCharacter * character)
@@ -18,11 +19,13 @@ void ABasicDoor::ActivateObject(AMainCharacter * character)
 	if (DoorDriver->GetPlaybackPosition() == 0.0f
 		|| DoorDriver->IsReversing())
 	{
+		if (bIsExit)
+			Cast<AMainGameMode>(GetWorld()->GetAuthGameMode())->OnExitOpened(this);
+
 		// UE_LOG(LogTemp, Warning, TEXT("Opened %s"), *(Name.ToString()));
 		DoorDriver->Play();
 	}
-	else if (DoorDriver->GetPlaybackPosition() == DoorDriver->GetTimelineLength()
-		|| DoorDriver->IsPlaying())
+	else if (!bIsExit && (DoorDriver->GetPlaybackPosition() == DoorDriver->GetTimelineLength() || DoorDriver->IsPlaying())) // We can't close exit door
 	{
 		// UE_LOG(LogTemp, Warning, TEXT("Closed %s"), *(Name.ToString()));
 		DoorDriver->Reverse();
@@ -36,6 +39,7 @@ void ABasicDoor::ResetDoor(bool isExit)
 	DoorDriver->Stop();
 	DoorDriver->SetPlaybackPosition(0.0f, true);
 	DoorDriver->SetPlayRate(!isExit ? 1.f : 0.3f);
+	bIsExit = isExit;
 }
 
 // Sets default values

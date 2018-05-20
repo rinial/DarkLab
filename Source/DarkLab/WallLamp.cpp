@@ -60,7 +60,7 @@ AWallLamp::AWallLamp()
 	Lamp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Lamp"));
 	Lamp->SetupAttachment(RootComponent);
 
-	// Create the extra light
+	// Create the light
 	Light = CreateDefaultSubobject<UPointLightComponent>(TEXT("Light"));
 	Light->SetupAttachment(RootComponent);
 
@@ -78,6 +78,6 @@ void AWallLamp::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Set mesh color
-	UpdateMeshColor(FLinearColor::Black); // Lamp is disabled
+	// Lamp is disabled
+	Reset();
 }

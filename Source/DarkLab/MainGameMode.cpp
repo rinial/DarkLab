@@ -13,6 +13,7 @@
 #include "WallLamp.h"
 #include "Flashlight.h"
 #include "Doorcard.h"
+#include "ExitVolume.h"
 #include "LabPassage.h"
 #include "LabRoom.h"
 #include "LabHallway.h"
@@ -33,7 +34,7 @@ const float AMainGameMode::AllLampsInRoomTurnOffProbability = 0.15f;
 const float AMainGameMode::ConnectToOtherRoomProbability = 0.8f;
 const float AMainGameMode::DeletePassageToFixProbability = 0.0f; // TODO increase or delete?
 const float AMainGameMode::PassageIsDoorProbability = 0.45f;
-const float AMainGameMode::DoorIsNormalProbability = 0.90f;
+const float AMainGameMode::DoorIsNormalProbability = 1.f; // 0.90f; TODO decrease if we need some big doors
 const float AMainGameMode::DoorIsExitProbability = 0.3f; // 0.05f;
 const float AMainGameMode::SpawnFlashlightProbability = 0.4f; // TODO decrease
 const float AMainGameMode::SpawnDoorcardProbability = 0.3f;
@@ -575,11 +576,26 @@ void AMainGameMode::OnEnterRoom() // LabRoom* lastRoom, LabRoom* newRoom)
 	SpawnFillInDepth(PlayerRoom, SpawnFillDepth);
 }
 
+// Called when character loses all of his lives
+void AMainGameMode::OnLoss()
+{
+	UE_LOG(LogTemp, Warning, TEXT("You actually lost!"));
+
+	// TODO
+}
 // Called when character is enabled to reset the map
 void AMainGameMode::OnCharacterEnabled()
 {
 	ResetMap();
 }
+// Called when character reached the exit
+void AMainGameMode::OnExitReached()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Reached the exit!"));
+
+	// TODO
+}
+
 // Called when character picks up an object to delete it from arrays without pooling
 void AMainGameMode::OnPickUp(TScriptInterface<class IPickupable> object)
 {
@@ -597,6 +613,37 @@ void AMainGameMode::OnPickUp(TScriptInterface<class IPickupable> object)
 			SpawnedRoomObjects[room].Remove(object->_getUObject());
 
 		// TODO also deallocate room space
+	}
+}
+// Called when exit door is opened to
+void AMainGameMode::OnExitOpened(ABasicDoor* door)
+{
+	int x, y;
+	FVector doorLoc = door->GetActorLocation();
+	WorldToGrid(doorLoc.X, doorLoc.Y, x, y);
+
+	if (door->GridDirection == EDirectionEnum::VE_Right)
+		x++;
+	else if (door->GridDirection == EDirectionEnum::VE_Left)
+		x--;
+	else if (door->GridDirection == EDirectionEnum::VE_Up)
+		y++;
+	else if (door->GridDirection == EDirectionEnum::VE_Down)
+		y--;
+
+	LabRoom* intersected;
+	if (MapSpaceIsFree(false, true, x, y, 1, 1, intersected))
+		return;
+
+	// Trying to find exit volume
+	for (TScriptInterface<IDeactivatable> object : SpawnedRoomObjects[intersected])
+	{
+		AExitVolume* exitVolume = Cast<AExitVolume>(object->_getUObject());
+		if (!exitVolume)
+			continue;
+
+		exitVolume->ActivateLight();
+		break;
 	}
 }
 
@@ -621,6 +668,8 @@ TArray<TScriptInterface<IDeactivatable>>& AMainGameMode::GetCorrectPool(UClass *
 		return FlashlightPool;
 	if (cl == DoorcardBP)
 		return DoorcardPool;
+	if (cl == ExitVolumeBP)
+		return ExitVolumePool;
 	return DefaultPool;
 }
 
@@ -901,11 +950,11 @@ ABasicWall* AMainGameMode::SpawnBasicWall(const int botLeftX, const int botLeftY
 	if (!wall)
 	{
 		wall = GetWorld()->SpawnActor<ABasicWall>(BasicWallBP);
-		wall->Execute_SetActive(wall, false);
+		// wall->Execute_SetActive(wall, false);
 	}
 
 	PlaceObject(wall, botLeftX, botLeftY, sizeX, sizeY);
-	wall->Execute_SetActive(wall, true);
+	// wall->Execute_SetActive(wall, true);
 
 	if (room && SpawnedRoomObjects.Contains(room))
 		SpawnedRoomObjects[room].Add(wall);
@@ -920,13 +969,13 @@ ABasicDoor * AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeft
 	if (!door)
 	{
 		door = GetWorld()->SpawnActor<ABasicDoor>(BasicDoorBP);
-		door->Execute_SetActive(door, false);
+		// door->Execute_SetActive(door, false);
 	}
 
 	door->ResetDoor(width == ExitDoorWidth); // Clothes the door if it was open
 	door->DoorColor = color; // Sets door's color
 	PlaceObject(door, botLeftX, botLeftY, direction, width);
-	door->Execute_SetActive(door, true);
+	// door->Execute_SetActive(door, true);
 
 	if (passage && SpawnedPassageObjects.Contains(passage))
 		SpawnedPassageObjects[passage].Add(door);
@@ -941,13 +990,13 @@ AWallLamp * AMainGameMode::SpawnWallLamp(const int botLeftX, const int botLeftY,
 	if (!lamp)
 	{
 		lamp = GetWorld()->SpawnActor<AWallLamp>(WallLampBP);
-		lamp->Execute_SetActive(lamp, false);
+		// lamp->Execute_SetActive(lamp, false);
 	}
 
 	lamp->Reset(); // Disables light if it was on
 	lamp->SetColor(color); // Sets correct color
 	PlaceObject(lamp, botLeftX, botLeftY, direction, width);
-	lamp->Execute_SetActive(lamp, true);
+	// lamp->Execute_SetActive(lamp, true);
 
 	if (room)
 	{
@@ -967,12 +1016,12 @@ AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLef
 	if (!flashlight)
 	{
 		flashlight = GetWorld()->SpawnActor<AFlashlight>(FlashlightBP);
-		flashlight->Execute_SetActive(flashlight, false);
+		// flashlight->Execute_SetActive(flashlight, false);
 	}
 
 	flashlight->Reset(); // Disables light if it was on
 	PlaceObject(flashlight, botLeftX, botLeftY, direction);
-	flashlight->Execute_SetActive(flashlight, true);
+	// flashlight->Execute_SetActive(flashlight, true);
 
 	if (room)
 	{
@@ -992,12 +1041,12 @@ ADoorcard* AMainGameMode::SpawnDoorcard(const int botLeftX, const int botLeftY, 
 	if (!doorcard)
 	{
 		doorcard = GetWorld()->SpawnActor<ADoorcard>(DoorcardBP);
-		doorcard->Execute_SetActive(doorcard, false);
+		// doorcard->Execute_SetActive(doorcard, false);
 	}
 
 	doorcard->SetColor(color); // Sets correct color
 	PlaceObject(doorcard, botLeftX, botLeftY, direction);
-	doorcard->Execute_SetActive(doorcard, true);
+	// doorcard->Execute_SetActive(doorcard, true);
 
 	if (room)
 	{
@@ -1010,6 +1059,26 @@ ADoorcard* AMainGameMode::SpawnDoorcard(const int botLeftX, const int botLeftY, 
 	// UE_LOG(LogTemp, Warning, TEXT("Spawned a flashlight"));
 
 	return doorcard;
+}
+AExitVolume * AMainGameMode::SpawnExitVolume(const int botLeftX, const int botLeftY, const EDirectionEnum direction, LabRoom * room)
+{
+	AExitVolume* exit = Cast<AExitVolume>(TryGetPoolable(ExitVolumeBP));
+	if (!exit)
+	{
+		exit = GetWorld()->SpawnActor<AExitVolume>(ExitVolumeBP);
+		// exit->Execute_SetActive(exit, false);
+	}
+
+	exit->Reset(); // Disables light if it was on
+	PlaceObject(exit, botLeftX, botLeftY, direction, ExitDoorWidth);
+	// exit->Execute_SetActive(exit, true);
+
+	if (room && SpawnedRoomObjects.Contains(room))
+		SpawnedRoomObjects[room].Add(exit);
+
+	UE_LOG(LogTemp, Warning, TEXT("Spawned an exit volume"));
+
+	return nullptr;
 }
 
 // Spawn full parts of the lab
@@ -2273,90 +2342,110 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 {
 	TArray<AActor*> spawnedActors;
 
-	// Used for lamps and for doorcards
-	FLinearColor color;
-	bool colorIsDetermined = false;
-	// In rooms with only one door that also isn't white card is almost always given and it has next level, also lamp is almost always spawned
-	if (room->Passages.Num() == 1 && room->Passages[0]->bIsDoor && room->Passages[0]->Color != FLinearColor::White)
+	bool isExitRoom = room && room->Passages.Num() == 1 && room->Passages[0]->bIsDoor && room->Passages[0]->Width == ExitDoorWidth;
+
+	if (!isExitRoom)
 	{
-		colorIsDetermined = true;
-
-		FLinearColor roomColor = room->Passages[0]->Color;
-		if (roomColor == FLinearColor::FromSRGBColor(FColor(30, 144, 239)))
-			color = FLinearColor::Green;
-		else if (roomColor == FLinearColor::Green)
-			color = FLinearColor::Yellow;
-		else if (roomColor == FLinearColor::Yellow)
-			color = FLinearColor::Red;
-		else if (roomColor == FLinearColor::Red)
-			color = FLinearColor::Black;
-		else
-			colorIsDetermined = false;
-	}
-
-	// The number of lamps we want to have in the room
-	int desiredNumOfLamps = FMath::RandRange(MinRoomNumOfLamps, 1 + MaxRoomNumOfLampsPerHundredArea * room->SizeX * room->SizeY / 100);
-
-	// Maximum number of tries
-	int maxTries = MaxRoomLampCreationTriesPerDesired * desiredNumOfLamps;
-
-	// Creates new lamps in the room
-	for (int i = 0; spawnedActors.Num() < MinRoomNumOfLamps || (i < maxTries && spawnedActors.Num() < desiredNumOfLamps) || spawnedActors.Num() < minNumOfLampsOverride; ++i)
-	{
-		int xOff;
-		int yOff;
-		int width = FMath::RandRange(MinLampWidth, MaxLampWidth);
-		EDirectionEnum direction;
-		if (CreateRandomInsideSpaceOfWidthNearWall(room, xOff, yOff, width, direction))
+		// Used for lamps and for doorcards
+		FLinearColor color;
+		bool colorIsDetermined = false;
+		// In rooms with only one door that also isn't white card is almost always given and it has next level, also lamp is almost always spawned
+		if (room->Passages.Num() == 1 && room->Passages[0]->bIsDoor && room->Passages[0]->Color != FLinearColor::White)
 		{
-			if (!colorIsDetermined)
+			colorIsDetermined = true;
+
+			FLinearColor roomColor = room->Passages[0]->Color;
+			if (roomColor == FLinearColor::FromSRGBColor(FColor(30, 144, 239)))
+				color = FLinearColor::Green;
+			else if (roomColor == FLinearColor::Green)
+				color = FLinearColor::Yellow;
+			else if (roomColor == FLinearColor::Yellow)
+				color = FLinearColor::Red;
+			else if (roomColor == FLinearColor::Red)
+				color = FLinearColor::Black;
+			else
+				colorIsDetermined = false;
+		}
+
+		// The number of lamps we want to have in the room
+		int desiredNumOfLamps = FMath::RandRange(MinRoomNumOfLamps, 1 + MaxRoomNumOfLampsPerHundredArea * room->SizeX * room->SizeY / 100);
+
+		// Maximum number of tries
+		int maxTries = MaxRoomLampCreationTriesPerDesired * desiredNumOfLamps;
+
+		// Creates new lamps in the room
+		for (int i = 0; spawnedActors.Num() < MinRoomNumOfLamps || (i < maxTries && spawnedActors.Num() < desiredNumOfLamps) || spawnedActors.Num() < minNumOfLampsOverride; ++i)
+		{
+			int xOff;
+			int yOff;
+			int width = FMath::RandRange(MinLampWidth, MaxLampWidth);
+			EDirectionEnum direction;
+			if (CreateRandomInsideSpaceOfWidthNearWall(room, xOff, yOff, width, direction))
 			{
-				color = RandColor();
-				while (color == FLinearColor::Black && spawnedActors.Num() < minNumOfLampsOverride)
+				if (!colorIsDetermined)
+				{
 					color = RandColor();
+					while (color == FLinearColor::Black && spawnedActors.Num() < minNumOfLampsOverride)
+						color = RandColor();
+				}
+				AWallLamp* lamp = SpawnWallLamp(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, color, width, room);
+				spawnedActors.Add(lamp);
 			}
-			AWallLamp* lamp = SpawnWallLamp(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, color, width, room);
-			spawnedActors.Add(lamp);
 		}
-	}
 
-	// Creates a doorcard
-	bool shouldSpawnDoorcard = colorIsDetermined || RandBool(SpawnDoorcardProbability);
-	for (int i = 0; shouldSpawnDoorcard && i < MaxGenericSpawnTries; ++i)
-	{
-		int xOff;
-		int yOff;
-		if (CreateRandomInsideSpaceOfSize(room, xOff, yOff, 1, 1, true))
+		// Creates a doorcard
+		bool shouldSpawnDoorcard = colorIsDetermined || RandBool(SpawnDoorcardProbability);
+		for (int i = 0; shouldSpawnDoorcard && i < MaxGenericSpawnTries; ++i)
 		{
-			// In random rooms cards are almost always blue
-			if (!colorIsDetermined)
+			int xOff;
+			int yOff;
+			if (CreateRandomInsideSpaceOfSize(room, xOff, yOff, 1, 1, true))
 			{
-				// color = FLinearColor::FromSRGBColor(FColor(30, 144, 239));
-			
-				color = RandColor();
-				while (color == FLinearColor::White)
+				// In random rooms cards are almost always blue
+				if (!colorIsDetermined)
+				{
+					// color = FLinearColor::FromSRGBColor(FColor(30, 144, 239));
+
 					color = RandColor();
+					while (color == FLinearColor::White)
+						color = RandColor();
+				}
+				EDirectionEnum direction = RandDirection();
+				ADoorcard* doorcard = SpawnDoorcard(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, color, room);
+				spawnedActors.Add(doorcard);
+				break; // We only spawn once
 			}
-			EDirectionEnum direction = RandDirection();
-			ADoorcard* doorcard = SpawnDoorcard(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, color, room);
-			spawnedActors.Add(doorcard);
-			break; // We only spawn once
+		}
+
+		// Creates a flashlight
+		bool shouldSpawnFlashlight = RandBool(SpawnFlashlightProbability);
+		for (int i = 0; shouldSpawnFlashlight && i < MaxGenericSpawnTries; ++i)
+		{
+			int xOff;
+			int yOff;
+			if (CreateRandomInsideSpaceOfSize(room, xOff, yOff, 1, 1, false))
+			{
+				EDirectionEnum direction = RandDirection();
+				AFlashlight* flashlight = SpawnFlashlight(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, room);
+				spawnedActors.Add(flashlight);
+				break; // We only spawn once
+			}
 		}
 	}
-
-	// Creates a flashlight
-	bool shouldSpawnFlashlight = RandBool(SpawnFlashlightProbability);
-	for (int i = 0; shouldSpawnFlashlight && i < MaxGenericSpawnTries; ++i)
+	else
 	{
-		int xOff;
-		int yOff;
-		if (CreateRandomInsideSpaceOfSize(room, xOff, yOff, 1, 1, false))
-		{
-			EDirectionEnum direction = RandDirection();
-			AFlashlight* flashlight = SpawnFlashlight(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, room);
-			spawnedActors.Add(flashlight);
-			break; // We only spawn once
-		}
+		LabPassage* passage = room->Passages[0];
+		int x = passage->BotLeftX;
+		int y = passage->BotLeftY;
+		if (passage->GridDirection == EDirectionEnum::VE_Right)
+			x++;
+		else if (passage->GridDirection == EDirectionEnum::VE_Left)
+			x--;
+		else if (passage->GridDirection == EDirectionEnum::VE_Up)
+			y++;
+		else if (passage->GridDirection == EDirectionEnum::VE_Down)
+			y--;
+		AExitVolume* exitVolume = SpawnExitVolume(x, y, GetReverseDirection(passage->GridDirection), room);
 	}
 
 	return spawnedActors;
@@ -2646,6 +2735,9 @@ AMainGameMode::AMainGameMode()
 	static ConstructorHelpers::FObjectFinder<UClass> doorcardBP(TEXT("Class'/Game/Blueprints/DoorcardBP.DoorcardBP_C'"));
 	if (doorcardBP.Succeeded())
 		DoorcardBP = doorcardBP.Object;
+	static ConstructorHelpers::FObjectFinder<UClass> exitVolumeBP(TEXT("Class'/Game/Blueprints/ExitVolumeBP.ExitVolumeBP_C'"));
+	if (exitVolumeBP.Succeeded())
+		ExitVolumeBP = exitVolumeBP.Object;
 
 	// Set to call Tick() every frame
 	PrimaryActorTick.bCanEverTick = true;

@@ -14,6 +14,7 @@ class ABasicDoor;
 class AWallLamp;
 class AFlashlight;
 class ADoorcard;
+class AExitVolume;
 class LabRoom;
 class LabPassage;
 
@@ -92,10 +93,17 @@ protected:
 	void OnEnterRoom(); // LabRoom* lastRoom, LabRoom* newRoom);
 
 public:
+	// Called when character loses all of his lives
+	void OnLoss();
 	// Called when character is enabled to reset the map
 	void OnCharacterEnabled();
+	// Called when character reached the exit
+	void OnExitReached();
+
 	// Called when character picks up an object to delete it from arrays without pooling
 	void OnPickUp(TScriptInterface<class IPickupable> object);
+	// Called when exit door is opened to
+	void OnExitOpened(class ABasicDoor* door);
 
 protected:
 	// Gets the pool for the object/class
@@ -147,6 +155,7 @@ protected:
 	AWallLamp* SpawnWallLamp(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White, const int width = 1, LabRoom* room = nullptr);
 	AFlashlight* SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction, LabRoom* room = nullptr);
 	ADoorcard* SpawnDoorcard(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color, LabRoom* room = nullptr);
+	AExitVolume* SpawnExitVolume(const int botLeftX, const int botLeftY, const EDirectionEnum direction, LabRoom* room = nullptr);
 
 	// Spawn full parts of the lab
 	void SpawnRoom(LabRoom* room);
@@ -317,6 +326,8 @@ protected:
 	TArray<TScriptInterface<IDeactivatable>> FlashlightPool;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
 	TArray<TScriptInterface<IDeactivatable>> DoorcardPool;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pools")
+	TArray<TScriptInterface<IDeactivatable>> ExitVolumePool;
 
 	// Constants used for generation
 	static const int ExpandDepth = 5;
@@ -382,6 +393,7 @@ private:
 	TSubclassOf<AWallLamp> WallLampBP;
 	TSubclassOf<AFlashlight> FlashlightBP;
 	TSubclassOf<ADoorcard> DoorcardBP;
+	TSubclassOf<AExitVolume> ExitVolumeBP;
 
 public:
 	// Sets default values
