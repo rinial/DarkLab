@@ -222,7 +222,7 @@ protected:
 	bool TryShrinkY(FRectSpaceStruct& currentSpace, FRectSpaceStruct minSpace, LabRoom* toAvoid);
 
 	// Creates a random room based on minimum room space
-	LabRoom* CreateRandomRoom(FRectSpaceStruct minSpace, bool fromPassage = false, EDirectionEnum direction = EDirectionEnum::VE_Up);
+	LabRoom* CreateRandomRoom(FRectSpaceStruct minSpace, bool fromPassage = false, EDirectionEnum direction = EDirectionEnum::VE_Up, bool keepMinimum = false);
 
 	// Creates and adds a random passage to the room, returns passage or nullptr and returns allocated room space by reference or another room that is now connected
 	LabPassage* CreateAndAddRandomPassage(LabRoom* room, FRectSpaceStruct& roomSpace, LabRoom*& possibleRoomConnection);
@@ -288,6 +288,8 @@ protected:
 
 	// Rooms that were visited by player
 	TArray<LabRoom*> VisitedRooms;
+	// Number of visited overall (not same as VisitedRooms.Num() since rooms are removed from the array from time to time)
+	int VisitedOverall;
 
 	// Rooms that have their lamps turned on
 	TArray<LabRoom*> RoomsWithLampsOn;
@@ -332,6 +334,8 @@ protected:
 	static const int MaxPassageWidth = 10; 
 	static const int NormalDoorWidth = 4; // Can't be lower than 2
 	static const int BigDoorWidth = 6;
+	static const int ExitDoorWidth = 8;
+	static const int MinVisitedBeforeExitCanSpawn = 20;
 	static const int MinDistanceBetweenPassages = 1; // Can't be lower than 1
 	static const int MinDistanceInsideToPassage = 2; // Maybe it should be 1
 	static const int MinRoomNumOfLamps = 0; 
@@ -352,6 +356,7 @@ protected:
 	static const float DeletePassageToFixProbability;
 	static const float PassageIsDoorProbability;
 	static const float DoorIsNormalProbability;
+	static const float DoorIsExitProbability;
 	static const float SpawnFlashlightProbability;
 	static const float SpawnDoorcardProbability;
 	static const float MakeRoomSpecialForCardProbability;

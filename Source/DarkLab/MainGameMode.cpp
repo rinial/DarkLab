@@ -27,21 +27,22 @@
 // Probabilities
 const float AMainGameMode::ReshapeDarknessOnEnterProbability = 0.7f;
 const float AMainGameMode::ReshapeDarknessOnTickProbability = 0.6f;
-const float AMainGameMode::LampsTurnOnOnEnterProbability = 0.45f;
+const float AMainGameMode::LampsTurnOnOnEnterProbability = 0.6f;
 const float AMainGameMode::LampsTurnOffPerSecondProbability = 0.04f;
 const float AMainGameMode::AllLampsInRoomTurnOffProbability = 0.15f;
 const float AMainGameMode::ConnectToOtherRoomProbability = 0.8f;
 const float AMainGameMode::DeletePassageToFixProbability = 0.0f; // TODO increase or delete?
 const float AMainGameMode::PassageIsDoorProbability = 0.45f;
-const float AMainGameMode::DoorIsNormalProbability = 0.95f;
+const float AMainGameMode::DoorIsNormalProbability = 0.90f;
+const float AMainGameMode::DoorIsExitProbability = 0.3f; // 0.05f;
 const float AMainGameMode::SpawnFlashlightProbability = 0.4f; // TODO decrease
 const float AMainGameMode::SpawnDoorcardProbability = 0.3f;
 const float AMainGameMode::MakeRoomSpecialForCardProbability = 0.0f; // TODO increase or delete?
-const float AMainGameMode::BlueProbability = 0.16f;
+const float AMainGameMode::BlueProbability = 0.14f;
 const float AMainGameMode::GreenProbability = 0.12f;
-const float AMainGameMode::YellowProbability = 0.08f;
-const float AMainGameMode::RedProbability = 0.04f;
-const float AMainGameMode::BlackProbability = 0.02f;
+const float AMainGameMode::YellowProbability = 0.10f;
+const float AMainGameMode::RedProbability = 0.08f;
+const float AMainGameMode::BlackProbability = 0.06f;
 // Other constants
 const float AMainGameMode::ReshapeDarknessTick = 4.f;
 
@@ -422,7 +423,7 @@ float AMainGameMode::GetRoomLightingAmount(LabRoom * room, const bool returnFirs
 // Returns true if the room is in light
 bool AMainGameMode::IsRoomIlluminated(LabRoom * room)
 {
-	return GetRoomLightingAmount(room, true) > 0.f;
+	return SpawnedRoomObjects.Contains(room) && GetRoomLightingAmount(room, true) > 0.f;
 }
 
 // Changes world location into grid location
@@ -552,6 +553,7 @@ void AMainGameMode::OnEnterRoom() // LabRoom* lastRoom, LabRoom* newRoom)
 			toActivateLamps = true;
 			// ActivateRoomLamps(PlayerRoom);
 		VisitedRooms.Add(PlayerRoom);
+		VisitedOverall++;
 	}
 
 	if (lastRoom)
@@ -563,13 +565,14 @@ void AMainGameMode::OnEnterRoom() // LabRoom* lastRoom, LabRoom* newRoom)
 
 	// CompleteReshapeAllDarknessAround();
 
+	// We do it before reshaping cause we may accidentally trap ourselves if we turn light on after
+	if (toActivateLamps)
+		ActivateRoomLamps(PlayerRoom);
+
 	if(RandBool(ReshapeDarknessOnEnterProbability))
 		ReshapeAllDarkness();
 	ExpandInDepth(PlayerRoom, ExpandDepth);
 	SpawnFillInDepth(PlayerRoom, SpawnFillDepth);
-
-	if (toActivateLamps)
-		ActivateRoomLamps(PlayerRoom);
 }
 
 // Called when character is enabled to reset the map
@@ -673,6 +676,7 @@ void AMainGameMode::PoolMap()
 	AllocatedRooms.Empty();
 	PlayerRoom = nullptr;
 	ActualPlayerRoom = nullptr;
+	VisitedOverall = 0;
 }
 
 // Pools dark area returning all rooms that now need fixing
@@ -703,7 +707,32 @@ void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& t
 			return;
 	}
 	else
-		toPool.AddUnique(start);
+	{
+		bool poolIt = true;
+		// We check if room has exit cause if it does, we only want to delete it when both this room and the room behind exit are going to be pooled 
+		for (LabPassage* passage : start->Passages)
+		{
+			// found exit
+			if (passage->bIsDoor && passage->Width == ExitDoorWidth)
+			{
+				LabRoom* otherRoom = passage->To == start ? passage->From : passage->To;
+				if (depth - 1 <= 0 || PlayerRoom == otherRoom || ActualPlayerRoom == otherRoom || IsRoomIlluminated(otherRoom))
+				{
+					poolIt = false;
+					break;
+				}
+			}
+
+		}
+		if (poolIt)
+			toPool.AddUnique(start);
+		else
+		{
+			toFix.AddUnique(start);
+			if (stopAtFirstIfLit)
+				return;
+		}
+	}
 
 	for (LabPassage* passage : start->Passages)
 	{
@@ -754,7 +783,27 @@ void AMainGameMode::ReshapeAllDarkness()
 		if (PlayerRoom == room || ActualPlayerRoom == room || IsRoomIlluminated(room))
 			toFix.AddUnique(room);
 		else
-			toPool.AddUnique(room);
+		{
+			bool poolIt = true;
+			// We check if room has exit cause if it does, we only want to delete it when both this room and the room behind exit are going to be pooled 
+			for (LabPassage* passage : room->Passages)
+			{
+				// found exit
+				if (passage->bIsDoor && passage->Width == ExitDoorWidth)
+				{
+					LabRoom* otherRoom = passage->To == room ? passage->From : passage->To;
+					if (PlayerRoom == otherRoom || ActualPlayerRoom == otherRoom || IsRoomIlluminated(otherRoom))
+					{
+						poolIt = false;
+						break;
+					}
+				}
+			}
+			if (poolIt)
+				toPool.AddUnique(room);
+			else
+				toFix.AddUnique(room);
+		}
 	}
 
 	for (int i = toPool.Num() - 1; i >= 0; --i)
@@ -813,7 +862,7 @@ UObject* AMainGameMode::TryGetPoolable(UClass* cl)
 
 	object = pool[index];
 	UObject* obj = object->_getUObject();
-	// object->Execute_SetActive(obj, true);
+	object->Execute_SetActive(obj, true);
 	pool.RemoveAt(index);
 	return obj;
 }
@@ -825,11 +874,11 @@ ABasicFloor* AMainGameMode::SpawnBasicFloor(const int botLeftX, const int botLef
 	if (!floor)
 	{
 		floor = GetWorld()->SpawnActor<ABasicFloor>(BasicFloorBP);
-		floor->Execute_SetActive(floor, false);
+		// floor->Execute_SetActive(floor, false);
 	}
 
 	PlaceObject(floor, botLeftX, botLeftY, sizeX, sizeY);
-	floor->Execute_SetActive(floor, true);
+	// floor->Execute_SetActive(floor, true);
 
 	if (room && SpawnedRoomObjects.Contains(room))
 		SpawnedRoomObjects[room].Add(floor);
@@ -874,7 +923,7 @@ ABasicDoor * AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeft
 		door->Execute_SetActive(door, false);
 	}
 
-	door->Reset(); // Clothes the door if it was open
+	door->ResetDoor(width == ExitDoorWidth); // Clothes the door if it was open
 	door->DoorColor = color; // Sets door's color
 	PlaceObject(door, botLeftX, botLeftY, direction, width);
 	door->Execute_SetActive(door, true);
@@ -1532,7 +1581,13 @@ FRectSpaceStruct AMainGameMode::CreateRandomPassageSpace(LabRoom * room, EDirect
 		break;
 	}
 
-	int doorWidth = !forDoor ? 0 : RandBool(DoorIsNormalProbability) ? NormalDoorWidth : BigDoorWidth;
+	int doorWidth = !forDoor ? 
+		0 : 
+		(VisitedOverall < MinVisitedBeforeExitCanSpawn || !RandBool(DoorIsExitProbability) ?
+			(RandBool(DoorIsNormalProbability) ? 
+				NormalDoorWidth : 
+				BigDoorWidth) :
+			ExitDoorWidth);
 	int minPos = !forDoor ? MinDistanceBetweenPassages : FMath::Max(MinDistanceBetweenPassages, doorWidth / 2 + doorWidth % 2);
 
 	// Left or right
@@ -1751,9 +1806,9 @@ bool AMainGameMode::TryShrinkY(FRectSpaceStruct & currentSpace, FRectSpaceStruct
 }
 
 // Creates a random room based on minimum room space
-LabRoom * AMainGameMode::CreateRandomRoom(FRectSpaceStruct minSpace, bool fromPassage, EDirectionEnum direction)
+LabRoom * AMainGameMode::CreateRandomRoom(FRectSpaceStruct minSpace, bool fromPassage, EDirectionEnum direction, bool keepMinimum)
 {
-	FRectSpaceStruct currentSpace = CreateRandomRoomSpace(minSpace, fromPassage, direction);
+	FRectSpaceStruct currentSpace = keepMinimum ? minSpace : CreateRandomRoomSpace(minSpace, fromPassage, direction);
 	// TArray<LabPassage*> additionalPassages;
 
 	LabRoom* intersected;
@@ -1784,8 +1839,6 @@ LabRoom * AMainGameMode::CreateRandomRoom(FRectSpaceStruct minSpace, bool fromPa
 
 	LabRoom* room = CreateRoom(currentSpace);
 
-	// TODO add passages
-
 	return room;
 }
 
@@ -1806,6 +1859,8 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 		//		|| )))
 		return nullptr;
 
+	bool pasIsExit = forDoor && (pasSpace.SizeX == ExitDoorWidth || pasSpace.SizeY == ExitDoorWidth);
+
 	// Find minimum space for a new room on the other side of this passage
 	roomSpace = CreateMinimumRoomSpace(room, pasSpace, direction);
 
@@ -1814,6 +1869,10 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 	if (!MapSpaceIsFree(false, true, roomSpace, intersected))
 	{
 		// return nullptr;
+
+		// Exit is only created as a new room
+		if (pasIsExit)
+			return nullptr;
 
 		// If we don't want to connect
 		if (!RandBool(ConnectToOtherRoomProbability))
@@ -1825,6 +1884,14 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 		// Room shouldn't be illuminated
 		if (PlayerRoom == intersected || ActualPlayerRoom == intersected || IsRoomIlluminated(intersected))
 			return nullptr;
+
+		// Room shouldn't be inner side of the exit
+		for (LabPassage* interPas : intersected->Passages)
+		{
+			bool interPasIsExit = interPas->bIsDoor && interPas->To == intersected && interPas->Width == ExitDoorWidth;
+			if (interPasIsExit)
+				return nullptr;
+		}
 		
 		// Other room should include the room space
 		if (!IsInside(roomSpace, intersected))
@@ -1843,12 +1910,24 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 		bool spaceIsFree = MapSpaceIsFree(true, false, roomSpace, intersected);
 		if (!spaceIsFree)
 		{
+			// Exit is only created as a new room
+			if (pasIsExit)
+				return nullptr;
+
 			// If we don't want to connect
 			if (!RandBool(ConnectToOtherRoomProbability))
 				return nullptr;
 
 			// We found something that intersects roomSpace but is not spawned yet
 			// We check if instead of creating new room (which we can't do since we intersected) we can connect to this room instead
+
+			// Room shouldn't be inner side of the exit
+			for (LabPassage* interPas : intersected->Passages)
+			{
+				bool interPasIsExit = interPas->bIsDoor && interPas->To == intersected && interPas->Width == ExitDoorWidth;
+				if (interPasIsExit)
+					return nullptr;
+			}
 
 			// Other room should include the room space
 			if (!IsInside(roomSpace, intersected))
@@ -1872,7 +1951,7 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 	else
 	{
 		// TODO maybe it shouldn't allow every color
-		FLinearColor color = RandColor();
+		FLinearColor color = !pasIsExit ? RandColor() : FLinearColor::Black;
 
 		passage = room->AddPassage(room->BotLeftX + pasSpace.BotLeftX, room->BotLeftY + pasSpace.BotLeftY, direction, possibleRoomConnection, forDoor, color, direction == EDirectionEnum::VE_Up || direction == EDirectionEnum::VE_Down ? pasSpace.SizeX : pasSpace.SizeY);
 	}
@@ -1894,6 +1973,14 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room, int desiredNumOfPassa
 		return newRooms;
 
 	ExpandedRooms.AddUnique(room);
+
+	// Room shouldn't be inner side of the exit
+	for (LabPassage* interPas : room->Passages)
+	{
+		bool interPasIsExit = interPas->bIsDoor && interPas->To == room && interPas->Width == ExitDoorWidth;
+		if (interPasIsExit)
+			return newRooms;
+	}
 
 	//if (desiredNumOfPassagesOverride < MinRoomNumOfPassages && room->Passages.Num() == 1 && room->Passages[0]->bIsDoor && room->Passages[0]->Color != FLinearColor::White && RandBool(MakeRoomSpecialForCardProbability))
 	//{
@@ -1931,11 +2018,12 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room, int desiredNumOfPassa
 
 			if (!possibleRoomConnection)
 			{
+				bool pasIsExit = passage->bIsDoor && passage->Width == ExitDoorWidth;
 
 				// UE_LOG(LogTemp, Warning, TEXT("> %s"), TEXT("success"));
 
 				// We create new room from min space, it also allocates room's space
-				LabRoom* newRoom = CreateRandomRoom(minRoomSpace, true, passage->GridDirection);
+				LabRoom* newRoom = CreateRandomRoom(minRoomSpace, true, passage->GridDirection, pasIsExit);
 				if (!newRoom)
 					continue;
 
@@ -2412,7 +2500,7 @@ void AMainGameMode::ExpandInDepth(LabRoom * start, int depth)
 		{
 			for (LabPassage* pas : room->Passages)
 			{
-				if (!pas->bIsDoor || pas->Color == FLinearColor::White || SpawnedPassageObjects.Contains(pas) || character->HasDoorcardOfColor(pas->Color))
+				if (!pas->bIsDoor || pas->Color == FLinearColor::White || pas->Width == ExitDoorWidth || SpawnedPassageObjects.Contains(pas) || character->HasDoorcardOfColor(pas->Color))
 					continue;
 
 				pas->Color = FLinearColor::White;
@@ -2495,17 +2583,16 @@ void AMainGameMode::SpawnFillInDepth(LabRoom* start, int depth)
 
 	for (LabPassage* passage : start->Passages)
 	{
-		// floor or door
-		AActor* initialPasActor = Cast<AActor>(SpawnedPassageObjects[passage][!passage->bIsDoor ? 0 : 1]->_getUObject());
-		FVector initialPasLoc = initialPasActor->GetActorLocation() + FVector(0, 0, 30);
+		// location of the floor
+		FVector initialPasLoc = Cast<AActor>(SpawnedPassageObjects[passage][0]->_getUObject())->GetActorLocation() + FVector(0, 0, 30);
 		if ((passage->From == start && passage->GridDirection == EDirectionEnum::VE_Right) || (passage->To == start && passage->GridDirection == EDirectionEnum::VE_Left))
-			initialPasLoc += FVector(0, 25, 0);
+			initialPasLoc += FVector(0, 30, 0);
 		else if ((passage->From == start && passage->GridDirection == EDirectionEnum::VE_Left) || (passage->To == start && passage->GridDirection == EDirectionEnum::VE_Right))
-			initialPasLoc += FVector(0, -25, 0);
+			initialPasLoc += FVector(0, -30, 0);
 		else if ((passage->From == start && passage->GridDirection == EDirectionEnum::VE_Up) || (passage->To == start && passage->GridDirection == EDirectionEnum::VE_Down))
-			initialPasLoc += FVector(25, 0, 0);
+			initialPasLoc += FVector(30, 0, 0);
 		else if ((passage->From == start && passage->GridDirection == EDirectionEnum::VE_Down) || (passage->To == start && passage->GridDirection == EDirectionEnum::VE_Up))
-			initialPasLoc += FVector(-25, 0, 0);
+			initialPasLoc += FVector(-30, 0, 0);
 		
 		if (passage->From != start)
 			SpawnFillInDepth(passage->From, depth - 1, passage, initialPasLoc);
@@ -2685,6 +2772,9 @@ void AMainGameMode::Tick(const float deltaTime)
 
 			// Number of "lives" left
 			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("> Lives: %d"), MainPlayerController->Lives), false);
+
+			// Number of visited rooms
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("> Visited rooms: %d"), VisitedOverall), false);
 
 			// Doorcards
 			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("> Doorcards: %s%s%s%s%s"),

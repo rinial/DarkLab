@@ -31,10 +31,11 @@ void ABasicDoor::ActivateObject(AMainCharacter * character)
 
 // TODO let some interface define it?
 // Resets to initial state
-void ABasicDoor::Reset()
+void ABasicDoor::ResetDoor(bool isExit)
 {
 	DoorDriver->Stop();
 	DoorDriver->SetPlaybackPosition(0.0f, true);
+	DoorDriver->SetPlayRate(!isExit ? 1.f : 0.3f);
 }
 
 // Sets default values

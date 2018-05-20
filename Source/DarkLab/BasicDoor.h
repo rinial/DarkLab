@@ -20,7 +20,7 @@ public:
 	// TODO let some interface define it?
 	// Resets to initial state
 	UFUNCTION(BlueprintCallable, Category = "Door")
-	void Reset();
+	void ResetDoor(bool isExit);
 	
 protected:
 	// Door's direction and root object
