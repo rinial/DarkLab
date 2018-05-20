@@ -6,7 +6,7 @@
 #include "BasicPickupableObject.h"
 #include "Doorcard.generated.h"
 
-// A card that can open doors, can be used only once
+// A card that can open doors, for now cards can be used many times but all of them are stored in character when he picks them up (as all pickupable objects should)
 UCLASS()
 class DARKLAB_API ADoorcard : public ABasicPickupableObject
 {

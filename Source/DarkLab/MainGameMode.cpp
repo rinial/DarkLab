@@ -31,15 +31,16 @@ const float AMainGameMode::LampsTurnOnOnEnterProbability = 0.45f;
 const float AMainGameMode::LampsTurnOffPerSecondProbability = 0.04f;
 const float AMainGameMode::AllLampsInRoomTurnOffProbability = 0.15f;
 const float AMainGameMode::ConnectToOtherRoomProbability = 0.8f;
-const float AMainGameMode::DeletePassageToFixProbability = 0.0f; // TODO inrease or delete?
+const float AMainGameMode::DeletePassageToFixProbability = 0.0f; // TODO increase or delete?
 const float AMainGameMode::PassageIsDoorProbability = 0.45f;
 const float AMainGameMode::DoorIsNormalProbability = 0.95f;
 const float AMainGameMode::SpawnFlashlightProbability = 0.4f; // TODO decrease
-const float AMainGameMode::SpawnDoorcardProbability = 0.4f; // TODO decrease
-const float AMainGameMode::BlueProbability = 0.2f;
-const float AMainGameMode::GreenProbability = 0.15f;
-const float AMainGameMode::YellowProbability = 0.1f;
-const float AMainGameMode::RedProbability = 0.05f;
+const float AMainGameMode::SpawnDoorcardProbability = 0.3f;
+const float AMainGameMode::MakeRoomSpecialForCardProbability = 0.0f; // TODO increase or delete?
+const float AMainGameMode::BlueProbability = 0.16f;
+const float AMainGameMode::GreenProbability = 0.12f;
+const float AMainGameMode::YellowProbability = 0.08f;
+const float AMainGameMode::RedProbability = 0.04f;
 const float AMainGameMode::BlackProbability = 0.02f;
 // Other constants
 const float AMainGameMode::ReshapeDarknessTick = 4.f;
@@ -874,7 +875,7 @@ ABasicDoor * AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeft
 	}
 
 	door->Reset(); // Clothes the door if it was open
-	door->DoorColor = color; // Sets wall's color
+	door->DoorColor = color; // Sets door's color
 	PlaceObject(door, botLeftX, botLeftY, direction, width);
 	door->Execute_SetActive(door, true);
 
@@ -971,6 +972,11 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 	// We don't spawn one room twice
 	if (SpawnedRoomObjects.Contains(room))
 		return;
+
+	/*if (!PlayerRoom || room == PlayerRoom)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s"), (!room->Passages[0]->bIsDoor ? TEXT("YES") : TEXT("NO")));
+	}*/
 
 	DeallocateRoom(room);
 	SpawnedRoomObjects.Add(room);
@@ -1882,9 +1888,18 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 // Returns new rooms
 TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room, int desiredNumOfPassagesOverride)
 {
+	TArray<LabRoom*> newRooms;
+
+	if (!room)
+		return newRooms;
+
 	ExpandedRooms.AddUnique(room);
 
-	TArray<LabRoom*> newRooms;
+	//if (desiredNumOfPassagesOverride < MinRoomNumOfPassages && room->Passages.Num() == 1 && room->Passages[0]->bIsDoor && room->Passages[0]->Color != FLinearColor::White && RandBool(MakeRoomSpecialForCardProbability))
+	//{
+	//	// We don't expand so this room becomes a vault for card
+	//	return newRooms;
+	//}
 
 	// The number of passages we want to have in the room
 	// These are not just new but overall
@@ -1904,12 +1919,18 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room, int desiredNumOfPassa
 		LabPassage* passage = CreateAndAddRandomPassage(room, minRoomSpace, possibleRoomConnection);
 		if (passage)
 		{
+			// TODO it shouldn't be like this
+			// For start room
+			if (desiredNumOfPassagesOverride >= MinRoomNumOfPassages && !SpawnedPassageObjects.Contains(passage))
+			{
+				// UE_LOG(LogTemp, Warning, TEXT("Made it doorless"));
+				// passage->bIsDoor = true; // false;
+				// UE_LOG(LogTemp, Warning, TEXT("Made it white"));
+				passage->Color = FLinearColor::White;
+			}
+
 			if (!possibleRoomConnection)
 			{
-				// TODO it shouldn't be like this
-				// For start room
-				if (desiredNumOfPassagesOverride >= MinRoomNumOfPassages)
-					passage->Color = FLinearColor::White;
 
 				// UE_LOG(LogTemp, Warning, TEXT("> %s"), TEXT("success"));
 
@@ -2164,6 +2185,27 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 {
 	TArray<AActor*> spawnedActors;
 
+	// Used for lamps and for doorcards
+	FLinearColor color;
+	bool colorIsDetermined = false;
+	// In rooms with only one door that also isn't white card is almost always given and it has next level, also lamp is almost always spawned
+	if (room->Passages.Num() == 1 && room->Passages[0]->bIsDoor && room->Passages[0]->Color != FLinearColor::White)
+	{
+		colorIsDetermined = true;
+
+		FLinearColor roomColor = room->Passages[0]->Color;
+		if (roomColor == FLinearColor::FromSRGBColor(FColor(30, 144, 239)))
+			color = FLinearColor::Green;
+		else if (roomColor == FLinearColor::Green)
+			color = FLinearColor::Yellow;
+		else if (roomColor == FLinearColor::Yellow)
+			color = FLinearColor::Red;
+		else if (roomColor == FLinearColor::Red)
+			color = FLinearColor::Black;
+		else
+			colorIsDetermined = false;
+	}
+
 	// The number of lamps we want to have in the room
 	int desiredNumOfLamps = FMath::RandRange(MinRoomNumOfLamps, 1 + MaxRoomNumOfLampsPerHundredArea * room->SizeX * room->SizeY / 100);
 
@@ -2179,12 +2221,38 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 		EDirectionEnum direction;
 		if (CreateRandomInsideSpaceOfWidthNearWall(room, xOff, yOff, width, direction))
 		{
-			// TODO color should depend on the room
-			FLinearColor color = RandColor();
-			while (color == FLinearColor::Black && spawnedActors.Num() < minNumOfLampsOverride)
+			if (!colorIsDetermined)
+			{
 				color = RandColor();
+				while (color == FLinearColor::Black && spawnedActors.Num() < minNumOfLampsOverride)
+					color = RandColor();
+			}
 			AWallLamp* lamp = SpawnWallLamp(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, color, width, room);
 			spawnedActors.Add(lamp);
+		}
+	}
+
+	// Creates a doorcard
+	bool shouldSpawnDoorcard = colorIsDetermined || RandBool(SpawnDoorcardProbability);
+	for (int i = 0; shouldSpawnDoorcard && i < MaxGenericSpawnTries; ++i)
+	{
+		int xOff;
+		int yOff;
+		if (CreateRandomInsideSpaceOfSize(room, xOff, yOff, 1, 1, true))
+		{
+			// In random rooms cards are almost always blue
+			if (!colorIsDetermined)
+			{
+				// color = FLinearColor::FromSRGBColor(FColor(30, 144, 239));
+			
+				color = RandColor();
+				while (color == FLinearColor::White)
+					color = RandColor();
+			}
+			EDirectionEnum direction = RandDirection();
+			ADoorcard* doorcard = SpawnDoorcard(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, color, room);
+			spawnedActors.Add(doorcard);
+			break; // We only spawn once
 		}
 	}
 
@@ -2194,52 +2262,11 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 	{
 		int xOff;
 		int yOff;
-		if (CreateRandomInsideSpaceOfSize(room, xOff, yOff, 1, 1, true)) // we can spawn flashlight over (under) lamps
+		if (CreateRandomInsideSpaceOfSize(room, xOff, yOff, 1, 1, false))
 		{
 			EDirectionEnum direction = RandDirection();
 			AFlashlight* flashlight = SpawnFlashlight(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, room);
 			spawnedActors.Add(flashlight);
-			break; // We only spawn once
-		}
-	}
-	
-	// Creates a doorcard
-	FLinearColor cardColor;
-	bool colorIsDetermined = false;
-	// In rooms with only one door that also isn't white card is almost always given and it has next level
-	if (room->Passages.Num() == 1 && room->Passages[0]->Color != FLinearColor::White)
-	{
-		colorIsDetermined = true;
-
-		FLinearColor roomColor = room->Passages[0]->Color;
-		if (roomColor == FLinearColor::FromSRGBColor(FColor(30, 144, 239)))
-			cardColor = FLinearColor::Green;
-		else if (roomColor == FLinearColor::Green)
-			cardColor = FLinearColor::Yellow;
-		else if (roomColor == FLinearColor::Yellow)
-			cardColor = FLinearColor::Red;
-		else if (roomColor == FLinearColor::Red)
-			cardColor = FLinearColor::Black;
-		else
-			colorIsDetermined = false;
-	}
-	bool shouldSpawnDoorcard = colorIsDetermined || RandBool(SpawnDoorcardProbability);
-	for (int i = 0; shouldSpawnDoorcard && i < MaxGenericSpawnTries; ++i)
-	{
-		int xOff;
-		int yOff;
-		if (CreateRandomInsideSpaceOfSize(room, xOff, yOff, 1, 1, false)) // we don't want to spawn over flashlights
-		{
-			// In random rooms cards are almost always blue
-			if (!colorIsDetermined)
-				cardColor = FLinearColor::FromSRGBColor(FColor(30, 144, 239));
-			// TODO add a chance of nonblue card in random room
-			/*cardColor = RandColor();
-			while (cardColor == FLinearColor::White)
-				cardColor = RandColor();*/
-			EDirectionEnum direction = RandDirection();
-			ADoorcard* doorcard = SpawnDoorcard(room->BotLeftX + xOff, room->BotLeftY + yOff, direction, cardColor, room);
-			spawnedActors.Add(doorcard);
 			break; // We only spawn once
 		}
 	}
@@ -2320,8 +2347,12 @@ bool AMainGameMode::CanReachUnexpanded(LabRoom * start, TArray<LabRoom*>& checke
 	if (!ExpandedRooms.Contains(start))
 		return true;
 
+	AMainCharacter* character = Cast<AMainCharacter>(MainPlayerController->GetCharacter());
 	for (LabPassage* passage : start->Passages)
 	{
+		if (passage->bIsDoor && passage->Color != FLinearColor::White && !character->HasDoorcardOfColor(passage->Color))
+			continue;
+
 		if (passage->From != start && !checkedRooms.Contains(passage->From))
 			if (CanReachUnexpanded(passage->From, checkedRooms))
 				return true;
@@ -2371,8 +2402,30 @@ void AMainGameMode::ExpandInDepth(LabRoom * start, int depth)
 
 	ExpandInDepth(start, depth, nullptr);
 	int expandTries = 2;
+
+	AMainCharacter* character = Cast<AMainCharacter>(MainPlayerController->GetCharacter());
 	while (!CanReachUnexpanded(start))
 	{
+		// Make some doors white
+		int maxNumPassagesToMakeWhite = 5; // TODO make constant
+		for (LabRoom* room : AllocatedRooms)
+		{
+			for (LabPassage* pas : room->Passages)
+			{
+				if (!pas->bIsDoor || pas->Color == FLinearColor::White || SpawnedPassageObjects.Contains(pas) || character->HasDoorcardOfColor(pas->Color))
+					continue;
+
+				pas->Color = FLinearColor::White;
+				--maxNumPassagesToMakeWhite;
+				if (maxNumPassagesToMakeWhite <= 0)
+					break;
+			}
+			if (maxNumPassagesToMakeWhite <= 0)
+				break;
+		}
+		if (CanReachUnexpanded(start))
+			break;
+
 		if (expandTries <= MaxExpandTriesOverall)
 		{
 			// UE_LOG(LogTemp, Warning, TEXT("> Try %d"), expandTries);
@@ -2633,18 +2686,13 @@ void AMainGameMode::Tick(const float deltaTime)
 			// Number of "lives" left
 			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("> Lives: %d"), MainPlayerController->Lives), false);
 
-			// Number of doorcards
-			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("> Doorcards:")), false);
-			// Blue
-			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("   > Blue: %d"), character->CountDoorcardsOfColor(FLinearColor::FromSRGBColor(FColor(30, 144, 239)))), false);
-			// Green
-			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("   > Green: %d"), character->CountDoorcardsOfColor(FLinearColor::Green)), false);
-			// Yellow
-			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("   > Yellow: %d"), character->CountDoorcardsOfColor(FLinearColor::Yellow)), false);
-			// Red
-			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("   > Red: %d"), character->CountDoorcardsOfColor(FLinearColor::Red)), false);
-			// Black
-			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("   > Black: %d"), character->CountDoorcardsOfColor(FLinearColor::Black)), false);
+			// Doorcards
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("> Doorcards: %s%s%s%s%s"),
+				character->HasDoorcardOfColor(FLinearColor::FromSRGBColor(FColor(30, 144, 239))) ? TEXT("Blue ") : TEXT(""),
+				character->HasDoorcardOfColor(FLinearColor::Green) ? TEXT("Green ") : TEXT(""),
+				character->HasDoorcardOfColor(FLinearColor::Yellow) ? TEXT("Yellow ") : TEXT(""),
+				character->HasDoorcardOfColor(FLinearColor::Red) ? TEXT("Red ") : TEXT(""),
+				character->HasDoorcardOfColor(FLinearColor::Black) ? TEXT("Black") : TEXT("")), false);
 
 			// Activatable and equipped
 			TArray<IInformative*> informativeObjects;

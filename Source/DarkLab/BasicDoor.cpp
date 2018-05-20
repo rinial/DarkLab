@@ -9,6 +9,12 @@
 // Called when the object is activated
 void ABasicDoor::ActivateObject(AMainCharacter * character)
 {
+	if (DoorColor != FLinearColor::White && !character->HasDoorcardOfColor(DoorColor))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("You can't open this door"));
+		return;
+	}
+
 	if (DoorDriver->GetPlaybackPosition() == 0.0f
 		|| DoorDriver->IsReversing())
 	{

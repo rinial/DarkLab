@@ -354,6 +354,7 @@ protected:
 	static const float DoorIsNormalProbability;
 	static const float SpawnFlashlightProbability;
 	static const float SpawnDoorcardProbability;
+	static const float MakeRoomSpecialForCardProbability;
 	static const float BlueProbability;
 	static const float GreenProbability;
 	static const float YellowProbability;
