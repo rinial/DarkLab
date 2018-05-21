@@ -13,6 +13,7 @@ class ABasicWall;
 class ABasicDoor;
 class AWallLamp;
 class AFlashlight;
+class ALighter;
 class ADoorcard;
 class AExitVolume;
 class LabRoom;
@@ -147,6 +148,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Pools")
 	UObject* TryGetPoolable(UClass* cl);
 
+public:
 	// Spawn specific objects
 	ABasicFloor* SpawnBasicFloor(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, LabRoom* room = nullptr);
 	ABasicFloor* SpawnBasicFloor(const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, LabPassage* passage);
@@ -154,9 +156,11 @@ protected:
 	ABasicDoor* SpawnBasicDoor(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White, const int width = 4, LabPassage* passage = nullptr);
 	AWallLamp* SpawnWallLamp(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color = FLinearColor::White, const int width = 1, LabRoom* room = nullptr);
 	AFlashlight* SpawnFlashlight(const int botLeftX, const int botLeftY, const EDirectionEnum direction, LabRoom* room = nullptr);
+	ALighter* SpawnLighter(const int botLeftX, const int botLeftY, const EDirectionEnum direction = EDirectionEnum::VE_Up, LabRoom* room = nullptr);
 	ADoorcard* SpawnDoorcard(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color, LabRoom* room = nullptr);
 	AExitVolume* SpawnExitVolume(const int botLeftX, const int botLeftY, const EDirectionEnum direction, LabRoom* room = nullptr);
 
+protected:
 	// Spawn full parts of the lab
 	void SpawnRoom(LabRoom* room);
 	void SpawnPassage(LabPassage* passage, LabRoom* room = nullptr);
@@ -392,6 +396,7 @@ private:
 	TSubclassOf<ABasicDoor> BasicDoorBP;
 	TSubclassOf<AWallLamp> WallLampBP;
 	TSubclassOf<AFlashlight> FlashlightBP;
+	TSubclassOf<ALighter> LighterBP;
 	TSubclassOf<ADoorcard> DoorcardBP;
 	TSubclassOf<AExitVolume> ExitVolumeBP;
 

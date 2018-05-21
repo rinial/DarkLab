@@ -12,6 +12,7 @@
 #include "BasicDoor.h"
 #include "WallLamp.h"
 #include "Flashlight.h"
+#include "Lighter.h"
 #include "Doorcard.h"
 #include "ExitVolume.h"
 #include "LabPassage.h"
@@ -1034,6 +1035,31 @@ AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLef
 	// UE_LOG(LogTemp, Warning, TEXT("Spawned a flashlight"));
 
 	return flashlight;
+}
+ALighter * AMainGameMode::SpawnLighter(const int botLeftX, const int botLeftY, const EDirectionEnum direction, LabRoom * room)
+{
+	//ALighter* lighter = Cast<ALighter>((TryGetPoolable(LighterBP)));
+	//if (!lighter)
+	//{
+	ALighter* lighter = GetWorld()->SpawnActor<ALighter>(LighterBP);
+	lighter->Execute_SetActive(lighter, false);
+	//}
+
+	lighter->Reset(); // Disables light if it was on
+	PlaceObject(lighter, botLeftX, botLeftY, direction);
+	lighter->Execute_SetActive(lighter, true);
+
+	if (room)
+	{
+		if (SpawnedRoomObjects.Contains(room))
+			SpawnedRoomObjects[room].Add(lighter);
+		if (AllocatedRoomSpace.Contains(room))
+			AllocateRoomSpace(room, botLeftX, botLeftY, 1, 1, false);
+	}
+
+	// UE_LOG(LogTemp, Warning, TEXT("Spawned a lighter"));
+
+	return lighter;
 }
 ADoorcard* AMainGameMode::SpawnDoorcard(const int botLeftX, const int botLeftY, const EDirectionEnum direction, const FLinearColor color, LabRoom* room)
 {
@@ -2732,6 +2758,9 @@ AMainGameMode::AMainGameMode()
 	static ConstructorHelpers::FObjectFinder<UClass> flashlightBP(TEXT("Class'/Game/Blueprints/FlashlightBP.FlashlightBP_C'"));
 	if (flashlightBP.Succeeded())
 		FlashlightBP = flashlightBP.Object;
+	static ConstructorHelpers::FObjectFinder<UClass> lighterBP(TEXT("Class'/Game/Blueprints/LighterBP.LighterBP_C'"));
+	if (lighterBP.Succeeded())
+		LighterBP = lighterBP.Object;
 	static ConstructorHelpers::FObjectFinder<UClass> doorcardBP(TEXT("Class'/Game/Blueprints/DoorcardBP.DoorcardBP_C'"));
 	if (doorcardBP.Succeeded())
 		DoorcardBP = doorcardBP.Object;
@@ -2900,8 +2929,11 @@ void AMainGameMode::Tick(const float deltaTime)
 				else
 					GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("%s: %s"), *name, TEXT("None")), false);
 			}
+			if (character->LighterIndex >= 0)
+				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Lighter gas: %f.3"), Cast<ALighter>(character->Inventory[character->LighterIndex]->_getUObject())->PowerLevel * 100), false);
 			if (character->FlashlightIndex >= 0)
 				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Flashlight power: %f.3"), Cast<AFlashlight>(character->Inventory[character->FlashlightIndex]->_getUObject())->PowerLevel * 100), false);
+			
 
 			// Empty line
 			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT(""), false);

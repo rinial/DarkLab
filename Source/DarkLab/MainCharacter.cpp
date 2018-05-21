@@ -59,6 +59,37 @@ void AMainCharacter::Activate()
 	toActivate->Execute_Activate(toActivate->_getUObject(), this);
 }
 
+// Equipes lighter is character has it
+void AMainCharacter::Equip1()
+{
+	if (LighterIndex >= 0)
+	{
+		TScriptInterface<IEquipable> lighter = Inventory[LighterIndex]->_getUObject();
+		if (lighter)
+		{
+			if (lighter != EquipedObject)
+				lighter->Execute_Equip(lighter->_getUObject(), this, FName("LeftHand"));
+			/*else
+				lighter->Execute_Unequip(lighter->_getUObject(), this);*/
+		}
+	}
+}
+// Equipes flashlight is character has it
+void AMainCharacter::Equip2()
+{
+	if (FlashlightIndex >= 0)
+	{
+		TScriptInterface<IEquipable> flashlight = Inventory[FlashlightIndex]->_getUObject();
+		if (flashlight)
+		{
+			if (flashlight != EquipedObject)
+				flashlight->Execute_Equip(flashlight->_getUObject(), this, FName("LeftHand"));
+			/*else
+				flashlight->Execute_Unequip(flashlight->_getUObject(), this);*/
+		}
+	}
+}
+
 // Happens when something 'damages' the character
 void AMainCharacter::Disable()
 {

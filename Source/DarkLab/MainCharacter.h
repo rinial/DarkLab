@@ -22,6 +22,8 @@ public:
 	// Other controls
 	void UseEquiped();
 	void Activate();
+	void Equip1();
+	void Equip2();
 
 	// Happens when something 'damages' the character
 	UFUNCTION(BlueprintCallable, Category = "Main Character")

@@ -55,6 +55,12 @@ protected:
 	// Makes the character avtivate smth near him
 	UFUNCTION()
 	void Activate();
+	// Equipes first item
+	UFUNCTION()
+	void Equip1();
+	// Equipes second item
+	UFUNCTION()
+	void Equip2();
 
 	// Show/Hide menu
 	UFUNCTION()

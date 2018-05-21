@@ -4,7 +4,7 @@
 #include "MainCharacter.h"
 // TODO delete later
 #include "Flashlight.h"
-// #include "Lighter.h"
+#include "Lighter.h"
 
 // Called when the object is to be equiped
 void ABasicEquipableObject::Equip_Implementation(AMainCharacter* character, const FName location)
@@ -64,7 +64,7 @@ void ABasicEquipableObject::ActivateObject(AMainCharacter* character)
 			Cast<AFlashlight>(character->Inventory[character->FlashlightIndex]->_getUObject())->ResetPowerLevel();
 		return;
 	}
-	/*ALighter* lighter = Cast<ALighter>(this);
+	ALighter* lighter = Cast<ALighter>(this);
 	if (lighter)
 	{
 		if (character->LighterIndex < 0)
@@ -72,12 +72,12 @@ void ABasicEquipableObject::ActivateObject(AMainCharacter* character)
 			character->LighterIndex = character->Inventory.Num() - 1;
 
 			if (!character->EquipedObject)
-				ExecuteEquip(this, character, FName("LeftHand"));
+				Execute_Equip(this, character, FName("LeftHand"));
 		}
 		else
 			Cast<ALighter>(character->Inventory[character->LighterIndex]->_getUObject())->ResetPowerLevel();
 		return;
-	}*/
+	}
 	
 
 	// We equip directly after picking up only if there is nother else equiped

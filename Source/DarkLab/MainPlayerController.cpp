@@ -4,6 +4,7 @@
 #include "MainCharacter.h"
 #include "GameFramework/GameModeBase.h"
 #include "MainGameMode.h"
+#include "Lighter.h"
 
 // Movement controls
 void AMainPlayerController::MoveUp(const float value)
@@ -74,6 +75,18 @@ void AMainPlayerController::Activate()
 {
 	if (MainCharacter && !MainCharacter->bIsDisabled)
 		MainCharacter->Activate();
+}
+// Equipes first item
+void AMainPlayerController::Equip1()
+{
+	if (MainCharacter && !MainCharacter->bIsDisabled)
+		MainCharacter->Equip1();
+}
+// Equipes second item
+void AMainPlayerController::Equip2()
+{
+	if (MainCharacter && !MainCharacter->bIsDisabled)
+		MainCharacter->Equip2();
 }
 
 // Show/Hide menu
@@ -154,6 +167,11 @@ void AMainPlayerController::BeginPlay()
 	MainCharacter = Cast<AMainCharacter>(GetCharacter());
 
 	GetMousePosition(LastMousePosition.X, LastMousePosition.Y);
+
+	// We spawn a lighter for the character
+	ALighter* lighter = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode())->SpawnLighter(0, 0);
+	lighter->ActivateObject(MainCharacter);
+	lighter->Execute_Use(lighter);
 }
 
 // Sets controls
@@ -173,6 +191,8 @@ void AMainPlayerController::SetupInputComponent()
 
 	InputComponent->BindAction("UseEquiped", IE_Pressed, this, &AMainPlayerController::UseEquiped);
 	InputComponent->BindAction("Activate", IE_Pressed, this, &AMainPlayerController::Activate);
+	InputComponent->BindAction("Equip1", IE_Pressed, this, &AMainPlayerController::Equip1);
+	InputComponent->BindAction("Equip2", IE_Pressed, this, &AMainPlayerController::Equip2);
 
 	InputComponent->BindAction("Menu/Cancel", IE_Pressed, this, &AMainPlayerController::ShowHideMenu);
 
