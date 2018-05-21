@@ -24,5 +24,5 @@ bool ABasicDeactivatableObject::IsActive_Implementation()
 // Sets default values
 ABasicDeactivatableObject::ABasicDeactivatableObject()
 {
-	PrimaryActorTick.bCanEverTick = bDefaultTickEnabled;
+	PrimaryActorTick.bCanEverTick = true; // bDefaultTickEnabled;
 }

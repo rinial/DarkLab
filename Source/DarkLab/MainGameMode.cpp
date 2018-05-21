@@ -35,8 +35,8 @@ const float AMainGameMode::ConnectToOtherRoomProbability = 0.8f;
 const float AMainGameMode::DeletePassageToFixProbability = 0.0f; // TODO increase or delete?
 const float AMainGameMode::PassageIsDoorProbability = 0.45f;
 const float AMainGameMode::DoorIsNormalProbability = 1.f; // 0.90f; TODO decrease if we need some big doors
-const float AMainGameMode::DoorIsExitProbability = 0.3f; // 0.05f;
-const float AMainGameMode::SpawnFlashlightProbability = 0.4f; // TODO decrease
+const float AMainGameMode::DoorIsExitProbability = 0.1f;
+const float AMainGameMode::SpawnFlashlightProbability = 0.1f; // TODO decrease
 const float AMainGameMode::SpawnDoorcardProbability = 0.3f;
 const float AMainGameMode::MakeRoomSpecialForCardProbability = 0.0f; // TODO increase or delete?
 const float AMainGameMode::BlueProbability = 0.14f;
@@ -911,7 +911,7 @@ UObject* AMainGameMode::TryGetPoolable(UClass* cl)
 
 	object = pool[index];
 	UObject* obj = object->_getUObject();
-	object->Execute_SetActive(obj, true);
+	// object->Execute_SetActive(obj, true);
 	pool.RemoveAt(index);
 	return obj;
 }
@@ -923,11 +923,11 @@ ABasicFloor* AMainGameMode::SpawnBasicFloor(const int botLeftX, const int botLef
 	if (!floor)
 	{
 		floor = GetWorld()->SpawnActor<ABasicFloor>(BasicFloorBP);
-		// floor->Execute_SetActive(floor, false);
+		floor->Execute_SetActive(floor, false);
 	}
 
 	PlaceObject(floor, botLeftX, botLeftY, sizeX, sizeY);
-	// floor->Execute_SetActive(floor, true);
+	floor->Execute_SetActive(floor, true);
 
 	if (room && SpawnedRoomObjects.Contains(room))
 		SpawnedRoomObjects[room].Add(floor);
@@ -950,11 +950,11 @@ ABasicWall* AMainGameMode::SpawnBasicWall(const int botLeftX, const int botLeftY
 	if (!wall)
 	{
 		wall = GetWorld()->SpawnActor<ABasicWall>(BasicWallBP);
-		// wall->Execute_SetActive(wall, false);
+		wall->Execute_SetActive(wall, false);
 	}
 
 	PlaceObject(wall, botLeftX, botLeftY, sizeX, sizeY);
-	// wall->Execute_SetActive(wall, true);
+	wall->Execute_SetActive(wall, true);
 
 	if (room && SpawnedRoomObjects.Contains(room))
 		SpawnedRoomObjects[room].Add(wall);
@@ -969,13 +969,13 @@ ABasicDoor * AMainGameMode::SpawnBasicDoor(const int botLeftX, const int botLeft
 	if (!door)
 	{
 		door = GetWorld()->SpawnActor<ABasicDoor>(BasicDoorBP);
-		// door->Execute_SetActive(door, false);
+		door->Execute_SetActive(door, false);
 	}
 
 	door->ResetDoor(width == ExitDoorWidth); // Clothes the door if it was open
 	door->DoorColor = color; // Sets door's color
 	PlaceObject(door, botLeftX, botLeftY, direction, width);
-	// door->Execute_SetActive(door, true);
+	door->Execute_SetActive(door, true);
 
 	if (passage && SpawnedPassageObjects.Contains(passage))
 		SpawnedPassageObjects[passage].Add(door);
@@ -990,13 +990,13 @@ AWallLamp * AMainGameMode::SpawnWallLamp(const int botLeftX, const int botLeftY,
 	if (!lamp)
 	{
 		lamp = GetWorld()->SpawnActor<AWallLamp>(WallLampBP);
-		// lamp->Execute_SetActive(lamp, false);
+		lamp->Execute_SetActive(lamp, false);
 	}
 
 	lamp->Reset(); // Disables light if it was on
 	lamp->SetColor(color); // Sets correct color
 	PlaceObject(lamp, botLeftX, botLeftY, direction, width);
-	// lamp->Execute_SetActive(lamp, true);
+	lamp->Execute_SetActive(lamp, true);
 
 	if (room)
 	{
@@ -1016,12 +1016,12 @@ AFlashlight* AMainGameMode::SpawnFlashlight(const int botLeftX, const int botLef
 	if (!flashlight)
 	{
 		flashlight = GetWorld()->SpawnActor<AFlashlight>(FlashlightBP);
-		// flashlight->Execute_SetActive(flashlight, false);
+		flashlight->Execute_SetActive(flashlight, false);
 	}
 
 	flashlight->Reset(); // Disables light if it was on
 	PlaceObject(flashlight, botLeftX, botLeftY, direction);
-	// flashlight->Execute_SetActive(flashlight, true);
+	flashlight->Execute_SetActive(flashlight, true);
 
 	if (room)
 	{
@@ -1041,12 +1041,12 @@ ADoorcard* AMainGameMode::SpawnDoorcard(const int botLeftX, const int botLeftY, 
 	if (!doorcard)
 	{
 		doorcard = GetWorld()->SpawnActor<ADoorcard>(DoorcardBP);
-		// doorcard->Execute_SetActive(doorcard, false);
+		doorcard->Execute_SetActive(doorcard, false);
 	}
 
 	doorcard->SetColor(color); // Sets correct color
 	PlaceObject(doorcard, botLeftX, botLeftY, direction);
-	// doorcard->Execute_SetActive(doorcard, true);
+	doorcard->Execute_SetActive(doorcard, true);
 
 	if (room)
 	{
@@ -1066,12 +1066,12 @@ AExitVolume * AMainGameMode::SpawnExitVolume(const int botLeftX, const int botLe
 	if (!exit)
 	{
 		exit = GetWorld()->SpawnActor<AExitVolume>(ExitVolumeBP);
-		// exit->Execute_SetActive(exit, false);
+		exit->Execute_SetActive(exit, false);
 	}
 
 	exit->Reset(); // Disables light if it was on
 	PlaceObject(exit, botLeftX, botLeftY, direction, ExitDoorWidth);
-	// exit->Execute_SetActive(exit, true);
+	exit->Execute_SetActive(exit, true);
 
 	if (room && SpawnedRoomObjects.Contains(room))
 		SpawnedRoomObjects[room].Add(exit);
@@ -2900,6 +2900,8 @@ void AMainGameMode::Tick(const float deltaTime)
 				else
 					GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("%s: %s"), *name, TEXT("None")), false);
 			}
+			if (character->FlashlightIndex >= 0)
+				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Flashlight power: %f.3"), Cast<AFlashlight>(character->Inventory[character->FlashlightIndex]->_getUObject())->PowerLevel * 100), false);
 
 			// Empty line
 			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT(""), false);

@@ -8,10 +8,17 @@
 // Enables or disables light
 void AFlashlight::Use_Implementation()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Toggled %s"), *(Name.ToString()));
+	if (PowerLevel > 0.f)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Toggled %s"), *(Name.ToString()));
 
-	MainLight->ToggleVisibility();
-	ExtraLight->ToggleVisibility();
+		MainLight->ToggleVisibility();
+		ExtraLight->ToggleVisibility();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT(" %s is out of power"), *(Name.ToString()));
+	}
 }
 
 // Resets to initial state
@@ -19,6 +26,15 @@ void AFlashlight::Reset()
 {
 	MainLight->SetVisibility(false);
 	ExtraLight->SetVisibility(false);
+	ResetPowerLevel();
+}
+
+// Resets only power level
+void AFlashlight::ResetPowerLevel()
+{
+	PowerLevel = 1.f;
+	MainLight->SetLightColor(NormalColor * PowerLevel);
+	ExtraLight->SetLightColor(NormalColor * PowerLevel);
 }
 
 // Sets default values
@@ -41,4 +57,27 @@ AFlashlight::AFlashlight()
 	BasicInfo = NSLOCTEXT("LocalNS", "Flashlight information", "Provides light in a cone");
 
 	ZOffset = 5.0f;
+
+	bDefaultTickEnabled = true;
+}
+
+// Called every frame
+void AFlashlight::Tick(const float deltaTime)
+{
+	Super::Tick(deltaTime);
+
+	if (MainLight->IsVisible())
+	{
+		PowerLevel -= PowerLossPerSecond * deltaTime;
+		PowerLevel = PowerLevel > 0.f ? PowerLevel : 0.f;
+		MainLight->SetLightColor(NormalColor * PowerLevel);
+		ExtraLight->SetLightColor(NormalColor * PowerLevel);
+
+		if (PowerLevel == 0.f)
+		{
+			UE_LOG(LogTemp, Warning, TEXT(" %s lost all power"), *(Name.ToString()));
+			MainLight->ToggleVisibility();
+			ExtraLight->ToggleVisibility();
+		}
+	}
 }

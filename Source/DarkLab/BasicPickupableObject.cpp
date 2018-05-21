@@ -8,9 +8,10 @@ void ABasicPickupableObject::PickUp_Implementation(AMainCharacter * character)
 {
 	// We disable the object
 	Execute_SetActive(this, false);
+
+	Cast<AMainGameMode>(GetWorld()->GetAuthGameMode())->OnPickUp(this);
 	
 	character->Inventory.Add(this);
-	Cast<AMainGameMode>(GetWorld()->GetAuthGameMode())->OnPickUp(this);
 
 	UE_LOG(LogTemp, Warning, TEXT("Picked up %s"), *(Name.ToString()));
 }

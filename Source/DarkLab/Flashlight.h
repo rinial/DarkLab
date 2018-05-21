@@ -24,6 +24,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flashlight")
 	void Reset();
 
+	// Resets only power level
+	UFUNCTION(BlueprintCallable, Category = "Flashlight")
+	void ResetPowerLevel();
+
 protected:
 	// Flashlight's direction and root object
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flashlight: Components")
@@ -38,6 +42,22 @@ protected:
 	class UPointLightComponent* ExtraLight;
 
 public:
+	// Current power level from 0 to 1
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flashlight")
+	float PowerLevel = 1.f;
+
+	// The speed of losing power
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flashlight")
+	float PowerLossPerSecond = 0.04f;
+
+private:
+	FLinearColor NormalColor = FLinearColor::White;
+
+public:
 	// Sets default values
 	AFlashlight();
+
+protected:
+	// Called every frame
+	virtual void Tick(const float deltaTime) override;
 };

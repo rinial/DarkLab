@@ -85,6 +85,11 @@ public:
 	// Objects in character's inventory
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character")
 	TArray<TScriptInterface<class IPickupable>> Inventory;
+	// TODO these are temporary, delete later
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character")
+	int FlashlightIndex = -1;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character")
+	int LighterIndex = -1;
 
 	// Objects currently inside the activator volume
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main Character")
