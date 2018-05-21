@@ -17,7 +17,7 @@ void ADarkness::Move(const FVector direction)
 
 	// Moves slower in light, but light resistance helps
 	// float temp = 1 - LightFearK * Luminosity * FMath::Max(0.0f, Luminosity - LightResistance);
-	float temp = 1 - Luminosity / (LightResistance + 0.1f);
+	float temp = 1 - 2 * FMath::Max(0.f, Luminosity - LightResistance / 2.f) / (LightResistance + 0.2f);
 	Movement->AddInputVector(direction * FMath::Max(0.0f, temp));
 }
 void ADarkness::MoveToLocation(FVector location)
@@ -48,7 +48,8 @@ bool ADarkness::RetreatFromLight()
 {
 	// Retreats faster in brighter light, but resistance helps
 	// float temp = 1 - LightFearK * Luminosity * FMath::Max(0.0f, Luminosity - LightResistance);
-	float temp = 1 - Luminosity / (LightResistance + 0.1f);
+	// float temp = 1 - Luminosity / (LightResistance + 0.1f);
+	float temp = 1 - 2 * FMath::Max(0.f, Luminosity - LightResistance / 2.f) / (LightResistance + 0.2f);
 	if (temp >= 0)
 		return false; // Doesn't retreat
 	
