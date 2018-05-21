@@ -141,19 +141,25 @@ void ADarkness::BeginPlay()
 }
 
 // Called every frame
-void ADarkness::Tick(float DeltaTime)
+void ADarkness::Tick(const float deltaTime)
 {
-	Super::Tick(DeltaTime);
+	Super::Tick(deltaTime);
 
 	// We check the light level	
 	Luminosity = GameMode->GetLightingAmount(BrightestLightLocation, this, true, Collision->GetScaledSphereRadius() + 30, true); // , false, bShowLightDebug);
 
+	// Calculate time in darkness
+	if (Luminosity > 0)
+		TimeInDark = 0.f;
+	else
+		TimeInDark += deltaTime;
+
 	// Increase resistance if stuck in bright light
 	if (Luminosity > LightResistance)
-		LightResistance += DeltaTime * LightResGainSpeed;
+		LightResistance += deltaTime * LightResGainSpeed;
 	// Or decrease it if in no light at all
 	else if (Luminosity <= 0.0f && LightResistance > 0.0f)
-		LightResistance -= DeltaTime * LightResLossSpeed;
+		LightResistance -= deltaTime * LightResLossSpeed;
 	if (LightResistance < 0.0f)
 		LightResistance = 0.0f;
 }

@@ -54,17 +54,21 @@ public:
 	// The darkness's resistance to light
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
 	float LightResistance = 0.0f;
+	// Current time spent in the darkness
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
+	float TimeInDark = 0.f;
+
 protected:
 	// The amount of light the darkness is in
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
 	FVector BrightestLightLocation;
 	// The speed of resistance rising if in light higher than resistance
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
-	float LightResGainSpeed = 0.01f;
+	float LightResGainSpeed = 0.007f;
 	// The speed of resistance dropping while not in any light
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
-	float LightResLossSpeed = 0.005f;
-	// The darkness's resistance to light
+	float LightResLossSpeed = 0.003f;
+	// The coefficient affecting darkness's reaction to light
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Luminosity")
 	float LightFearK = 10.0f;
 
@@ -103,5 +107,5 @@ protected:
 
 public:	
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	virtual void Tick(const float deltaTime) override;
 };

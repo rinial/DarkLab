@@ -53,7 +53,7 @@ ALighter::ALighter()
 
 	bDefaultTickEnabled = true;
 
-	NormalColor = FLinearColor(1.f, 0.5f, 0.06f);
+	NormalColor = FLinearColor(0.8f, 0.4f, 0.05f);
 }
 
 // Called every frame

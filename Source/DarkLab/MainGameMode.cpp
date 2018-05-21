@@ -2797,7 +2797,7 @@ void AMainGameMode::BeginPlay()
 	MainPlayerController = Cast<AMainPlayerController>(controller);
 
 	// Finally we generate map
-	GenerateMap();
+	GenerateMap(); 
 	
 	// Make world reshape every few seconds even if character doesn't change rooms
 	FTimerHandle handler;
@@ -2929,10 +2929,10 @@ void AMainGameMode::Tick(const float deltaTime)
 				else
 					GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("%s: %s"), *name, TEXT("None")), false);
 			}
-			if (character->LighterIndex >= 0)
-				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Lighter gas: %f.3"), Cast<ALighter>(character->Inventory[character->LighterIndex]->_getUObject())->PowerLevel * 100), false);
+			/*if (character->LighterIndex >= 0)
+				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Lighter gas: %f"), Cast<ALighter>(character->Inventory[character->LighterIndex]->_getUObject())->PowerLevel * 100), false);*/
 			if (character->FlashlightIndex >= 0)
-				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Flashlight power: %f.3"), Cast<AFlashlight>(character->Inventory[character->FlashlightIndex]->_getUObject())->PowerLevel * 100), false);
+				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, FString::Printf(TEXT("Flashlight power: %f"), Cast<AFlashlight>(character->Inventory[character->FlashlightIndex]->_getUObject())->PowerLevel * 100), false);
 			
 
 			// Empty line

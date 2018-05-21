@@ -8,12 +8,31 @@
 // Called on disabling a character
 void ADarknessController::OnDisabling()
 {
-	State = EDarkStateEnum::VE_Retreating;
+	StartRetreating();
+
+	//// Start tracking a new one after a delay
+	//FTimerHandle handler;
+	//((AActor*)this)->GetWorldTimerManager().SetTimer(handler, this, &ADarknessController::StartHunting, 1.0f, false, TrackingRestartDelay);
+}
+
+// Stops everything, enters passive state
+void ADarknessController::BecomePassive()
+{
+	State = EDarkStateEnum::VE_Passive;
 	Darkness->Stop();
 
+	CurrentMaxTimePassive = FMath::FRandRange(MinTimePassive, MaxTimePassive);
+	SinceLastStateChange = 0.f;
+	UE_LOG(LogTemp, Warning, TEXT("Entering passive state"));
+}
+
+// Teleports somewhere and starts following the player
+void ADarknessController::StartHunting()
+{	
 	APlayerController* controller = GetWorld()->GetFirstPlayerController();
 	if (!controller)
 		return;
+
 	AMainPlayerController* mainController = Cast<AMainPlayerController>(controller);
 	if (!mainController)
 		return;
@@ -22,26 +41,25 @@ void ADarknessController::OnDisabling()
 	if (mainController->Lives <= 0)
 		return;
 
-	// Start tracking a new one after a delay
-	FTimerHandle handler;
-	((AActor*)this)->GetWorldTimerManager().SetTimer(handler, this, &ADarknessController::TrackPlayer, 1.0f, false, TrackingRestartDelay);
+	ACharacter* character = controller->GetCharacter();
+	if (character)
+	{
+		State = EDarkStateEnum::VE_Hunting;
+		CurrentMaxTimeHunting = FMath::FRandRange(MinTimeHunting, MaxTimeHunting);
+		SinceLastStateChange = 0.f;
+		Darkness->MoveToActor((AActor*)character);
+		UE_LOG(LogTemp, Warning, TEXT("Starting the hunt"));
+	}
 }
 
-// Starts following the player
-void ADarknessController::TrackPlayer()
-{	
-	// Then we find the character
-	APlayerController* controller = GetWorld()->GetFirstPlayerController();
-	if (controller)
-	{
-		ACharacter* character = controller->GetCharacter();
-		if (character)
-		{
-			State = EDarkStateEnum::VE_Hunting;
-			Darkness->MoveToActor((AActor*)character);
-			UE_LOG(LogTemp, Warning, TEXT("Following the player"));
-		}
-	}
+// Stops following the player and retreats into the darkness
+void ADarknessController::StartRetreating()
+{
+	State = EDarkStateEnum::VE_Retreating;
+	Darkness->Stop();
+
+	SinceLastStateChange = 0.f;
+	UE_LOG(LogTemp, Warning, TEXT("Retreating into darkness"));
 }
 
 // Called when the game starts or when spawned
@@ -49,13 +67,13 @@ void ADarknessController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// We first find the darkness
+	// We find the darkness
 	Darkness = Cast<ADarkness>(GetPawn());	
 	if (!Darkness)
 		UE_LOG(LogTemp, Warning, TEXT("No Darkness"));
 
-	// Then we initiate the tracking
-	TrackPlayer();
+	// Then we set the state
+	BecomePassive();
 }
 
 // Called every frame
@@ -63,21 +81,37 @@ void ADarknessController::Tick(const float deltaTime)
 {
 	Super::Tick(deltaTime);
 
-	// Darkness retreats from powerful light sources
-	bool isRetreating = Darkness->RetreatFromLight();
+	SinceLastStateChange += deltaTime;
 
-	// Tracks if isn't retreating already
-	if (!isRetreating)
+	// Darkness retreats from powerful light sources
+	bool isAfraid = Darkness->RetreatFromLight();
+
+	// Do something based on state if it isn't afraid already
+	if (!isAfraid)
 	{
 		switch (State)
 		{
 		case EDarkStateEnum::VE_Passive:
+			// If its been some time, start the hunt
+			if (SinceLastStateChange >= CurrentMaxTimePassive)
+				StartHunting();
+			// TODO else?
 			break;
 		case EDarkStateEnum::VE_Hunting:
-			Darkness->Tracking();
+			// If hunting for some time, start retreating
+			if (SinceLastStateChange >= CurrentMaxTimeHunting)
+				StartRetreating();
+			// Otherwise keep hunting
+			else
+				Darkness->Tracking();
 			break;
 		case EDarkStateEnum::VE_Retreating:
-			Darkness->IntoDarkness();
+			// If retreating for too long or if already escaped into darkness, become passive
+			if (SinceLastStateChange >= MaxTimeRetreating || Darkness->TimeInDark >= MinTimeRetreatingInDarkness)
+				BecomePassive();
+			// Otherwise keep retreating
+			else
+				Darkness->IntoDarkness();
 			break;
 		}
 	}

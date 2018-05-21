@@ -48,7 +48,7 @@ public:
 
 	// The speed of losing power
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flashlight")
-	float PowerLossPerSecond = 0.04f;
+	float PowerLossPerSecond = 0.03f;
 
 private:
 	FLinearColor NormalColor = FLinearColor::White;
