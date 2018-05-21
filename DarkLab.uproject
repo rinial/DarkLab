@@ -13,5 +13,11 @@
 				"AIModule"
 			]
 		}
+	],
+	"TargetPlatforms": [
+		"AllDesktop",
+		"MacNoEditor",
+		"WindowsNoEditor",
+		"LinuxNoEditor"
 	]
 }

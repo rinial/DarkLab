@@ -48,7 +48,7 @@ protected:
 
 	// The minimum distance between darkness and character before darkness can teleport
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Teleport")
-	float MinTeleportDistance = 2500.0f;
+	float MinTeleportDistance = 3000.0f;
 	// The minimum time between two consequtive teleports
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Teleport")
 	float MinTimeBetweenTeleports = 15.0f;
