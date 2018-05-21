@@ -38,7 +38,7 @@ public:
 private:
 	// Reenables particles
 	void ReenableParticles();
-	float ReenableParticlesAfterTeleportDelay = 0.5f;
+	float ReenableParticlesAfterTeleportDelay = 2.f;
 
 public:
 	// TODO delete, this is only used for debug

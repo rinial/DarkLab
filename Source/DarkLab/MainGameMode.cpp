@@ -37,8 +37,8 @@ const float AMainGameMode::DeletePassageToFixProbability = 0.0f; // TODO increas
 const float AMainGameMode::PassageIsDoorProbability = 0.45f;
 const float AMainGameMode::DoorIsNormalProbability = 1.f; // 0.90f; TODO decrease if we need some big doors
 const float AMainGameMode::DoorIsExitProbability = 0.17f;
-const float AMainGameMode::SpawnFlashlightProbability = 0.1f; // TODO decrease
-const float AMainGameMode::SpawnDoorcardProbability = 0.3f;
+const float AMainGameMode::SpawnFlashlightProbability = 0.17f; // TODO decrease
+const float AMainGameMode::SpawnDoorcardProbability = 0.28f;
 const float AMainGameMode::MakeRoomSpecialForCardProbability = 0.0f; // TODO increase or delete?
 const float AMainGameMode::BlueProbability = 0.14f;
 const float AMainGameMode::GreenProbability = 0.12f;
@@ -199,15 +199,17 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 				// 1 if near the edge of light, 0 if in center
 				float temp = distance / lightRadius;
 				// We take into account the inverse squared falloff
-				temp = FMath::Pow(temp, 0.5f);
+				// temp = FMath::Pow(temp, 0.5f);
+				temp = FMath::Pow(temp, 2.f);
 				// Now it's 0 near the edge and 1 in center
 				temp = 1 - temp;
+
 				// Finally we take intensity into account
-				// temp *= lightComp->Intensity * spotK;
+				temp *= lightComp->Intensity / 150.f;
 
 				// We also take color into account
 				FLinearColor lightColor = lightComp->GetLightColor();
-				temp *= FMath::Pow(lightColor.R * lightColor.R + lightColor.G * lightColor.G + lightColor.B * lightColor.B / 3.0f, 0.5f);
+				temp *= FMath::Pow((lightColor.R * lightColor.R + lightColor.G * lightColor.G + lightColor.B * lightColor.B) / 3.0f, 0.35f); // 0.5f);
 
 				// UE_LOG(LogTemp, Warning, TEXT("%f"), temp);
 				// It always counts the brightest light

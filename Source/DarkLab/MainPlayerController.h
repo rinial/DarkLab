@@ -20,7 +20,7 @@ private:
 public:
 	// The number of character's 'lives'
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main Player Controller")
-	int Lives = 3;
+	int Lives = 1; // TODO increase?
 
 protected:
 	// While true rotation is controled with mouse
