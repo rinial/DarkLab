@@ -26,6 +26,11 @@ private:
 	UPROPERTY()
 	class ADarkness* Darkness;
 
+public:
+	// If true, keeps hunting till it gets the player
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Hunting")
+	bool bIsPersistent = false;
+
 protected:
 	// The maximum time the darkness keeps being passive
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Passive")
@@ -54,22 +59,26 @@ protected:
 	// The maximum time for any retreating 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Retreating")
 	float MaxTimeRetreating = 25.f;
-	// The minimum time after retreating into darkness and before becoming passive
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Retreating")
-	float MinTimeRetreatingInDarkness = 5.0f;
+
+	// The minimum time spend in the dark before it can teleport or just stop retreating
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: States")
+	float MinTimeInDark = 5.0f;
 
 	// Time since last state change
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: State")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: States")
 	float SinceLastStateChange = 0.f;
 
 public:
 	// Current state of the darkness
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: State")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: States")
 	EDarkStateEnum State = EDarkStateEnum::VE_Passive;
 
 public:
 	// Called on disabling a character
 	void OnDisabling();
+
+	// Called when player gets the black doorcard
+	void OnPlayerFindsBlackCard();
 	
 	// Stops everything, enters passive state
 	UFUNCTION(BlueprintCallable, Category = "Darkness: Passive")

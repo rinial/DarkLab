@@ -36,7 +36,7 @@ const float AMainGameMode::ConnectToOtherRoomProbability = 0.8f;
 const float AMainGameMode::DeletePassageToFixProbability = 0.0f; // TODO increase or delete?
 const float AMainGameMode::PassageIsDoorProbability = 0.45f;
 const float AMainGameMode::DoorIsNormalProbability = 1.f; // 0.90f; TODO decrease if we need some big doors
-const float AMainGameMode::DoorIsExitProbability = 0.1f;
+const float AMainGameMode::DoorIsExitProbability = 0.17f;
 const float AMainGameMode::SpawnFlashlightProbability = 0.1f; // TODO decrease
 const float AMainGameMode::SpawnDoorcardProbability = 0.3f;
 const float AMainGameMode::MakeRoomSpecialForCardProbability = 0.0f; // TODO increase or delete?
@@ -2824,6 +2824,13 @@ void AMainGameMode::Tick(const float deltaTime)
 			ActivateRoomLamps(room);
 	}
 
+	ACharacter* tempCharacter = MainPlayerController->GetCharacter();
+	AMainCharacter* character = tempCharacter ? Cast<AMainCharacter>(tempCharacter) : nullptr;
+
+	// If player finds black card, we make darkness know
+	if (character && DarknessController && !DarknessController->bIsPersistent && character->HasDoorcardOfColor(FLinearColor::Black))
+		DarknessController->OnPlayerFindsBlackCard();
+
 	// On screen debug
 	if (bShowDebug && GEngine)
 	{
@@ -2872,11 +2879,8 @@ void AMainGameMode::Tick(const float deltaTime)
 		}
 
 		// Character debug
-		ACharacter* tempCharacter = MainPlayerController->GetCharacter();
-		if (tempCharacter)
+		if (character)
 		{
-			AMainCharacter* character = Cast<AMainCharacter>(tempCharacter);
-
 			// Title
 			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Yellow, TEXT("Character:"), false);
 

@@ -15,6 +15,13 @@ void ADarknessController::OnDisabling()
 	//((AActor*)this)->GetWorldTimerManager().SetTimer(handler, this, &ADarknessController::StartHunting, 1.0f, false, TrackingRestartDelay);
 }
 
+// Called when player gets the black doorcard
+void ADarknessController::OnPlayerFindsBlackCard()
+{
+	bIsPersistent = true;
+	StartHunting();
+}
+
 // Stops everything, enters passive state
 void ADarknessController::BecomePassive()
 {
@@ -99,7 +106,7 @@ void ADarknessController::Tick(const float deltaTime)
 			break;
 		case EDarkStateEnum::VE_Hunting:
 			// If hunting for some time, start retreating
-			if (SinceLastStateChange >= CurrentMaxTimeHunting)
+			if (!bIsPersistent && SinceLastStateChange >= CurrentMaxTimeHunting)
 				StartRetreating();
 			// Otherwise keep hunting
 			else
@@ -107,7 +114,7 @@ void ADarknessController::Tick(const float deltaTime)
 			break;
 		case EDarkStateEnum::VE_Retreating:
 			// If retreating for too long or if already escaped into darkness, become passive
-			if (SinceLastStateChange >= MaxTimeRetreating || Darkness->TimeInDark >= MinTimeRetreatingInDarkness)
+			if (SinceLastStateChange >= MaxTimeRetreating || Darkness->TimeInDark >= MinTimeInDark)
 				BecomePassive();
 			// Otherwise keep retreating
 			else
