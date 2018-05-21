@@ -27,6 +27,7 @@ public:
 	void MoveToLocation(FVector location);
 	void MoveToActor(AActor* actor);
 	void Stop();
+	void TeleportToLocation(FVector locaton);
 	// When light is too strong goes backwards and returns true. Great for some situations and will look weird in others. Returns false if light ain't too strong
 	bool RetreatFromLight();
 	// Tracks something
@@ -34,6 +35,12 @@ public:
 	// Goes away from last brightest light
 	void IntoDarkness();
 
+private:
+	// Reenables particles
+	void ReenableParticles();
+	float ReenableParticlesAfterTeleportDelay = 0.5f;
+
+public:
 	// TODO delete, this is only used for debug
 	UPROPERTY(EditAnywhere, Category = "Darkness: Debug")
 	bool bIsStationary = false;

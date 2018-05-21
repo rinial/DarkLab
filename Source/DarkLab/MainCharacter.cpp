@@ -268,6 +268,11 @@ void AMainCharacter::Tick(const float deltaTime)
 		SelectedForActivation = newSelectedForActivation;
 	}
 
+	// TODO delete later
+	// Bad fix for falling in the floor
+	FVector currentLoc = GetActorLocation();
+	SetActorLocation(FVector(currentLoc.X, currentLoc.Y, 90.649994));
+
 	// TODO delete
 	// We check the light level
 	// GameMode->GetLightingAmount(this, true);

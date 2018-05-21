@@ -46,6 +46,16 @@ protected:
 	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Hunting")
 	//float TrackingRestartDelay = 8.0f;
 
+	// The minimum distance between darkness and character before darkness can teleport
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Teleport")
+	float MinTeleportDistance = 2500.0f;
+	// The minimum time between two consequtive teleports
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Teleport")
+	float MinTimeBetweenTeleports = 15.0f;
+	// Time since last teleport
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Teleport")
+	float SinceLastTeleport = 0.f;
+
 	// The maximum time the darkness keeps hunting
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Hunting")
 	float MaxTimeHunting = 60.0f;
@@ -79,6 +89,10 @@ public:
 
 	// Called when player gets the black doorcard
 	void OnPlayerFindsBlackCard();
+
+	// Teleports to some point closer to character
+	UFUNCTION(BlueprintCallable, Category = "Darkness: Teleport")
+	void TeleportToCharacter();
 	
 	// Stops everything, enters passive state
 	UFUNCTION(BlueprintCallable, Category = "Darkness: Passive")

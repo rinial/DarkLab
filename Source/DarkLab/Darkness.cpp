@@ -33,6 +33,15 @@ void ADarkness::Stop()
 {
 	TrackingType = ETrackingEnum::VE_None;
 }
+void ADarkness::TeleportToLocation(FVector location)
+{
+	DarkParticles->SetEmitterEnable(FName("Darkness"), false);
+	SetActorLocation(location);
+
+	// Reenables particles after a delay
+	FTimerHandle handler;
+	((AActor*)this)->GetWorldTimerManager().SetTimer(handler, this, &ADarkness::ReenableParticles, 1.0f, false, ReenableParticlesAfterTeleportDelay);
+}
 // When light is too strong goes backwards and returns true. Great for some situations and will look weird in others. Returns false if light aint too strong
 bool ADarkness::RetreatFromLight()
 {
@@ -84,6 +93,12 @@ void ADarkness::IntoDarkness()
 	FVector fleeDirection = GetActorLocation() - BrightestLightLocation;
 	fleeDirection.Normalize();
 	Move(fleeDirection);
+}
+
+// Reenables particles
+void ADarkness::ReenableParticles()
+{
+	DarkParticles->SetEmitterEnable(FName("Darkness"), true);
 }
 
 // Used for collision overlaps

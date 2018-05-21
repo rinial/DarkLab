@@ -4,15 +4,12 @@
 #include "Darkness.h"
 #include "MainPlayerController.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "GameFramework/Character.h"
 
 // Called on disabling a character
 void ADarknessController::OnDisabling()
 {
 	StartRetreating();
-
-	//// Start tracking a new one after a delay
-	//FTimerHandle handler;
-	//((AActor*)this)->GetWorldTimerManager().SetTimer(handler, this, &ADarknessController::StartHunting, 1.0f, false, TrackingRestartDelay);
 }
 
 // Called when player gets the black doorcard
@@ -20,6 +17,46 @@ void ADarknessController::OnPlayerFindsBlackCard()
 {
 	bIsPersistent = true;
 	StartHunting();
+}
+
+// Teleports to some point closer to character
+void ADarknessController::TeleportToCharacter()
+{
+	if (SinceLastTeleport < MinTimeBetweenTeleports || Darkness->TimeInDark < MinTimeInDark)
+		return;
+
+	APlayerController* controller = GetWorld()->GetFirstPlayerController();
+	if (!controller)
+		return;
+	ACharacter* character = controller->GetCharacter();
+	if (!character)
+		return;
+
+	FVector charLocation = character->GetActorLocation();
+
+	if ((charLocation - Darkness->GetActorLocation()).Size2D() < MinTeleportDistance)
+		return;
+
+	// Making random direction
+	FVector direction;
+	float L;
+	do
+	{
+		// Check random vectors in the unit circle so result is statistically uniform.
+		direction.X = FMath::FRand() * 2.f - 1.f;
+		direction.Y = FMath::FRand() * 2.f - 1.f;
+		L = direction.SizeSquared();
+	} 
+	while (L > 1.0f || L < KINDA_SMALL_NUMBER);
+	direction *= (1.0f / FMath::Sqrt(L));
+
+	// TODO check if that place is not lit
+	FVector destination = charLocation + direction * MinTeleportDistance;
+
+	Darkness->TeleportToLocation(destination);
+	SinceLastTeleport = 0.f;
+
+	UE_LOG(LogTemp, Warning, TEXT("Teleported"));
 }
 
 // Stops everything, enters passive state
@@ -30,6 +67,7 @@ void ADarknessController::BecomePassive()
 
 	CurrentMaxTimePassive = FMath::FRandRange(MinTimePassive, MaxTimePassive);
 	SinceLastStateChange = 0.f;
+
 	UE_LOG(LogTemp, Warning, TEXT("Entering passive state"));
 }
 
@@ -49,14 +87,15 @@ void ADarknessController::StartHunting()
 		return;
 
 	ACharacter* character = controller->GetCharacter();
-	if (character)
-	{
-		State = EDarkStateEnum::VE_Hunting;
-		CurrentMaxTimeHunting = FMath::FRandRange(MinTimeHunting, MaxTimeHunting);
-		SinceLastStateChange = 0.f;
-		Darkness->MoveToActor((AActor*)character);
-		UE_LOG(LogTemp, Warning, TEXT("Starting the hunt"));
-	}
+	if (!character)
+		return;
+	
+	State = EDarkStateEnum::VE_Hunting;
+	CurrentMaxTimeHunting = FMath::FRandRange(MinTimeHunting, MaxTimeHunting);
+	SinceLastStateChange = 0.f;
+	Darkness->MoveToActor((AActor*)character);
+
+	UE_LOG(LogTemp, Warning, TEXT("Starting the hunt"));
 }
 
 // Stops following the player and retreats into the darkness
@@ -66,6 +105,7 @@ void ADarknessController::StartRetreating()
 	Darkness->Stop();
 
 	SinceLastStateChange = 0.f;
+
 	UE_LOG(LogTemp, Warning, TEXT("Retreating into darkness"));
 }
 
@@ -89,6 +129,7 @@ void ADarknessController::Tick(const float deltaTime)
 	Super::Tick(deltaTime);
 
 	SinceLastStateChange += deltaTime;
+	SinceLastTeleport += deltaTime;
 
 	// Darkness retreats from powerful light sources
 	bool isAfraid = Darkness->RetreatFromLight();
@@ -110,7 +151,12 @@ void ADarknessController::Tick(const float deltaTime)
 				StartRetreating();
 			// Otherwise keep hunting
 			else
+			{
+				// Tries to teleport if possible
+				TeleportToCharacter();
+				// Then just moves
 				Darkness->Tracking();
+			}
 			break;
 		case EDarkStateEnum::VE_Retreating:
 			// If retreating for too long or if already escaped into darkness, become passive
