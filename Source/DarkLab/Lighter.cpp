@@ -34,6 +34,12 @@ void ALighter::ResetPowerLevel()
 	Light->SetLightColor(NormalColor * CurrentlySeenLevel);
 }
 
+// Returns true if lighter is on
+bool ALighter::IsOn()
+{
+	return Light->IsVisible();
+}
+
 // Sets default values
 ALighter::ALighter()
 {

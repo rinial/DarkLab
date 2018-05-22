@@ -10,6 +10,8 @@
 #include "Activatable.h"
 #include "Informative.h"
 #include "Doorcard.h"
+#include "Lighter.h"
+#include "Flashlight.h"
 #include "MainPlayerController.h"
 #include "MainGameMode.h"
 
@@ -68,7 +70,12 @@ void AMainCharacter::Equip1()
 		if (lighter)
 		{
 			if (lighter != EquipedObject)
+			{
 				lighter->Execute_Equip(lighter->_getUObject(), this, FName("LeftHand"));
+				ALighter* light = Cast<ALighter>(lighter->_getUObject());
+				if (light && !light->IsOn())
+					light->Execute_Use(light);
+			}
 			/*else
 				lighter->Execute_Unequip(lighter->_getUObject(), this);*/
 		}
@@ -83,7 +90,12 @@ void AMainCharacter::Equip2()
 		if (flashlight)
 		{
 			if (flashlight != EquipedObject)
+			{
 				flashlight->Execute_Equip(flashlight->_getUObject(), this, FName("LeftHand"));
+				AFlashlight* light = Cast<AFlashlight>(flashlight->_getUObject());
+				if (light && !light->IsOn())
+					light->Execute_Use(light);
+			}
 			/*else
 				flashlight->Execute_Unequip(flashlight->_getUObject(), this);*/
 		}

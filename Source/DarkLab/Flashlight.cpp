@@ -37,6 +37,12 @@ void AFlashlight::ResetPowerLevel()
 	ExtraLight->SetLightColor(NormalColor * PowerLevel);
 }
 
+// Returns true if flashlight is on
+bool AFlashlight::IsOn()
+{
+	return MainLight->IsVisible();
+}
+
 // Sets default values
 AFlashlight::AFlashlight()
 {

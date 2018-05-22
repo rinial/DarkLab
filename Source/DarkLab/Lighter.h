@@ -28,6 +28,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Lighter")
 	void ResetPowerLevel();
 
+	// Returns true if lighter is on
+	UFUNCTION(BlueprintCallable, Category = "Lighter")
+	bool IsOn();
+
 protected:
 	// Lighter's direction and root object
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lighter: Components")

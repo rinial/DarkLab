@@ -5,6 +5,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "MainGameMode.h"
 #include "Lighter.h"
+// For HUD
+#include "Blueprint/UserWidget.h"
 
 // Movement controls
 void AMainPlayerController::MoveUp(const float value)
@@ -163,6 +165,11 @@ AMainPlayerController::AMainPlayerController()
 void AMainPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	// Add HUD
+	UClass* HUDAssetClass = StaticLoadClass(UObject::StaticClass(), nullptr, TEXT("WidgetBlueprint'/Game/Blueprints/GameHUDBP.GameHUDBP_C'"));
+	UUserWidget* HUD = CreateWidget<UUserWidget>(this, HUDAssetClass);
+	HUD->AddToViewport();
 
 	MainCharacter = Cast<AMainCharacter>(GetCharacter());
 

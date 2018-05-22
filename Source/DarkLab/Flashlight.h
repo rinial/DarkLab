@@ -28,6 +28,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flashlight")
 	void ResetPowerLevel();
 
+	// Returns true if flashlight is on
+	UFUNCTION(BlueprintCallable, Category = "Flashlight")
+	bool IsOn();
+
 protected:
 	// Flashlight's direction and root object
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flashlight: Components")
