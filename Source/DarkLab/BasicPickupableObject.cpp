@@ -3,6 +3,9 @@
 #include "BasicPickupableObject.h"
 #include "MainCharacter.h"
 #include "MainGameMode.h"
+// TODO delete
+#include "Doorcard.h"
+#include "GameHUD.h"
 
 void ABasicPickupableObject::PickUp_Implementation(AMainCharacter * character)
 {
@@ -11,6 +14,17 @@ void ABasicPickupableObject::PickUp_Implementation(AMainCharacter * character)
 
 	Cast<AMainGameMode>(GetWorld()->GetAuthGameMode())->OnPickUp(this);
 	
+
+	// TODO delete
+	ADoorcard* card = Cast<ADoorcard>(this);
+	if (card)
+	{
+		FLinearColor color = card->GetColor();
+		if (!character->HasDoorcardOfColor(color))
+			character->HUD->ShowDoorcard(color);
+	}
+
+
 	character->Inventory.Add(this);
 
 	UE_LOG(LogTemp, Warning, TEXT("Picked up %s"), *(Name.ToString()));

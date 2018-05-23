@@ -34,8 +34,8 @@ ADoorcard::ADoorcard()
 	Card->SetupAttachment(RootComponent);
 	
 	// Fill information
-	Name = NSLOCTEXT("LocalNS", "Doorcard name", "Doorcard");
-	BasicInfo = NSLOCTEXT("LocalNS", "Doorcard information", "Use to open a colored door");
+	Name = NSLOCTEXT("LocalNS", "Doorcard name", "Keycard");
+	BasicInfo = NSLOCTEXT("LocalNS", "Doorcard information", "Opens doors of similar color");
 
 	ZOffset = 1.0f;
 }

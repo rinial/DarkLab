@@ -21,10 +21,16 @@ class DARKLAB_API ADarknessController : public AAIController
 {
 	GENERATED_BODY()
 
-private:
+protected:
 	// Controlled darkness
 	UPROPERTY()
 	class ADarkness* Darkness;
+	// Hunted character
+	UPROPERTY()
+	class AMainCharacter* MainCharacter;
+	// Hunted character controller
+	UPROPERTY()
+	class AMainPlayerController* PlayerController;
 
 public:
 	// If true, keeps hunting till it gets the player
@@ -64,7 +70,7 @@ protected:
 	float MinTimeHunting = 30.0f;
 	// Currently decided max hunting time updated at the start of every hunt
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Hunting")
-	float CurrentMaxTimeHunting = 45.0f;
+	float CurrentMaxTimeHunting = -1.0f;
 
 	// The maximum time for any retreating 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Darkness: Retreating")

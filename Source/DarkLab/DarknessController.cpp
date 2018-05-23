@@ -4,7 +4,8 @@
 #include "Darkness.h"
 #include "MainPlayerController.h"
 #include "GameFramework/PawnMovementComponent.h"
-#include "GameFramework/Character.h"
+#include "MainCharacter.h"
+#include "GameHUD.h"
 
 // Called on disabling a character
 void ADarknessController::OnDisabling()
@@ -25,14 +26,7 @@ void ADarknessController::TeleportToCharacter()
 	if (SinceLastTeleport < MinTimeBetweenTeleports || Darkness->TimeInDark < MinTimeInDark)
 		return;
 
-	APlayerController* controller = GetWorld()->GetFirstPlayerController();
-	if (!controller)
-		return;
-	ACharacter* character = controller->GetCharacter();
-	if (!character)
-		return;
-
-	FVector charLocation = character->GetActorLocation();
+	FVector charLocation = MainCharacter->GetActorLocation();
 
 	if ((charLocation - Darkness->GetActorLocation()).Size2D() < MinTeleportDistance)
 		return;
@@ -68,34 +62,29 @@ void ADarknessController::BecomePassive()
 	CurrentMaxTimePassive = FMath::FRandRange(MinTimePassive, MaxTimePassive);
 	SinceLastStateChange = 0.f;
 
+	// MainCharacter->HUD->ShowHideWarning(true, FText::FromString("You feel safe lol"));
 	UE_LOG(LogTemp, Warning, TEXT("Entering passive state"));
 }
 
 // Teleports somewhere and starts following the player
 void ADarknessController::StartHunting()
 {	
-	APlayerController* controller = GetWorld()->GetFirstPlayerController();
-	if (!controller)
-		return;
-
-	AMainPlayerController* mainController = Cast<AMainPlayerController>(controller);
-	if (!mainController)
-		return;
-
 	// Don't hunt anymore
-	if (mainController->Lives <= 0)
+	if (PlayerController->Lives <= 0)
 		return;
 
-	ACharacter* character = controller->GetCharacter();
-	if (!character)
-		return;
+	bool firstHunt = CurrentMaxTimeHunting < 0;
 	
 	State = EDarkStateEnum::VE_Hunting;
 	CurrentMaxTimeHunting = FMath::FRandRange(MinTimeHunting, MaxTimeHunting);
 	SinceLastStateChange = 0.f;
-	Darkness->MoveToActor((AActor*)character);
+	Darkness->MoveToActor((AActor*)MainCharacter);
 
-	UE_LOG(LogTemp, Warning, TEXT("Starting the hunt"));
+	if (!bIsPersistent || firstHunt)
+		MainCharacter->HUD->ShowHideWarning(true, FText::FromString("You sense something malevolent coming after you from the darkness"));
+	else
+		MainCharacter->HUD->ShowHideWarning(true, FText::FromString("You feel the darkness coming for you again. This time it won't be stopped"));
+	// UE_LOG(LogTemp, Warning, TEXT("Starting the hunt"));
 }
 
 // Stops following the player and retreats into the darkness
@@ -106,7 +95,8 @@ void ADarknessController::StartRetreating()
 
 	SinceLastStateChange = 0.f;
 
-	UE_LOG(LogTemp, Warning, TEXT("Retreating into darkness"));
+	MainCharacter->HUD->ShowHideWarning(true, FText::FromString("You notice the darkness retreating. You are safe..."));
+	// UE_LOG(LogTemp, Warning, TEXT("Retreating into darkness"));
 }
 
 // Called when the game starts or when spawned
@@ -118,6 +108,18 @@ void ADarknessController::BeginPlay()
 	Darkness = Cast<ADarkness>(GetPawn());	
 	if (!Darkness)
 		UE_LOG(LogTemp, Warning, TEXT("No Darkness"));
+
+	// We find the player
+	APlayerController* controller = GetWorld()->GetFirstPlayerController();
+	if (!controller)
+		UE_LOG(LogTemp, Warning, TEXT("No Player Conrtoller"));;
+	PlayerController = Cast<AMainPlayerController>(controller);
+	
+	// We find the character
+	ACharacter* character = controller->GetCharacter();
+	if (!character)
+		return;
+	MainCharacter = Cast<AMainCharacter>(character);
 
 	// Then we set the state
 	BecomePassive();

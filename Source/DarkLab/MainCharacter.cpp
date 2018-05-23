@@ -14,6 +14,7 @@
 #include "Flashlight.h"
 #include "MainPlayerController.h"
 #include "MainGameMode.h"
+#include "GameHUD.h"
 
 // Movement functions
 void AMainCharacter::Move(FVector direction, const float value)
@@ -75,6 +76,9 @@ void AMainCharacter::Equip1()
 				ALighter* light = Cast<ALighter>(lighter->_getUObject());
 				if (light && !light->IsOn())
 					light->Execute_Use(light);
+
+				HUD->OutlineItem(2, false);
+				HUD->OutlineItem(1, true);
 			}
 			/*else
 				lighter->Execute_Unequip(lighter->_getUObject(), this);*/
@@ -95,6 +99,9 @@ void AMainCharacter::Equip2()
 				AFlashlight* light = Cast<AFlashlight>(flashlight->_getUObject());
 				if (light && !light->IsOn())
 					light->Execute_Use(light);
+
+				HUD->OutlineItem(1, false);
+				HUD->OutlineItem(2, true);
 			}
 			/*else
 				flashlight->Execute_Unequip(flashlight->_getUObject(), this);*/
@@ -273,6 +280,11 @@ void AMainCharacter::Tick(const float deltaTime)
 	TScriptInterface<IActivatable> newSelectedForActivation = GetActivatable();
 	if (SelectedForActivation != newSelectedForActivation)
 	{
+		if (SelectedForActivation && !newSelectedForActivation)
+			HUD->ShowHideActivatablePanel(false);
+		else if (!SelectedForActivation && newSelectedForActivation)
+			HUD->ShowHideActivatablePanel(true);
+
 		if (SelectedForActivation)
 			SetOutline(SelectedForActivation->_getUObject(), false);
 		if (newSelectedForActivation)

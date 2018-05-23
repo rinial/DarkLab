@@ -36,7 +36,7 @@ private:
 	// GetInputMouseDelta doesn't really work as it should
 	FVector2D LastMousePosition;
 
-protected:
+public:
 	// Cotntrol where the character goes
 	UFUNCTION()
 	void MoveUp(const float value);
@@ -56,15 +56,18 @@ protected:
 	UFUNCTION()
 	void Activate();
 	// Equipes first item
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void Equip1();
 	// Equipes second item
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void Equip2();
 
 	// Show/Hide menu
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void ShowHideMenu();
+	// Show/Hide help
+	UFUNCTION(BlueprintCallable)
+	void ShowHideHelp();
 
 	// Resets map, only used for debug
 	UFUNCTION()
@@ -81,6 +84,16 @@ private:
 	void OnLoss();
 	// Respawns the character
 	void Enable();
+
+protected:
+	UPROPERTY()
+	class AMainGameMode* GameMode;
+	UPROPERTY()
+	class UGameHUD* HUD;
+
+private:
+	bool bShowingMenu = false;
+	bool bShowingHelp = false;
 	
 public:
 	// Sets default values

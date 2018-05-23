@@ -74,6 +74,10 @@ private:
 	// A reference to the game mode
 	UPROPERTY()
 	class AMainGameMode* GameMode;
+public:
+	// A reference to the HUD
+	UPROPERTY()
+	class UGameHUD* HUD;
 
 public:
 	// Is true when a character loses a life. Used for "death" animation

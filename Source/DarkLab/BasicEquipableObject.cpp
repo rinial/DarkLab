@@ -5,6 +5,7 @@
 // TODO delete later
 #include "Flashlight.h"
 #include "Lighter.h"
+#include "GameHUD.h"
 
 // Called when the object is to be equiped
 void ABasicEquipableObject::Equip_Implementation(AMainCharacter* character, const FName location)
@@ -56,6 +57,7 @@ void ABasicEquipableObject::ActivateObject(AMainCharacter* character)
 		if (character->FlashlightIndex < 0)
 		{
 			character->FlashlightIndex = character->Inventory.Num() - 1;
+			character->HUD->ShowItem2Panel();
 			
 			if (!character->EquipedObject)
 				Execute_Equip(this, character, FName("LeftHand"));

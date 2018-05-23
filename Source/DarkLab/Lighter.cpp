@@ -53,7 +53,7 @@ ALighter::ALighter()
 
 	// Fill information
 	Name = NSLOCTEXT("LocalNS", "Lighter name", "Lighter");
-	BasicInfo = NSLOCTEXT("LocalNS", "Lighter information", "Provides light around");
+	BasicInfo = NSLOCTEXT("LocalNS", "Lighter information", "Provides light around. Loses gas in time");
 
 	ZOffset = 5.0f;
 

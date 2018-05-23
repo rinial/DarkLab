@@ -48,7 +48,7 @@ public:
 
 	// The speed of losing power
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lighter")
-	float PowerLossPerSecond = 0.0f; // TODO increase
+	float PowerLossPerSecond = 0.002f;
 
 private:
 	FLinearColor NormalColor = FLinearColor::White; // TODO change

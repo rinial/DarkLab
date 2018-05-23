@@ -22,6 +22,7 @@
 #include "Darkness.h"
 #include "MainPlayerController.h"
 #include "MainCharacter.h"
+#include "GameHUD.h"
 // For on screen debug
 #include "EngineGlobals.h"
 #include "Engine/Engine.h"
@@ -582,9 +583,12 @@ void AMainGameMode::OnEnterRoom() // LabRoom* lastRoom, LabRoom* newRoom)
 // Called when character loses all of his lives
 void AMainGameMode::OnLoss()
 {
-	UE_LOG(LogTemp, Warning, TEXT("You actually lost!"));
+	if (!bHasWon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("You actually lost!"));
 
-	// TODO
+		HUD->ShowLossMessage();
+	}
 }
 // Called when character is enabled to reset the map
 void AMainGameMode::OnCharacterEnabled()
@@ -594,9 +598,13 @@ void AMainGameMode::OnCharacterEnabled()
 // Called when character reached the exit
 void AMainGameMode::OnExitReached()
 {
+	bHasWon = true;
+
 	UE_LOG(LogTemp, Warning, TEXT("Reached the exit!"));
 
-	// TODO
+	HUD->ShowVictoryMessage();
+
+	// TODO stop character from moving?
 }
 
 // Called when character picks up an object to delete it from arrays without pooling
@@ -646,6 +654,7 @@ void AMainGameMode::OnExitOpened(ABasicDoor* door)
 			continue;
 
 		exitVolume->ActivateLight();
+		HUD->ShowHideWarning(true, FText::FromString("The light engulfs you, coming from the open exit. It's almost blinding. You feel a welcoming breeze from the passage ahead. Time to leave the lab behind"));
 		break;
 	}
 }

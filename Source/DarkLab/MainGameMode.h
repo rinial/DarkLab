@@ -383,11 +383,17 @@ protected:
 	// Other constants
 	static const float ReshapeDarknessTick;
 
-	// Pointers to existing controllers
+	// Pointers to existing controllers and HUD
 	UPROPERTY()
 	class ADarknessController* DarknessController;
 	UPROPERTY()
 	class AMainPlayerController* MainPlayerController;
+public:
+	UPROPERTY()
+	class UGameHUD* HUD;
+
+	UPROPERTY()
+	bool bHasWon = false;
 	
 private:
 	// Classes used for spawning
