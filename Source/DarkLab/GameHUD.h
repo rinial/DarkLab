@@ -60,6 +60,14 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Game HUD")
 	void ShowHideHelp(bool show);
 
+	// Shows overlay during transition
+	UFUNCTION(BlueprintImplementableEvent, Category = "Game HUD")
+	void OnRestart();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Game HUD")
+	void OnChangeMap();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Game HUD")
+	void OnExit();
+
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Game HUD")
 	class AMainPlayerController* Controller;

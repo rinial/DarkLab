@@ -56,18 +56,31 @@ public:
 	UFUNCTION()
 	void Activate();
 	// Equipes first item
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Main Player Controller")
 	void Equip1();
 	// Equipes second item
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Main Player Controller")
 	void Equip2();
+	// Equipes third item
+	UFUNCTION(BlueprintCallable, Category = "Main Player Controller")
+	void Equip3();
 
 	// Show/Hide menu
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Main Player Controller")
 	void ShowHideMenu();
 	// Show/Hide help
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Main Player Controller")
 	void ShowHideHelp();
+
+	// Restarts the game
+	UFUNCTION(BlueprintCallable, Category = "Main Player Controller")
+	void Restart();
+	// Returns to main menu
+	UFUNCTION(BlueprintCallable, Category = "Main Player Controller")
+	void ToMainMenu();
+	// Exits game
+	UFUNCTION(BlueprintCallable, Category = "Main Player Controller")
+	void ExitGame();
 
 	// Resets map, only used for debug
 	UFUNCTION()
@@ -91,8 +104,10 @@ protected:
 	UPROPERTY()
 	class UGameHUD* HUD;
 
-private:
+public:
+	UPROPERTY(BlueprintReadOnly, Category = "Main Player Controller")
 	bool bShowingMenu = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Main Player Controller")
 	bool bShowingHelp = false;
 	
 public:

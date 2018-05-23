@@ -91,16 +91,25 @@ void AMainPlayerController::Activate()
 // Equipes first item
 void AMainPlayerController::Equip1()
 {
-	// if (!bShowingMenu && !bShowingHelp && MainCharacter && !MainCharacter->bIsDisabled)
-	if (!GameMode->bHasWon && MainCharacter && !MainCharacter->bIsDisabled)
+	if (bShowingMenu)
+		Restart();
+	if (!bShowingHelp && !GameMode->bHasWon && MainCharacter && !MainCharacter->bIsDisabled)
 		MainCharacter->Equip1();
 }
 // Equipes second item
 void AMainPlayerController::Equip2()
 {
-	// if (!bShowingMenu && !bShowingHelp && MainCharacter && !MainCharacter->bIsDisabled)
-	if (!GameMode->bHasWon && MainCharacter && !MainCharacter->bIsDisabled)
+	if (bShowingMenu)
+		ToMainMenu();
+	if (!bShowingHelp && !GameMode->bHasWon && MainCharacter && !MainCharacter->bIsDisabled)
 		MainCharacter->Equip2();
+}
+// Equipes third item
+void AMainPlayerController::Equip3()
+{
+	if (bShowingMenu)
+		ExitGame();
+	// TODO
 }
 
 // Show/Hide menu
@@ -108,32 +117,59 @@ void AMainPlayerController::ShowHideMenu()
 {
 	UE_LOG(LogTemp, Warning, TEXT("ShowHideMenu called"));
 
-	if (bShowingHelp)
-		ShowHideHelp();
+	/*if (bShowingHelp)
+		ShowHideHelp();*/
 
 	bShowingMenu = !bShowingMenu;
 	HUD->ShowHideMenu(bShowingMenu);
 	
-	UGameplayStatics::SetGlobalTimeDilation(this, bShowingMenu ? 0.05f : 1.f);
+	UGameplayStatics::SetGlobalTimeDilation(this, bShowingMenu || bShowingHelp ? 0.05f : 1.f);
 	// SetPause(bShowingMenu);
-
-	// TODO delete
-	// add somewhere
-	//FGenericPlatformMisc::RequestExit(false);
 }
 // Show/Hide help
 void AMainPlayerController::ShowHideHelp()
 {
 	UE_LOG(LogTemp, Warning, TEXT("ShowHideHelp called"));
 
-	if (bShowingMenu)
-		ShowHideMenu();
+	/*if (bShowingMenu)
+		ShowHideMenu();*/
 
 	bShowingHelp = !bShowingHelp;
 	HUD->ShowHideHelp(bShowingHelp);
 
-	UGameplayStatics::SetGlobalTimeDilation(this, bShowingHelp ? 0.05f : 1.f);
+	UGameplayStatics::SetGlobalTimeDilation(this, bShowingMenu || bShowingHelp ? 0.05f : 1.f);
 	// SetPause(bShowingHelp);
+}
+
+// Restarts the game
+void AMainPlayerController::Restart()
+{
+	HUD->OnRestart();
+
+	// We add a small delay to show loading screen
+	FTimerHandle handler;
+	GetWorldTimerManager().SetTimer(handler, this, &AMainPlayerController::RestartLevel, 1.0f, false, 0.001f); // Its that small because of the low time dilation
+	// RestartLevel();
+
+	// Haven't tried
+	// ClientTravel(TEXT("?restart"), TRAVEL_Relative);
+	// GetWorld()->Exec(GetWorld(), TEXT("RestartLevel"));
+	// UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), false);
+	
+	// Doesn't work
+	// GameMode->ResetLevel();
+}
+// Returns to main menu
+void AMainPlayerController::ToMainMenu()
+{
+	HUD->OnChangeMap();
+	// TODO
+}
+// Exits game
+void AMainPlayerController::ExitGame()
+{
+	HUD->OnExit();
+	FGenericPlatformMisc::RequestExit(false);
 }
 
 // Resets map, only used for debug
@@ -247,6 +283,7 @@ void AMainPlayerController::SetupInputComponent()
 	InputComponent->BindAction("Activate", IE_Pressed, this, &AMainPlayerController::Activate);
 	InputComponent->BindAction("Equip1", IE_Pressed, this, &AMainPlayerController::Equip1);
 	InputComponent->BindAction("Equip2", IE_Pressed, this, &AMainPlayerController::Equip2);
+	InputComponent->BindAction("Equip3", IE_Pressed, this, &AMainPlayerController::Equip3);
 
 	InputComponent->BindAction("Menu", IE_Pressed, this, &AMainPlayerController::ShowHideMenu);
 	InputComponent->BindAction("Help", IE_Pressed, this, &AMainPlayerController::ShowHideHelp);

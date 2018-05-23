@@ -95,7 +95,8 @@ void ADarknessController::StartRetreating()
 
 	SinceLastStateChange = 0.f;
 
-	MainCharacter->HUD->ShowHideWarning(true, FText::FromString("You notice the darkness retreating. You are safe..."));
+	if (!MainCharacter->bIsDisabled)
+		MainCharacter->HUD->ShowHideWarning(true, FText::FromString("You notice the darkness retreating. You are safe."));
 	// UE_LOG(LogTemp, Warning, TEXT("Retreating into darkness"));
 }
 
