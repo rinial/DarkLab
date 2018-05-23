@@ -7,6 +7,8 @@
 #include "Lighter.h"
 #include "GameHUD.h"
 #include "Kismet/GameplayStatics.h"
+// TODO delete?
+#include "UObject/ConstructorHelpers.h"
 
 // Movement controls
 void AMainPlayerController::MoveUp(const float value)
@@ -229,6 +231,10 @@ AMainPlayerController::AMainPlayerController()
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
 	// bShouldPerformFullTickWhenPaused = true;
+
+	static ConstructorHelpers::FObjectFinder<UClass> gameHUDBP(TEXT("Class'/Game/Blueprints/GameHUDBP.GameHUDBP_C'"));
+	if (gameHUDBP.Succeeded())
+		HUDAssetClass = gameHUDBP.Object;
 }
 
 // Called when the game starts or when spawned
@@ -242,7 +248,7 @@ void AMainPlayerController::BeginPlay()
 	MainCharacter = Cast<AMainCharacter>(GetCharacter());
 
 	// Add HUD
-	UClass* HUDAssetClass = StaticLoadClass(UObject::StaticClass(), nullptr, TEXT("WidgetBlueprint'/Game/Blueprints/GameHUDBP.GameHUDBP_C'"));
+	// UClass* HUDAssetClass = StaticLoadClass(UObject::StaticClass(), nullptr, TEXT("Class'/Game/Blueprints/GameHUDBP.GameHUDBP_C'")); //("WidgetBlueprint'/Game/Blueprints/GameHUDBP.GameHUDBP_C'"));
 	HUD = Cast<UGameHUD>(CreateWidget<UUserWidget>(this, HUDAssetClass));
 	HUD->Controller = this;
 	HUD->Character = MainCharacter;

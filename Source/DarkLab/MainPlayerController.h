@@ -109,6 +109,9 @@ public:
 	bool bShowingMenu = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Main Player Controller")
 	bool bShowingHelp = false;
+
+private:
+	TSubclassOf<class UGameHUD> HUDAssetClass;
 	
 public:
 	// Sets default values
