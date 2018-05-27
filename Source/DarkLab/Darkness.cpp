@@ -154,6 +154,9 @@ void ADarkness::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (!bIsActive)
+		return;
+
 	GameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
 	DarknessController = Cast<ADarknessController>(GetController());
 }
@@ -162,6 +165,9 @@ void ADarkness::BeginPlay()
 void ADarkness::Tick(const float deltaTime)
 {
 	Super::Tick(deltaTime);
+
+	if (!bIsActive)
+		return;
 
 	// We check the light level	
 	Luminosity = GameMode->GetLightingAmount(BrightestLightLocation, this, true, Collision->GetScaledSphereRadius() + 30, true); // , false, bShowLightDebug);

@@ -390,7 +390,7 @@ protected:
 	class AMainPlayerController* MainPlayerController;
 public:
 	UPROPERTY()
-	class UGameHUD* HUD;
+	class UGameHUD* GameHUD;
 
 	UPROPERTY()
 	bool bHasWon = false;

@@ -57,7 +57,7 @@ void ABasicEquipableObject::ActivateObject(AMainCharacter* character)
 		if (character->FlashlightIndex < 0)
 		{
 			character->FlashlightIndex = character->Inventory.Num() - 1;
-			character->HUD->ShowItem2Panel();
+			character->GameHUD->ShowItem2Panel();
 			
 			if (!character->EquipedObject)
 				Execute_Equip(this, character, FName("LeftHand"));

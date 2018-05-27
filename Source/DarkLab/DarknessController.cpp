@@ -23,6 +23,8 @@ void ADarknessController::OnPlayerFindsBlackCard()
 // Teleports to some point closer to character
 void ADarknessController::TeleportToCharacter()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Trying to teleport"));
+
 	if (SinceLastTeleport < MinTimeBetweenTeleports || Darkness->TimeInDark < MinTimeInDark)
 		return;
 
@@ -32,7 +34,9 @@ void ADarknessController::TeleportToCharacter()
 		return;
 
 	// Making random direction
+	UE_LOG(LogTemp, Warning, TEXT("Making random direction"));
 	FVector direction;
+	int tries = 50;
 	float L;
 	do
 	{
@@ -40,8 +44,12 @@ void ADarknessController::TeleportToCharacter()
 		direction.X = FMath::FRand() * 2.f - 1.f;
 		direction.Y = FMath::FRand() * 2.f - 1.f;
 		L = direction.SizeSquared();
-	} 
-	while (L > 1.0f || L < KINDA_SMALL_NUMBER);
+		--tries;
+	}
+	while (tries > 0 && (L > 1.0f || L < KINDA_SMALL_NUMBER));
+	UE_LOG(LogTemp, Warning, TEXT("Made random direction"));
+	if (tries <= 0)
+		UE_LOG(LogTemp, Warning, TEXT("Took me long"));
 	direction *= (1.0f / FMath::Sqrt(L));
 
 	// TODO check if that place is not lit
@@ -62,7 +70,7 @@ void ADarknessController::BecomePassive()
 	CurrentMaxTimePassive = FMath::FRandRange(MinTimePassive, MaxTimePassive);
 	SinceLastStateChange = 0.f;
 
-	// MainCharacter->HUD->ShowHideWarning(true, FText::FromString("You feel safe lol"));
+	// MainCharacter->GameHUD->ShowHideWarning(true, FText::FromString("You feel safe lol"));
 	UE_LOG(LogTemp, Warning, TEXT("Entering passive state"));
 }
 
@@ -81,9 +89,9 @@ void ADarknessController::StartHunting()
 	Darkness->MoveToActor((AActor*)MainCharacter);
 
 	if (!bIsPersistent || firstHunt)
-		MainCharacter->HUD->ShowHideWarning(true, FText::FromString("You sense something malevolent coming after you from the darkness"));
+		MainCharacter->GameHUD->ShowHideWarning(true, FText::FromString("You sense something malevolent coming after you from the darkness"));
 	else
-		MainCharacter->HUD->ShowHideWarning(true, FText::FromString("You feel the darkness coming for you again. This time it won't be stopped"));
+		MainCharacter->GameHUD->ShowHideWarning(true, FText::FromString("You feel the darkness coming for you again. This time it won't be stopped"));
 	// UE_LOG(LogTemp, Warning, TEXT("Starting the hunt"));
 }
 
@@ -96,7 +104,7 @@ void ADarknessController::StartRetreating()
 	SinceLastStateChange = 0.f;
 
 	if (!MainCharacter->bIsDisabled)
-		MainCharacter->HUD->ShowHideWarning(true, FText::FromString("You notice the darkness retreating. You are safe."));
+		MainCharacter->GameHUD->ShowHideWarning(true, FText::FromString("You notice the darkness retreating. You are safe."));
 	// UE_LOG(LogTemp, Warning, TEXT("Retreating into darkness"));
 }
 
@@ -113,13 +121,13 @@ void ADarknessController::BeginPlay()
 	// We find the player
 	APlayerController* controller = GetWorld()->GetFirstPlayerController();
 	if (!controller)
-		UE_LOG(LogTemp, Warning, TEXT("No Player Conrtoller"));;
+		UE_LOG(LogTemp, Warning, TEXT("No Player Conrtoller"));
 	PlayerController = Cast<AMainPlayerController>(controller);
 	
 	// We find the character
 	ACharacter* character = controller->GetCharacter();
 	if (!character)
-		return;
+		UE_LOG(LogTemp, Warning, TEXT("No Character"));
 	MainCharacter = Cast<AMainCharacter>(character);
 
 	// Then we set the state
@@ -155,10 +163,13 @@ void ADarknessController::Tick(const float deltaTime)
 			// Otherwise keep hunting
 			else
 			{
+				UE_LOG(LogTemp, Warning, TEXT("Hunting"));
 				// Tries to teleport if possible
 				TeleportToCharacter();
+				UE_LOG(LogTemp, Warning, TEXT("> After teleport"));
 				// Then just moves
 				Darkness->Tracking();
+				UE_LOG(LogTemp, Warning, TEXT("> After tracking"));
 			}
 			break;
 		case EDarkStateEnum::VE_Retreating:

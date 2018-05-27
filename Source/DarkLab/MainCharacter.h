@@ -77,7 +77,7 @@ private:
 public:
 	// A reference to the HUD
 	UPROPERTY()
-	class UGameHUD* HUD;
+	class UGameHUD* GameHUD;
 
 public:
 	// Is true when a character loses a life. Used for "death" animation

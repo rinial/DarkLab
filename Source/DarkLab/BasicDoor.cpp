@@ -14,9 +14,9 @@ void ABasicDoor::ActivateObject(AMainCharacter * character)
 	if (DoorColor != FLinearColor::White && !character->HasDoorcardOfColor(DoorColor))
 	{
 		if (!bIsExit)
-			character->HUD->ShowHideWarning(true, FText::FromString("You don't have a keycard for this door"));
+			character->GameHUD->ShowHideWarning(true, FText::FromString("You don't have a keycard for this door"));
 		else
-			character->HUD->ShowHideWarning(true, FText::FromString("You reached the exit, but you don't have a suitable keycard"));
+			character->GameHUD->ShowHideWarning(true, FText::FromString("You reached the exit, but you don't have a suitable keycard"));
 		UE_LOG(LogTemp, Warning, TEXT("You can't open this door"));
 		return;
 	}

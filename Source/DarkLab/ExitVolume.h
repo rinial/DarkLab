@@ -43,6 +43,11 @@ protected:
 	class UPointLightComponent* Light;
 
 public:
+	// For volume in menu
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Exit")
+	bool bForMenu = false;
+
+public:
 	// Sets default values
 	AExitVolume();
 

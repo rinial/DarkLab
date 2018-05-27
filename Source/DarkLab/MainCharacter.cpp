@@ -77,8 +77,8 @@ void AMainCharacter::Equip1()
 				if (light && !light->IsOn())
 					light->Execute_Use(light);
 
-				HUD->OutlineItem(2, false);
-				HUD->OutlineItem(1, true);
+				GameHUD->OutlineItem(2, false);
+				GameHUD->OutlineItem(1, true);
 			}
 			/*else
 				lighter->Execute_Unequip(lighter->_getUObject(), this);*/
@@ -100,8 +100,8 @@ void AMainCharacter::Equip2()
 				if (light && !light->IsOn())
 					light->Execute_Use(light);
 
-				HUD->OutlineItem(1, false);
-				HUD->OutlineItem(2, true);
+				GameHUD->OutlineItem(1, false);
+				GameHUD->OutlineItem(2, true);
 			}
 			/*else
 				flashlight->Execute_Unequip(flashlight->_getUObject(), this);*/
@@ -281,9 +281,9 @@ void AMainCharacter::Tick(const float deltaTime)
 	if (SelectedForActivation != newSelectedForActivation)
 	{
 		if (SelectedForActivation && !newSelectedForActivation)
-			HUD->ShowHideActivatablePanel(false);
+			GameHUD->ShowHideActivatablePanel(false);
 		else if (!SelectedForActivation && newSelectedForActivation)
-			HUD->ShowHideActivatablePanel(true);
+			GameHUD->ShowHideActivatablePanel(true);
 
 		if (SelectedForActivation)
 			SetOutline(SelectedForActivation->_getUObject(), false);

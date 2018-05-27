@@ -57,6 +57,9 @@ void AExitVolume::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (bForMenu)
+		return;
+
 	// Light is disabled
 	Reset();
 

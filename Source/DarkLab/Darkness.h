@@ -45,6 +45,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Darkness: Debug")
 	bool bIsStationary = false;
 
+	// True if
+	UPROPERTY(EditAnywhere, Category = "Darkness")
+	bool bIsActive = true;
+
 protected:
 	// Tracking parameters
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Darkness: Tracking")

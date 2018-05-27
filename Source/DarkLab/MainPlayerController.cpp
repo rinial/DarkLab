@@ -4,8 +4,10 @@
 #include "MainCharacter.h"
 #include "GameFramework/GameModeBase.h"
 #include "MainGameMode.h"
+// #include "MenuGameMode.h"
 #include "Lighter.h"
 #include "GameHUD.h"
+#include "MenuHUD.h"
 #include "Kismet/GameplayStatics.h"
 // TODO delete?
 #include "UObject/ConstructorHelpers.h"
@@ -13,12 +15,18 @@
 // Movement controls
 void AMainPlayerController::MoveUp(const float value)
 {
+	if (bIsMenu)
+		return;
+
 	//if (!bShowingMenu && !bShowingHelp && MainCharacter && !MainCharacter->bIsDisabled)
 	if (!GameMode->bHasWon && MainCharacter && !MainCharacter->bIsDisabled)
 		MainCharacter->MoveUp(value);
 }
 void AMainPlayerController::MoveRight(const float value)
 {
+	if (bIsMenu)
+		return;
+
 	// if (!bShowingMenu && !bShowingHelp && MainCharacter && !MainCharacter->bIsDisabled)
 	if (!GameMode->bHasWon && MainCharacter && !MainCharacter->bIsDisabled)
 		MainCharacter->MoveRight(value);
@@ -27,6 +35,9 @@ void AMainPlayerController::MoveRight(const float value)
 // Rotation controls
 void AMainPlayerController::LookWithMouse()
 {
+	if (bIsMenu)
+		return;
+
 	if (GameMode->bHasWon || bShowingMenu || bShowingHelp)
 		return;
 
@@ -49,6 +60,9 @@ void AMainPlayerController::LookWithMouse()
 }
 void AMainPlayerController::LookWithStick()
 {
+	if (bIsMenu)
+		return;
+
 	if (GameMode->bHasWon || bShowingMenu || bShowingHelp)
 		return;
 
@@ -79,6 +93,9 @@ void AMainPlayerController::LookWithStick()
 // Makes the character use something he has equiped
 void AMainPlayerController::UseEquiped()
 {
+	if (bIsMenu)
+		return;
+
 	// if (!bShowingMenu && !bShowingHelp && MainCharacter && !MainCharacter->bIsDisabled)
 	if (!GameMode->bHasWon && MainCharacter && !MainCharacter->bIsDisabled)
 		MainCharacter->UseEquiped();
@@ -86,6 +103,9 @@ void AMainPlayerController::UseEquiped()
 // Makes the character avtivate smth near him
 void AMainPlayerController::Activate()
 {
+	if (bIsMenu)
+		return;
+
 	// if (!bShowingMenu && !bShowingHelp && MainCharacter && !MainCharacter->bIsDisabled)
 	if (!GameMode->bHasWon && MainCharacter && !MainCharacter->bIsDisabled)
 		MainCharacter->Activate();
@@ -93,37 +113,49 @@ void AMainPlayerController::Activate()
 // Equipes first item
 void AMainPlayerController::Equip1()
 {
-	if (bShowingMenu)
+	if (bIsMenu)
+		Start();
+	else if (bShowingMenu)
 		Restart();
-	if (!bShowingHelp && !GameMode->bHasWon && MainCharacter && !MainCharacter->bIsDisabled)
+	else if (!bShowingHelp && !GameMode->bHasWon && MainCharacter && !MainCharacter->bIsDisabled)
 		MainCharacter->Equip1();
 }
 // Equipes second item
 void AMainPlayerController::Equip2()
 {
-	if (bShowingMenu)
+	if (bIsMenu)
+		ExitGame();
+	else if (bShowingMenu)
 		ToMainMenu();
-	if (!bShowingHelp && !GameMode->bHasWon && MainCharacter && !MainCharacter->bIsDisabled)
+	else if (!bShowingHelp && !GameMode->bHasWon && MainCharacter && !MainCharacter->bIsDisabled)
 		MainCharacter->Equip2();
 }
 // Equipes third item
 void AMainPlayerController::Equip3()
 {
+	if (bIsMenu)
+		return;
+
 	if (bShowingMenu)
 		ExitGame();
-	// TODO
 }
 
 // Show/Hide menu
 void AMainPlayerController::ShowHideMenu()
 {
+	if (bIsMenu)
+	{
+		// ExitGame();
+		return;
+	}
+
 	UE_LOG(LogTemp, Warning, TEXT("ShowHideMenu called"));
 
 	/*if (bShowingHelp)
 		ShowHideHelp();*/
 
 	bShowingMenu = !bShowingMenu;
-	HUD->ShowHideMenu(bShowingMenu);
+	GameHUD->ShowHideMenu(bShowingMenu);
 	
 	UGameplayStatics::SetGlobalTimeDilation(this, bShowingMenu || bShowingHelp ? 0.05f : 1.f);
 	// SetPause(bShowingMenu);
@@ -131,22 +163,40 @@ void AMainPlayerController::ShowHideMenu()
 // Show/Hide help
 void AMainPlayerController::ShowHideHelp()
 {
+	if (bIsMenu)
+		return;
+
 	UE_LOG(LogTemp, Warning, TEXT("ShowHideHelp called"));
 
 	/*if (bShowingMenu)
 		ShowHideMenu();*/
 
 	bShowingHelp = !bShowingHelp;
-	HUD->ShowHideHelp(bShowingHelp);
+	GameHUD->ShowHideHelp(bShowingHelp);
 
 	UGameplayStatics::SetGlobalTimeDilation(this, bShowingMenu || bShowingHelp ? 0.05f : 1.f);
 	// SetPause(bShowingHelp);
 }
 
+// Starts the game
+void AMainPlayerController::Start()
+{
+	if (!bIsMenu)
+		return;
+
+	MenuHUD->OnChangeMap();
+
+	// We add a small delay to show loading screen
+	FTimerHandle handler;
+	GetWorldTimerManager().SetTimer(handler, this, &AMainPlayerController::FinishStart, 1.0f, false, 0.01f);
+}
 // Restarts the game
 void AMainPlayerController::Restart()
 {
-	HUD->OnRestart();
+	if (bIsMenu)
+		return;
+
+	GameHUD->OnRestart();
 
 	// We add a small delay to show loading screen
 	FTimerHandle handler;
@@ -164,22 +214,45 @@ void AMainPlayerController::Restart()
 // Returns to main menu
 void AMainPlayerController::ToMainMenu()
 {
-	HUD->OnChangeMap();
-	// TODO
+	if (bIsMenu)
+		return;
+	
+	GameHUD->OnChangeMap();
+
+	// We add a small delay to show loading screen
+	FTimerHandle handler;
+	GetWorldTimerManager().SetTimer(handler, this, &AMainPlayerController::FinishToMainMenu, 1.0f, false, 0.001f); // Its that small because of the low time dilation
 }
 // Exits game
 void AMainPlayerController::ExitGame()
 {
-	HUD->OnExit();
+	if (bIsMenu)
+		MenuHUD->OnExit();
+	else
+		GameHUD->OnExit();
+
 	FGenericPlatformMisc::RequestExit(false);
 }
 
 // Resets map, only used for debug
 void AMainPlayerController::ResetMap()
 {
+	if (bIsMenu)
+		return;
+
 	// UE_LOG(LogTemp, Warning, TEXT("ResetMap called"));
 
 	Cast<AMainGameMode>(GetWorld()->GetAuthGameMode())->ResetMap();
+}
+
+// Some fucntions called after a delay
+void AMainPlayerController::FinishStart()
+{
+	UGameplayStatics::OpenLevel(this, FName("TestMap"));
+}
+void AMainPlayerController::FinishToMainMenu()
+{
+	UGameplayStatics::OpenLevel(this, FName("MenuMap"));
 }
 
 // Takes one 'life' and calls CalculateLoss
@@ -234,7 +307,10 @@ AMainPlayerController::AMainPlayerController()
 
 	static ConstructorHelpers::FObjectFinder<UClass> gameHUDBP(TEXT("Class'/Game/Blueprints/GameHUDBP.GameHUDBP_C'"));
 	if (gameHUDBP.Succeeded())
-		HUDAssetClass = gameHUDBP.Object;
+		GameHUDAssetClass = gameHUDBP.Object;
+	static ConstructorHelpers::FObjectFinder<UClass> menuHUDBP(TEXT("Class'/Game/Blueprints/MenuHUDBP.MenuHUDBP_C'"));
+	if (menuHUDBP.Succeeded())
+		MenuHUDAssetClass = menuHUDBP.Object;
 }
 
 // Called when the game starts or when spawned
@@ -242,32 +318,47 @@ void AMainPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Find game mode
+	// Find game mode and decide if it's menu
 	GameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
-	// Find character
-	MainCharacter = Cast<AMainCharacter>(GetCharacter());
+	if (!GameMode)
+		bIsMenu = true;
 
-	// Add HUD
-	// UClass* HUDAssetClass = StaticLoadClass(UObject::StaticClass(), nullptr, TEXT("Class'/Game/Blueprints/GameHUDBP.GameHUDBP_C'")); //("WidgetBlueprint'/Game/Blueprints/GameHUDBP.GameHUDBP_C'"));
-	HUD = Cast<UGameHUD>(CreateWidget<UUserWidget>(this, HUDAssetClass));
-	HUD->Controller = this;
-	HUD->Character = MainCharacter;
-	MainCharacter->HUD = HUD;
-	HUD->GameMode = GameMode;
-	GameMode->HUD = HUD;
-	HUD->AddToViewport();
+	if (!bIsMenu)
+	{
+		// Find character
+		MainCharacter = Cast<AMainCharacter>(GetCharacter());
 
-	HUD->ShowHideWarning(true, FText::FromString("You wake up in a room with a white keycard and a lighter in your pockets. You don't remember where you are, but this looks like some kind of a lab"));
+		// Add HUD
+		// UClass* GameHUDAssetClass = StaticLoadClass(UObject::StaticClass(), nullptr, TEXT("Class'/Game/Blueprints/GameHUDBP.GameHUDBP_C'")); //("WidgetBlueprint'/Game/Blueprints/GameHUDBP.GameHUDBP_C'"));
+		GameHUD = Cast<UGameHUD>(CreateWidget<UUserWidget>(this, GameHUDAssetClass));
+		GameHUD->Controller = this;
+		GameHUD->Character = MainCharacter;
+		MainCharacter->GameHUD = GameHUD;
+		GameHUD->GameMode = GameMode;
+		GameMode->GameHUD = GameHUD;
+		GameHUD->AddToViewport();
 
+		GameHUD->ShowHideWarning(true, FText::FromString("You wake up in a room with a white keycard and a lighter in your pockets. You don't remember where you are, but this looks like some kind of a lab"));
+
+		// We spawn a lighter for the character
+		ALighter* lighter = GameMode->SpawnLighter(0, 0);
+		lighter->ActivateObject(MainCharacter);
+		Equip1();
+		UseEquiped();
+
+		// SetTickableWhenPaused(true);
+	}
+	else
+	{
+		// Add HUD
+		MenuHUD = Cast<UMenuHUD>(CreateWidget<UUserWidget>(this, MenuHUDAssetClass));
+		MenuHUD->Controller = this;
+		MenuHUD->AddToViewport();
+
+		this->SetInputMode(FInputModeGameAndUI());
+	}
+	
 	GetMousePosition(LastMousePosition.X, LastMousePosition.Y);
-
-	// We spawn a lighter for the character
-	ALighter* lighter = GameMode->SpawnLighter(0, 0);
-	lighter->ActivateObject(MainCharacter);
-	Equip1();
-	UseEquiped();
-
-	// SetTickableWhenPaused(true);
 }
 
 // Sets controls

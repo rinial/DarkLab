@@ -72,6 +72,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Main Player Controller")
 	void ShowHideHelp();
 
+	// Starts the game
+	UFUNCTION(BlueprintCallable, Category = "Main Player Controller")
+	void Start();
 	// Restarts the game
 	UFUNCTION(BlueprintCallable, Category = "Main Player Controller")
 	void Restart();
@@ -85,6 +88,13 @@ public:
 	// Resets map, only used for debug
 	UFUNCTION()
 	void ResetMap();
+
+protected:
+	// Some fucntions called after a delay
+	UFUNCTION()
+	void FinishStart();
+	UFUNCTION()
+	void FinishToMainMenu();
 
 public:
 	// Called from the main character. Takes one 'life' and calls CalculateLoss
@@ -102,7 +112,9 @@ protected:
 	UPROPERTY()
 	class AMainGameMode* GameMode;
 	UPROPERTY()
-	class UGameHUD* HUD;
+	class UGameHUD* GameHUD;
+	UPROPERTY()
+	class UMenuHUD* MenuHUD;
 
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Main Player Controller")
@@ -110,8 +122,13 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Main Player Controller")
 	bool bShowingHelp = false;
 
+	// True is this is menu
+	UPROPERTY(BlueprintReadOnly, Category = "Main Player Controller")
+	bool bIsMenu = false;
+
 private:
-	TSubclassOf<class UGameHUD> HUDAssetClass;
+	TSubclassOf<class UGameHUD> GameHUDAssetClass;
+	TSubclassOf<class UMenuHUD> MenuHUDAssetClass;
 	
 public:
 	// Sets default values

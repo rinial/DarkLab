@@ -587,7 +587,7 @@ void AMainGameMode::OnLoss()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("You actually lost!"));
 
-		HUD->ShowLossMessage();
+		GameHUD->ShowLossMessage();
 	}
 }
 // Called when character is enabled to reset the map
@@ -602,7 +602,7 @@ void AMainGameMode::OnExitReached()
 
 	UE_LOG(LogTemp, Warning, TEXT("Reached the exit!"));
 
-	HUD->ShowVictoryMessage();
+	GameHUD->ShowVictoryMessage();
 
 	// TODO stop character from moving?
 }
@@ -654,7 +654,7 @@ void AMainGameMode::OnExitOpened(ABasicDoor* door)
 			continue;
 
 		exitVolume->ActivateLight();
-		HUD->ShowHideWarning(true, FText::FromString("The light engulfs you, coming from the open exit. It's almost blinding. You feel a welcoming breeze from the passage ahead. Time to leave the lab behind"));
+		GameHUD->ShowHideWarning(true, FText::FromString("The light engulfs you, coming from the open exit. It's almost blinding. You feel a welcoming breeze from the passage ahead. Time to leave the lab behind"));
 		break;
 	}
 }

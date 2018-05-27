@@ -21,7 +21,7 @@ void ABasicPickupableObject::PickUp_Implementation(AMainCharacter * character)
 	{
 		FLinearColor color = card->GetColor();
 		if (!character->HasDoorcardOfColor(color))
-			character->HUD->ShowDoorcard(color);
+			character->GameHUD->ShowDoorcard(color);
 	}
 
 
