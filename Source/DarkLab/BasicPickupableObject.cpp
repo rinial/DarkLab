@@ -7,6 +7,7 @@
 #include "Doorcard.h"
 #include "GameHUD.h"
 
+// Called when the object is to be picked up
 void ABasicPickupableObject::PickUp_Implementation(AMainCharacter * character)
 {
 	// We disable the object
@@ -29,7 +30,7 @@ void ABasicPickupableObject::PickUp_Implementation(AMainCharacter * character)
 
 	UE_LOG(LogTemp, Warning, TEXT("Picked up %s"), *(Name.ToString()));
 }
-
+// Called when the object is activated
 void ABasicPickupableObject::ActivateObject(AMainCharacter * character)
 {
 	if (!character)

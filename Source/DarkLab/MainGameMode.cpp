@@ -17,7 +17,7 @@
 #include "ExitVolume.h"
 #include "LabPassage.h"
 #include "LabRoom.h"
-#include "LabHallway.h"
+// #include "LabHallway.h"
 #include "DarknessController.h"
 #include "Darkness.h"
 #include "MainPlayerController.h"
@@ -893,7 +893,7 @@ void AMainGameMode::CompleteReshapeAllDarknessAroundOnTick()
 		CompleteReshapeAllDarknessAround();
 }
 
-// Tries to find a poolable object in a specified array
+// Tries to find a poolable object
 UObject* AMainGameMode::TryGetPoolable(UClass* cl)
 {
 	TArray<TScriptInterface<IDeactivatable>>& pool = GetCorrectPool(cl);
@@ -2823,10 +2823,9 @@ void AMainGameMode::Tick(const float deltaTime)
 {
 	Super::Tick(deltaTime);
 	
-	// Updates PlayerRoom, calles OnEnterRoom
+	// Updates PlayerRoom, calls OnEnterRoom
 	GetCharacterRoom();
 
-	// TODO make a separate method
 	// Turns off some lamps from time to time
 	for (int i = RoomsWithLampsOn.Num() - 1; i >= 0; --i)
 	{

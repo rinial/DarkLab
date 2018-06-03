@@ -51,7 +51,7 @@ public:
 
 	// Shows or hides a warning
 	UFUNCTION(BlueprintImplementableEvent, Category = "Game HUD")
-	void ShowHideWarning(bool show, const FText& warning); // !!
+	void ShowHideWarning(bool show, const FText& warning);
 
 	// Shows or hides menu
 	UFUNCTION(BlueprintImplementableEvent, Category = "Game HUD")

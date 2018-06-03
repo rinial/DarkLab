@@ -8,7 +8,7 @@
 #include "Equipable.h"
 #include "Usable.h"
 #include "Activatable.h"
-#include "Informative.h"
+// #include "Informative.h"
 #include "Doorcard.h"
 #include "Lighter.h"
 #include "Flashlight.h"

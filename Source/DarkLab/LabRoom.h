@@ -8,7 +8,6 @@
 class LabPassage;
 
 // Represents a room in the laboratory
-// Hallways and forks are also technically rooms
 class DARKLAB_API LabRoom
 {
 public:
