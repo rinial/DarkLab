@@ -19,6 +19,7 @@
 		"AllDesktop",
 		"MacNoEditor",
 		"WindowsNoEditor",
-		"LinuxNoEditor"
+		"LinuxNoEditor",
+		"HTML5"
 	]
 }
