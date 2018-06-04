@@ -149,6 +149,8 @@ float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, c
 }
 float AMainGameMode::GetLightingAmount(FVector& lightLoc, const AActor* actor, const TArray<FVector> locations, const bool returnFirstPositive)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::GetLightingAmount"));
+
 	float result = 0.0f;
 
 	// First we find all the point lights (spot lights count as point lights)
@@ -279,6 +281,8 @@ bool AMainGameMode::CanSee(const FVector location1, const AActor * actor2, const
 }
 bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const AActor * actor2, const FVector location2)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::CanSee"));
+
 	UWorld* gameWorld = GetWorld();
 	if (!gameWorld)
 		return false;
@@ -322,6 +326,8 @@ bool AMainGameMode::CanSee(const AActor * actor1, const FVector location1, const
 // Returns the light level for a passage
 float AMainGameMode::GetPassageLightingAmount(LabPassage * passage, bool oneSide, bool innerSide, const bool returnFirstPositive)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::GetPassageLightingAmount"));
+
 	if (!passage)
 		return 0.f;
 
@@ -385,6 +391,8 @@ bool AMainGameMode::IsPassageIlluminated(LabPassage * passage, bool oneSide, boo
 // Returns the light level for a room
 float AMainGameMode::GetRoomLightingAmount(LabRoom * room, const bool returnFirstPositive)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::GetRoomLightingAmount"));
+
 	if (!room)
 		return 0.f;
 
@@ -507,6 +515,8 @@ void AMainGameMode::GetCharacterLocation(int & x, int & y)
 // Returns the room the character is in
 LabRoom * AMainGameMode::GetCharacterRoom()
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::GetCharacterRoom"));
+
 	int x, y;
 	GetCharacterLocation(x, y);
 
@@ -546,6 +556,8 @@ LabRoom * AMainGameMode::GetCharacterRoom()
 // Called when character enters new room
 void AMainGameMode::OnEnterRoom() // LabRoom* lastRoom, LabRoom* newRoom)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::OnEnterRoom"));
+
 	LabRoom* lastRoom = PlayerRoom;
 	PlayerRoom = ActualPlayerRoom;
 
@@ -743,6 +755,8 @@ void AMainGameMode::PoolMap()
 // Pools dark area returning all rooms that now need fixing
 void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& toFix, bool stopAtFirstIfLit)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::PoolDarkness1"));
+
 	if (!start)
 		return;
 
@@ -757,6 +771,8 @@ void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& t
 }
 void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& toFix, TArray<LabRoom*>& toPool, bool stopAtFirstIfLit)
 {	
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::PoolDarkness2"));
+
 	if (!start)
 		return;
 
@@ -807,6 +823,8 @@ void AMainGameMode::PoolDarkness(LabRoom * start, int depth, TArray<LabRoom*>& t
 // Pools dark area and fixes every room that needs fixing
 void AMainGameMode::ReshapeDarkness(LabRoom * start, int depth, bool stopAtFirstIfLit)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::ReshapeDarkness"));
+
 	TArray<LabRoom*> toFix;
 	PoolDarkness(start, depth, toFix, stopAtFirstIfLit);
 	for (LabRoom* roomToFix : toFix)
@@ -830,7 +848,7 @@ void AMainGameMode::CompleteReshapeDarknessAround()
 // Pools all dark rooms on the map and fixes every room that needs fixing
 void AMainGameMode::ReshapeAllDarkness()
 {
-	// UE_LOG(LogTemp, Warning, TEXT("Reshaped all darkness"));
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::ReshapeAllDarkness"));
 
 	TArray<LabRoom*> allRooms;
 	AllocatedRoomSpace.GetKeys(allRooms);	
@@ -896,6 +914,8 @@ void AMainGameMode::CompleteReshapeAllDarknessAroundOnTick()
 // Tries to find a poolable object
 UObject* AMainGameMode::TryGetPoolable(UClass* cl)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::TryGetPoolable"));
+
 	TArray<TScriptInterface<IDeactivatable>>& pool = GetCorrectPool(cl);
 
 	if (pool.Num() == 0)
@@ -1113,7 +1133,7 @@ AExitVolume * AMainGameMode::SpawnExitVolume(const int botLeftX, const int botLe
 	if (room && SpawnedRoomObjects.Contains(room))
 		SpawnedRoomObjects[room].Add(exit);
 
-	UE_LOG(LogTemp, Warning, TEXT("Spawned an exit volume"));
+	// UE_LOG(LogTemp, Warning, TEXT("Spawned an exit volume"));
 
 	return nullptr;
 }
@@ -1121,6 +1141,8 @@ AExitVolume * AMainGameMode::SpawnExitVolume(const int botLeftX, const int botLe
 // Spawn full parts of the lab
 void AMainGameMode::SpawnRoom(LabRoom * room)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::SpawnRoom"));
+
 	if (!room)
 		return;
 
@@ -1237,6 +1259,8 @@ void AMainGameMode::SpawnRoom(LabRoom * room)
 }
 void AMainGameMode::SpawnPassage(LabPassage* passage, LabRoom* room)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::SpawnPassage"));
+
 	if (!passage)
 		return;
 
@@ -1263,6 +1287,8 @@ void AMainGameMode::SpawnPassage(LabPassage* passage, LabRoom* room)
 // Despawns room so it can be respawned later
 void AMainGameMode::DespawnRoom(LabRoom * room)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::DespawnRoom"));
+
 	if (!room)
 		return;
 
@@ -1326,6 +1352,7 @@ void AMainGameMode::AllocateRoomSpace(LabRoom * room, const int xOffset, const i
 }
 void AMainGameMode::AllocateRoomSpace(LabRoom * room, const int xOffset, const int yOffset, const int sizeX, const int sizeY, bool local)
 {
+
 	if (!room || !AllocatedRoomSpace.Contains(room))
 		return;
 	if (local)
@@ -1357,6 +1384,8 @@ bool AMainGameMode::MapSpaceIsFree(bool amongAllocated, bool amongSpawned, FRect
 }
 bool AMainGameMode::MapSpaceIsFree(bool amongAllocated, bool amongSpawned, const int botLeftX, const int botLeftY, const int sizeX, const int sizeY, LabRoom*& intersected)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::MapSpaceIsFree"));
+
 	/*if (sizeX < 1 || sizeY < 1)
 		return false;*/
 
@@ -1429,6 +1458,8 @@ bool AMainGameMode::RoomSpaceIsFree(LabRoom * room, const int xOffset, const int
 }
 bool AMainGameMode::RoomSpaceIsFree(LabRoom * room, const int xOffset, const int yOffset, const int sizeX, const int sizeY, const bool forPassage, const bool forDoor)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::RoomSpaceIsFree"));
+
 	if (!room)
 		return false;
 
@@ -1659,7 +1690,7 @@ EDirectionEnum AMainGameMode::GetReverseDirection(EDirectionEnum direction)
 	case EDirectionEnum::VE_Up:
 		return EDirectionEnum::VE_Down;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Somehow reached the end of GetREverseDirection"))
+	UE_LOG(LogTemp, Warning, TEXT("Somehow reached the end of GetReverseDirection"))
 	return EDirectionEnum::VE_Up;
 }
 
@@ -1667,6 +1698,8 @@ EDirectionEnum AMainGameMode::GetReverseDirection(EDirectionEnum direction)
 // Doesn't take other passages into account. Direction is always out
 FRectSpaceStruct AMainGameMode::CreateRandomPassageSpace(LabRoom * room, EDirectionEnum& direction, const bool forDoor)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::CreateRandomPassageSpace"));
+
 	FRectSpaceStruct space;
 
 	// Choose wall
@@ -1735,6 +1768,8 @@ FRectSpaceStruct AMainGameMode::CreatePassageSpaceFromPassage(LabRoom* room, Lab
 // TODO maybe it should take room size just in case other room gets destroyed
 FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom* room, FRectSpaceStruct passageSpace, EDirectionEnum direction, bool widerForDoor)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::CreateMinimumRoomSpace1"));
+
 	FRectSpaceStruct space;
 
 	int width = direction == EDirectionEnum::VE_Left || direction == EDirectionEnum::VE_Right ? passageSpace.SizeY : passageSpace.SizeX;
@@ -1775,6 +1810,8 @@ FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom* room, FRectSpace
 // Creates minimum space for a room near passage for tests and allocation
 FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom * room, LabPassage * passage)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::CreateMinimumRoomSpace2"));
+
 	EDirectionEnum direction = !passage->To ? passage->GridDirection : GetReverseDirection(passage->GridDirection);
 
 	FRectSpaceStruct pasSpace = CreatePassageSpaceFromPassage(room, passage);
@@ -1793,6 +1830,8 @@ FRectSpaceStruct AMainGameMode::CreateMinimumRoomSpace(LabRoom * room, LabPassag
 // Creates random room space based on minimum room space
 FRectSpaceStruct AMainGameMode::CreateRandomRoomSpace(FRectSpaceStruct minSpace, bool fromPassage, EDirectionEnum direction)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::CreateRandomRoomSpace"));
+	
 	FRectSpaceStruct randomSpace;
 
 	int area = FMath::RandRange(FMath::Max(minSpace.SizeX * minSpace.SizeY, MinRoomArea), MaxRoomArea);
@@ -1914,6 +1953,8 @@ bool AMainGameMode::TryShrinkY(FRectSpaceStruct & currentSpace, FRectSpaceStruct
 // Creates a random room based on minimum room space
 LabRoom * AMainGameMode::CreateRandomRoom(FRectSpaceStruct minSpace, bool fromPassage, EDirectionEnum direction, bool keepMinimum)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::CreateRandomRoom"));
+	
 	FRectSpaceStruct currentSpace = keepMinimum ? minSpace : CreateRandomRoomSpace(minSpace, fromPassage, direction);
 	// TArray<LabPassage*> additionalPassages;
 
@@ -1951,7 +1992,9 @@ LabRoom * AMainGameMode::CreateRandomRoom(FRectSpaceStruct minSpace, bool fromPa
 // Creates and adds a random passage to the room, returns passage or nullptr, also allocates room space and returns allocated room space by reference
 LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpaceStruct & roomSpace, LabRoom*& possibleRoomConnection)
 {
-	 //bool roomIsSpawned = SpawnedRoomObjects.Contains(room);
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::CreateAndAddRandomPassage"));
+
+	// bool roomIsSpawned = SpawnedRoomObjects.Contains(room);
 
 	bool forDoor = RandBool(PassageIsDoorProbability);
 	EDirectionEnum direction;
@@ -2073,6 +2116,8 @@ LabPassage * AMainGameMode::CreateAndAddRandomPassage(LabRoom * room, FRectSpace
 // Returns new rooms
 TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room, int desiredNumOfPassagesOverride)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::ExpandRoom"));
+
 	TArray<LabRoom*> newRooms;
 
 	if (!room)
@@ -2155,6 +2200,8 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room, int desiredNumOfPassa
 // Also spawns a wall over previous passage if room was spawned
 void AMainGameMode::FixRoom(LabRoom * room, int depth)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::FixRoom"));
+
 	if (depth > MaxFixDepth)
 		return;
 
@@ -2332,6 +2379,8 @@ void AMainGameMode::FixRoom(LabRoom * room, int depth)
 // Returns false if couldn't create
 bool AMainGameMode::CreateRandomInsideSpaceOfSize(LabRoom * room, int& xOffset, int& yOffset, const int sizeX, const int sizeY, const bool canBeTaken)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::CreateRandomInsideSpaceOfSize"));
+
 	if (sizeX < 1 || sizeY < 1 || sizeX > room->SizeX - 2 || sizeY > room->SizeY - 2)
 		return false;
 
@@ -2344,6 +2393,8 @@ bool AMainGameMode::CreateRandomInsideSpaceOfSize(LabRoom * room, int& xOffset, 
 // Same but near wall and returns direction from wall (width is along wall)
 bool AMainGameMode::CreateRandomInsideSpaceOfWidthNearWall(LabRoom * room, int& xOffset, int& yOffset, const int width, EDirectionEnum & direction, const bool canBeTaken)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::CreateRandomInsideSpaceOfWidthNearWall"));
+
 	// Choose wall
 	direction = RandDirection(); // Direction here are INTO room, so wall is the opposite
 	switch (direction)
@@ -2377,6 +2428,8 @@ bool AMainGameMode::CreateRandomInsideSpaceOfWidthNearWall(LabRoom * room, int& 
 // Should always be called on a room that is already spawned
 TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::FillRoom"));
+
 	TArray<AActor*> spawnedActors;
 
 	bool isExitRoom = room && room->Passages.Num() == 1 && room->Passages[0]->bIsDoor && room->Passages[0]->Width == ExitDoorWidth;
@@ -2491,6 +2544,8 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 // Activates all lamps in a single room
 void AMainGameMode::ActivateRoomLamps(LabRoom * room)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::ActivateRoomLamps"));
+
 	if (!room)
 		return;
 
@@ -2553,6 +2608,8 @@ void AMainGameMode::ActivateRoomLamps(LabRoom * room)
 // Returns true if unexpanded rooms are reachable from here
 bool AMainGameMode::CanReachUnexpanded(LabRoom * start, TArray<LabRoom*>& checkedRooms)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::CanReachUnexpanded"));
+
 	if (!start)
 		return false;
 
@@ -2587,6 +2644,8 @@ bool AMainGameMode::CanReachUnexpanded(LabRoom * start)
 // Repeats with all adjasent rooms recursively
 void AMainGameMode::ExpandInDepth(LabRoom* start, int depth, LabPassage* fromPassage, bool expandExpanded)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::ExpandInDepth1"));
+
 	if (!start)
 		return;
 
@@ -2611,6 +2670,8 @@ void AMainGameMode::ExpandInDepth(LabRoom* start, int depth, LabPassage* fromPas
 }
 void AMainGameMode::ExpandInDepth(LabRoom * start, int depth)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::ExpandInDepth2"));
+	
 	// UE_LOG(LogTemp, Warning, TEXT("Expanding:"));
 	// UE_LOG(LogTemp, Warning, TEXT("> Try 1"));
 
@@ -2662,6 +2723,8 @@ void AMainGameMode::ExpandInDepth(LabRoom * start, int depth)
 // Repeats with all adjasent rooms recursively
 void AMainGameMode::SpawnFillInDepth(LabRoom * start, int depth, LabPassage* fromPassage, FVector initialPasLoc)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::SpawnFillInDepth1"));
+
 	if (!start)
 		return;
 
@@ -2694,6 +2757,8 @@ void AMainGameMode::SpawnFillInDepth(LabRoom * start, int depth, LabPassage* fro
 }
 void AMainGameMode::SpawnFillInDepth(LabRoom* start, int depth)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::SpawnFillInDepth2"));
+
 	if (!start)
 		return;
 
@@ -2821,6 +2886,8 @@ void AMainGameMode::BeginPlay()
 // Called every frame
 void AMainGameMode::Tick(const float deltaTime)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::Tick"));
+
 	Super::Tick(deltaTime);
 	
 	// Updates PlayerRoom, calls OnEnterRoom

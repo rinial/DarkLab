@@ -53,7 +53,7 @@ void ABasicDoor::ResetDoor(bool isExit)
 {
 	DoorDriver->Stop();
 	DoorDriver->SetPlaybackPosition(0.0f, true);
-	DoorDriver->SetPlayRate(!isExit ? 1.f : 0.3f);
+	DoorDriver->SetPlayRate(!isExit ? 1.f : 0.15f); // Exit door opens slower
 	if (!isExit)
 	{
 		DoorDriver->SetPlayRate(1.f);

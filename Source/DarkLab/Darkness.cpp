@@ -11,6 +11,8 @@
 // Movement functions
 void ADarkness::Move(const FVector direction)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Darkness::Move"));
+
 	// TODO delete, this is only used for debug to prevent darkness from moving
 	if (bIsStationary)
 		return;
@@ -36,6 +38,8 @@ void ADarkness::Stop()
 }
 void ADarkness::TeleportToLocation(FVector location)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Darkness::TeleportToLocation"));
+
 	DarkParticles->SetEmitterEnable(FName("Darkness"), false);
 	SetActorLocation(location);
 
@@ -46,6 +50,8 @@ void ADarkness::TeleportToLocation(FVector location)
 // When light is too strong goes backwards and returns true. Great for some situations and will look weird in others. Returns false if light aint too strong
 bool ADarkness::RetreatFromLight()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Darkness::RetreatFromLight"));
+
 	// Retreats faster in brighter light, but resistance helps
 	// float temp = 1 - LightFearK * Luminosity * FMath::Max(0.0f, Luminosity - LightResistance);
 	// float temp = 1 - Luminosity / (LightResistance + 0.1f);
@@ -63,6 +69,8 @@ bool ADarkness::RetreatFromLight()
 // Track something
 void ADarkness::Tracking()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Darkness::Tracking"));
+
 	FVector currentLocation;
 	switch (TrackingType)
 	{
@@ -164,6 +172,8 @@ void ADarkness::BeginPlay()
 // Called every frame
 void ADarkness::Tick(const float deltaTime)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Darkness::Tick"));
+
 	Super::Tick(deltaTime);
 
 	if (!bIsActive)

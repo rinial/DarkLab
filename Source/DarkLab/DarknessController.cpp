@@ -27,7 +27,7 @@ void ADarknessController::OnPlayerFindsBlackCard()
 // Teleports to some point closer to character
 void ADarknessController::TeleportToCharacter()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Trying to teleport"));
+	UE_LOG(LogTemp, Warning, TEXT("DarknessController::TeleportToCharacter"));
 
 	if (SinceLastTeleport < MinTimeBetweenTeleports || Darkness->TimeInDark < MinTimeInDark)
 		return;
@@ -38,7 +38,7 @@ void ADarknessController::TeleportToCharacter()
 		return;
 
 	// Making random direction
-	UE_LOG(LogTemp, Warning, TEXT("Making random direction"));
+	// UE_LOG(LogTemp, Warning, TEXT("Making random direction"));
 	FVector direction;
 	int tries = 50;
 	float L;
@@ -51,9 +51,9 @@ void ADarknessController::TeleportToCharacter()
 		--tries;
 	}
 	while (tries > 0 && (L > 1.0f || L < KINDA_SMALL_NUMBER));
-	UE_LOG(LogTemp, Warning, TEXT("Made random direction"));
+	// UE_LOG(LogTemp, Warning, TEXT("Made random direction"));
 	if (tries <= 0)
-		UE_LOG(LogTemp, Warning, TEXT("Took me long"));
+		UE_LOG(LogTemp, Warning, TEXT("Teleport took me long"));
 	direction *= (1.0f / FMath::Sqrt(L));
 
 	// TODO check if that place is not lit
@@ -62,12 +62,14 @@ void ADarknessController::TeleportToCharacter()
 	Darkness->TeleportToLocation(destination);
 	SinceLastTeleport = 0.f;
 
-	UE_LOG(LogTemp, Warning, TEXT("Teleported"));
+	//UE_LOG(LogTemp, Warning, TEXT("Teleported"));
 }
 
 // Stops everything, enters passive state
 void ADarknessController::BecomePassive()
 {
+	UE_LOG(LogTemp, Warning, TEXT("DarknessController::BecomePassive"));
+
 	State = EDarkStateEnum::VE_Passive;
 	Darkness->Stop();
 
@@ -75,12 +77,14 @@ void ADarknessController::BecomePassive()
 	SinceLastStateChange = 0.f;
 
 	// MainCharacter->GameHUD->ShowHideWarning(true, FText::FromString("You feel safe lol"));
-	UE_LOG(LogTemp, Warning, TEXT("Entering passive state"));
+	// UE_LOG(LogTemp, Warning, TEXT("Entering passive state"));
 }
 
 // Teleports somewhere and starts following the player
 void ADarknessController::StartHunting()
 {	
+	UE_LOG(LogTemp, Warning, TEXT("DarknessController::StartHunting"));
+
 	// Don't hunt anymore
 	if (PlayerController->Lives <= 0)
 		return;
@@ -102,6 +106,8 @@ void ADarknessController::StartHunting()
 // Stops following the player and retreats into the darkness
 void ADarknessController::StartRetreating()
 {
+	UE_LOG(LogTemp, Warning, TEXT("DarknessController::StartRetreating"));
+
 	State = EDarkStateEnum::VE_Retreating;
 	Darkness->Stop();
 
@@ -141,6 +147,8 @@ void ADarknessController::BeginPlay()
 // Called every frame
 void ADarknessController::Tick(const float deltaTime)
 {
+	UE_LOG(LogTemp, Warning, TEXT("DarknessController::Tick"));
+
 	Super::Tick(deltaTime);
 
 	SinceLastStateChange += deltaTime;
@@ -167,13 +175,13 @@ void ADarknessController::Tick(const float deltaTime)
 			// Otherwise keep hunting
 			else
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Hunting"));
+				// UE_LOG(LogTemp, Warning, TEXT("Hunting"));
 				// Tries to teleport if possible
 				TeleportToCharacter();
-				UE_LOG(LogTemp, Warning, TEXT("> After teleport"));
+				// UE_LOG(LogTemp, Warning, TEXT("> After teleport"));
 				// Then just moves
 				Darkness->Tracking();
-				UE_LOG(LogTemp, Warning, TEXT("> After tracking"));
+				// UE_LOG(LogTemp, Warning, TEXT("> After tracking"));
 			}
 			break;
 		case EDarkStateEnum::VE_Retreating:

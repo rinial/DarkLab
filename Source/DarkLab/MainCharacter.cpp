@@ -19,6 +19,8 @@
 // Movement functions
 void AMainCharacter::Move(FVector direction, const float value)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainCharacter::Move"));
+
 	direction.Normalize();
 	FRotator rotation = GetActorRotation();
 	FVector lookDirection = rotation.Vector();
@@ -112,7 +114,7 @@ void AMainCharacter::Equip2()
 // Happens when something 'damages' the character
 void AMainCharacter::Disable()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Got disabled"));
+	UE_LOG(LogTemp, Warning, TEXT("MainCharacter::Disable"));
 
 	bIsDisabled = true;
 
@@ -127,7 +129,7 @@ void AMainCharacter::Disable()
 // Called from controller when it's time to enable character again
 void AMainCharacter::Enable()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Got enabled"));
+	UE_LOG(LogTemp, Warning, TEXT("MainCharacter::Enable"));
 
 	bIsDisabled = false;
 
@@ -140,6 +142,8 @@ void AMainCharacter::Enable()
 // Used for the activator's collision overlaps
 void AMainCharacter::OnActivatorBeginOverlap(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainCharacter::OnActivatorBeginOverlap"));
+
 	// We don't count our currently equiped object
 	UObject* otherObject = Cast<UObject>(OtherActor);
 	if (EquipedObject && otherObject == EquipedObject->_getUObject())
@@ -163,6 +167,8 @@ void AMainCharacter::OnActivatorEndOverlap(UPrimitiveComponent * OverlappedComp,
 // Returns an activatable object in front of the character
 TScriptInterface<class IActivatable> AMainCharacter::GetActivatable()
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainCharacter::GetActivatable"));
+
 	if(ActivatableObjects.Num() == 0)
 		return nullptr;
 
@@ -195,6 +201,8 @@ TScriptInterface<class IActivatable> AMainCharacter::GetActivatable()
 // Returns true if character has a card of specified color
 bool AMainCharacter::HasDoorcardOfColor(FLinearColor color)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainCharacter::HasDoorcardOfColor"));
+
 	for (TScriptInterface<IPickupable> pickupable : Inventory)
 	{
 		ADoorcard* doorcard = Cast<ADoorcard>(pickupable->_getUObject());
@@ -206,6 +214,8 @@ bool AMainCharacter::HasDoorcardOfColor(FLinearColor color)
 // Returns the number of cards of specified color the character has
 int AMainCharacter::CountDoorcardsOfColor(FLinearColor color)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainCharacter::CountDoorcardsOfColor"));
+
 	int count = 0;
 	for (TScriptInterface<IPickupable> pickupable : Inventory)
 	{
@@ -232,6 +242,8 @@ void AMainCharacter::SetOutline(UObject * object, bool showOutline) const
 }
 void AMainCharacter::SetOutline(AActor* actor, bool showOutline) const
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainCharacter::SetOutline"));
+
 	if (!actor)
 		return;
 
@@ -274,6 +286,8 @@ void AMainCharacter::BeginPlay()
 // Called every frame
 void AMainCharacter::Tick(const float deltaTime)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainCharacter::Tick"));
+
 	Super::Tick(deltaTime);
 
 	// TODO move to a separate function

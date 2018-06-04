@@ -393,6 +393,8 @@ void AMainPlayerController::SetupInputComponent()
 // Called every frame
 void AMainPlayerController::PlayerTick(const float deltaTime)
 {
+	UE_LOG(LogTemp, Warning, TEXT("MainPlayerController::Tick"));
+	
 	Super::PlayerTick(deltaTime);
 
 	// We update LastMousePosition and make sure to enable mouse controls if mouse was moved
