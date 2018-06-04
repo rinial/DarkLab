@@ -1836,7 +1836,6 @@ FRectSpaceStruct AMainGameMode::CreateRandomRoomSpace(FRectSpaceStruct minSpace,
 
 	int area = FMath::RandRange(FMath::Max(minSpace.SizeX * minSpace.SizeY, MinRoomArea), MaxRoomArea);
 
-	// TODO shouldn't randomize for corridors?
 	// We randomize what we make first
 	if (FMath::RandBool())
 	{
@@ -1879,17 +1878,17 @@ FRectSpaceStruct AMainGameMode::CreateRandomRoomSpace(FRectSpaceStruct minSpace,
 
 // Shrinks space to not include specified room but still include minSpace
 // If prioritize horizontal is true, it tries to shrink horizontal part, otherwise vertival
-void AMainGameMode::ShrinkSpace(FRectSpaceStruct & currentSpace, FRectSpaceStruct minSpace, LabRoom * toAvoid, bool prioritizeX)
+bool AMainGameMode::ShrinkSpace(FRectSpaceStruct & currentSpace, FRectSpaceStruct minSpace, LabRoom * toAvoid, bool prioritizeX)
 {
 	if (!toAvoid)
-		return;
+		return false;
 
 	if (prioritizeX)
-		if (!TryShrinkX(currentSpace, minSpace, toAvoid))
-			TryShrinkY(currentSpace, minSpace, toAvoid);
+		return TryShrinkX(currentSpace, minSpace, toAvoid)
+			|| TryShrinkY(currentSpace, minSpace, toAvoid);
 	else
-		if (!TryShrinkY(currentSpace, minSpace, toAvoid))
-			TryShrinkX(currentSpace, minSpace, toAvoid);
+		return TryShrinkY(currentSpace, minSpace, toAvoid)
+			|| TryShrinkX(currentSpace, minSpace, toAvoid);
 }
 bool AMainGameMode::TryShrinkX(FRectSpaceStruct & currentSpace, FRectSpaceStruct minSpace, LabRoom * toAvoid)
 {
@@ -1954,29 +1953,48 @@ bool AMainGameMode::TryShrinkY(FRectSpaceStruct & currentSpace, FRectSpaceStruct
 LabRoom * AMainGameMode::CreateRandomRoom(FRectSpaceStruct minSpace, bool fromPassage, EDirectionEnum direction, bool keepMinimum)
 {
 	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::CreateRandomRoom"));
+
+	if (keepMinimum)
+		return CreateRoom(minSpace);
 	
-	FRectSpaceStruct currentSpace = keepMinimum ? minSpace : CreateRandomRoomSpace(minSpace, fromPassage, direction);
+	FRectSpaceStruct currentSpace = CreateRandomRoomSpace(minSpace, fromPassage, direction);
 	// TArray<LabPassage*> additionalPassages;
 
 	LabRoom* intersected;
 	bool prioritizeX = FMath::RandBool(); // TODO should depend on smth
 	bool swapPriority = false;
 
-	while (!MapSpaceIsFree(true, false, currentSpace, intersected))
+	while (!MapSpaceIsFree(true, false, currentSpace, intersected) && intersected)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("> Shrinking among allocated"));
+
 		// TODO should try to include intersected and add its passages
 		// IsInside()
-
-		ShrinkSpace(currentSpace, minSpace, intersected, prioritizeX);
+		
+		UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: d, sX: %d, sY: %d"), currentSpace.BotLeftX, currentSpace.BotLeftY, currentSpace.SizeX, currentSpace.SizeY);
+		if (!ShrinkSpace(currentSpace, minSpace, intersected, prioritizeX))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("> Failed to shrink"));
+			return nullptr;
+		}
+		UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: d, sX: %d, sY: %d"), currentSpace.BotLeftX, currentSpace.BotLeftY, currentSpace.SizeX, currentSpace.SizeY);
 
 		if (swapPriority)
 			prioritizeX = !prioritizeX;
 		else
 			prioritizeX = FMath::RandBool();
 	}
-	while (!MapSpaceIsFree(false, true, currentSpace, intersected))
+	while (!MapSpaceIsFree(false, true, currentSpace, intersected) && intersected)
 	{
-		ShrinkSpace(currentSpace, minSpace, intersected, prioritizeX);
+		UE_LOG(LogTemp, Warning, TEXT("> Shrinking among spawned"));
+
+		UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: d, sX: %d, sY: %d"), currentSpace.BotLeftX, currentSpace.BotLeftY, currentSpace.SizeX, currentSpace.SizeY);
+		if (!ShrinkSpace(currentSpace, minSpace, intersected, prioritizeX))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("> Failed to shrink"));
+			return nullptr;
+		}
+		UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: d, sX: %d, sY: %d"), currentSpace.BotLeftX, currentSpace.BotLeftY, currentSpace.SizeX, currentSpace.SizeY);
 
 		if (swapPriority)
 			prioritizeX = !prioritizeX;
