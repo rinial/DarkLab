@@ -1971,13 +1971,13 @@ LabRoom * AMainGameMode::CreateRandomRoom(FRectSpaceStruct minSpace, bool fromPa
 		// TODO should try to include intersected and add its passages
 		// IsInside()
 		
-		UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: d, sX: %d, sY: %d"), currentSpace.BotLeftX, currentSpace.BotLeftY, currentSpace.SizeX, currentSpace.SizeY);
+		UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: %d, sX: %d, sY: %d"), currentSpace.BotLeftX, currentSpace.BotLeftY, currentSpace.SizeX, currentSpace.SizeY);
 		if (!ShrinkSpace(currentSpace, minSpace, intersected, prioritizeX))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("> Failed to shrink"));
 			return nullptr;
 		}
-		UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: d, sX: %d, sY: %d"), currentSpace.BotLeftX, currentSpace.BotLeftY, currentSpace.SizeX, currentSpace.SizeY);
+		UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: %d, sX: %d, sY: %d"), currentSpace.BotLeftX, currentSpace.BotLeftY, currentSpace.SizeX, currentSpace.SizeY);
 
 		if (swapPriority)
 			prioritizeX = !prioritizeX;
@@ -1988,13 +1988,13 @@ LabRoom * AMainGameMode::CreateRandomRoom(FRectSpaceStruct minSpace, bool fromPa
 	{
 		UE_LOG(LogTemp, Warning, TEXT("> Shrinking among spawned"));
 
-		UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: d, sX: %d, sY: %d"), currentSpace.BotLeftX, currentSpace.BotLeftY, currentSpace.SizeX, currentSpace.SizeY);
+		UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: %d, sX: %d, sY: %d"), currentSpace.BotLeftX, currentSpace.BotLeftY, currentSpace.SizeX, currentSpace.SizeY);
 		if (!ShrinkSpace(currentSpace, minSpace, intersected, prioritizeX))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("> Failed to shrink"));
 			return nullptr;
 		}
-		UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: d, sX: %d, sY: %d"), currentSpace.BotLeftX, currentSpace.BotLeftY, currentSpace.SizeX, currentSpace.SizeY);
+		UE_LOG(LogTemp, Warning, TEXT("> x: %d, y: %d, sX: %d, sY: %d"), currentSpace.BotLeftX, currentSpace.BotLeftY, currentSpace.SizeX, currentSpace.SizeY);
 
 		if (swapPriority)
 			prioritizeX = !prioritizeX;
