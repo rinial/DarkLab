@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 // TODO delete?
 #include "UObject/ConstructorHelpers.h"
+#include "Components/AudioComponent.h"
 
 // Movement controls
 void AMainPlayerController::MoveUp(const float value)

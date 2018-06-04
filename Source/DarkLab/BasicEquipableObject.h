@@ -28,6 +28,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Activatable")
 	virtual void ActivateObject(AMainCharacter* character) override;
 
+	// Called when equiped
+	UFUNCTION(BlueprintImplementableEvent, Category = "Equipable")
+	void OnEquip();
+	// Called when unequiped
+	UFUNCTION(BlueprintImplementableEvent, Category = "Equipable")
+	void OnUnequip();
+
 // public:
 	// Sets default values
 	// ABasicEquipableObject();

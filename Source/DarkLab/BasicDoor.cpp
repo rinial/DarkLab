@@ -18,20 +18,30 @@ void ABasicDoor::ActivateObject(AMainCharacter * character)
 		else
 			character->GameHUD->ShowHideWarning(true, FText::FromString("You reached the exit, but you don't have a suitable keycard"));
 		UE_LOG(LogTemp, Warning, TEXT("You can't open this door"));
+
+		OnOpenFailed(); // To play sound
+
 		return;
 	}
 
 	if (DoorDriver->GetPlaybackPosition() == 0.0f
 		|| DoorDriver->IsReversing())
 	{
-		if (bIsExit)
+		if (bIsExit) // To play sound
+		{
 			Cast<AMainGameMode>(GetWorld()->GetAuthGameMode())->OnExitOpened(this);
+			OnOpenExit();
+		}
+		else
+			OnOpen(); // To play sound
 
 		// UE_LOG(LogTemp, Warning, TEXT("Opened %s"), *(Name.ToString()));
 		DoorDriver->Play();
 	}
 	else if (!bIsExit && (DoorDriver->GetPlaybackPosition() == DoorDriver->GetTimelineLength() || DoorDriver->IsPlaying())) // We can't close exit door
 	{
+		OnClose(); // To play sound
+
 		// UE_LOG(LogTemp, Warning, TEXT("Closed %s"), *(Name.ToString()));
 		DoorDriver->Reverse();
 	}

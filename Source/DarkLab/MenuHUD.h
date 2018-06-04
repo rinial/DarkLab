@@ -13,9 +13,9 @@ class DARKLAB_API UMenuHUD : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	// Shows overlay during transition
 	UFUNCTION(BlueprintImplementableEvent, Category = "Menu HUD")
 	void OnChangeMap();
-	// Shows overlay during transition
 	UFUNCTION(BlueprintImplementableEvent, Category = "Menu HUD")
 	void OnExit();
 	

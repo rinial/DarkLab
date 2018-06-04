@@ -32,6 +32,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Lighter")
 	bool IsOn();
 
+	// Called when turned on
+	UFUNCTION(BlueprintImplementableEvent, Category = "Lighter")
+	void OnTurnOn();
+	// Called when turned off
+	UFUNCTION(BlueprintImplementableEvent, Category = "Lighter")
+	void OnTurnOff();
+	// Called when trying to turn on but failing
+	UFUNCTION(BlueprintImplementableEvent, Category = "Lighter")
+	void OnTurnOnFailed();
+
 protected:
 	// Lighter's direction and root object
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lighter: Components")

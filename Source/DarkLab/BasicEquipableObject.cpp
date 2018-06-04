@@ -26,6 +26,8 @@ void ABasicEquipableObject::Equip_Implementation(AMainCharacter* character, cons
 	// Finally we activate it to be seen 
 	Execute_SetActive(this, true);
 
+	OnEquip(); // To play sound
+
 	UE_LOG(LogTemp, Warning, TEXT("Equiped %s"), *(Name.ToString()));
 }
 // Called when the object is to be unequiped
@@ -36,6 +38,8 @@ void ABasicEquipableObject::Unequip_Implementation(AMainCharacter* character)
 
 	// No need to destroy it
 	character->EquipedObject = nullptr;
+
+	OnUnequip(); // Doesn't really lead anywhere yet
 
 	UE_LOG(LogTemp, Warning, TEXT("Unequiped %s"), *(Name.ToString()));
 }

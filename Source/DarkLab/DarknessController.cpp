@@ -18,6 +18,10 @@ void ADarknessController::OnPlayerFindsBlackCard()
 {
 	bIsPersistent = true;
 	StartHunting();
+
+	// Adding a small delay to let darkness teleport (if it can)
+	FTimerHandle handler;
+	GetWorldTimerManager().SetTimer(handler, Darkness, &ADarkness::OnEnraged, 1.f, false, 0.2f);
 }
 
 // Teleports to some point closer to character

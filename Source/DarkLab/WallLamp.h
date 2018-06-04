@@ -33,6 +33,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Lamp")
 	bool IsOn();
 
+	// Called when turned on
+	UFUNCTION(BlueprintImplementableEvent, Category = "Lamp")
+	void OnTurnOn();
+	// Called when turned off
+	UFUNCTION(BlueprintImplementableEvent, Category = "Lamp")
+	void OnTurnOff();
+
 private:
 	// Update's the color of the lamp mesh
 	UFUNCTION()

@@ -11,11 +11,18 @@ void ALighter::Use_Implementation()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Toggled %s"), *(Name.ToString()));
 
+		if (!IsOn())
+			OnTurnOn();
+		else
+			OnTurnOff();
+
 		Light->ToggleVisibility();
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT(" %s is out of gas"), *(Name.ToString()));
+
+		OnTurnOnFailed();
 	}
 }
 

@@ -14,7 +14,6 @@ void ABasicPickupableObject::PickUp_Implementation(AMainCharacter * character)
 	Execute_SetActive(this, false);
 
 	Cast<AMainGameMode>(GetWorld()->GetAuthGameMode())->OnPickUp(this);
-	
 
 	// TODO delete
 	ADoorcard* card = Cast<ADoorcard>(this);
@@ -27,6 +26,8 @@ void ABasicPickupableObject::PickUp_Implementation(AMainCharacter * character)
 
 
 	character->Inventory.Add(this);
+	
+	OnPickUp(); // To play sound
 
 	UE_LOG(LogTemp, Warning, TEXT("Picked up %s"), *(Name.ToString()));
 }

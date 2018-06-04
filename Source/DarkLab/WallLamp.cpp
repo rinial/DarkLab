@@ -9,10 +9,18 @@
 // Called when the object is activated
 void AWallLamp::ActivateObject(AMainCharacter * character)
 {
+	if (Color == FLinearColor::Black)
+		return;
+
 	// UE_LOG(LogTemp, Warning, TEXT("Toggled lamp"));
 
+	if (!IsOn())
+		OnTurnOn();
+	else
+		OnTurnOff();
+
 	Light->ToggleVisibility();
-	UpdateMeshColor(Light->IsVisible() ? Color : FLinearColor::Black);
+	UpdateMeshColor(IsOn() ? Color : FLinearColor::Black);
 }
 
 // TODO let some interface define it?

@@ -8,6 +8,8 @@
 // Enables or disables light
 void AFlashlight::Use_Implementation()
 {
+	OnToggle();
+
 	if (PowerLevel > 0.f)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Toggled %s"), *(Name.ToString()));

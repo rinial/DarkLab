@@ -35,6 +35,10 @@ public:
 	// Goes away from last brightest light
 	void IntoDarkness();
 
+	// Called after player finds black card
+	UFUNCTION(BlueprintImplementableEvent, Category = "Darkness")
+	void OnEnraged();
+
 private:
 	// Reenables particles
 	void ReenableParticles();

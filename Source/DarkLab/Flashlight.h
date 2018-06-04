@@ -32,6 +32,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flashlight")
 	bool IsOn();
 
+	// Called when trying to turn on/off
+	UFUNCTION(BlueprintImplementableEvent, Category = "Flashlight")
+	void OnToggle();
+
 protected:
 	// Flashlight's direction and root object
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flashlight: Components")

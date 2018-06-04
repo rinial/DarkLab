@@ -23,6 +23,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Activatable")
 	virtual void ActivateObject(AMainCharacter* character) override;
 
+	// Called when picked up
+	UFUNCTION(BlueprintImplementableEvent, Category = "Pickupable")
+	void OnPickUp();
+
 public:
 	// Sets default values
 	ABasicPickupableObject();

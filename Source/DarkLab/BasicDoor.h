@@ -21,6 +21,19 @@ public:
 	// Resets to initial state
 	UFUNCTION(BlueprintCallable, Category = "Door")
 	void ResetDoor(bool isExit);
+
+	// Called when opening
+	UFUNCTION(BlueprintImplementableEvent, Category = "Door")
+	void OnOpen();
+	// Called when closing
+	UFUNCTION(BlueprintImplementableEvent, Category = "Door")
+	void OnClose();
+	// Called when opening failed
+	UFUNCTION(BlueprintImplementableEvent, Category = "Door")
+	void OnOpenFailed();
+	// Called when opening exit
+	UFUNCTION(BlueprintImplementableEvent, Category = "Door")
+	void OnOpenExit();
 	
 protected:
 	// Door's direction and root object
