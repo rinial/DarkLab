@@ -17,7 +17,7 @@ FText UGameHUD::GetItem1Info()
 		return FText();
 	
 	TScriptInterface<IPickupable> obj = Character->Inventory[Character->LighterIndex];
-	int power = Cast<ALighter>(obj->_getUObject())->PowerLevel * 100;
+	int power = FMath::CeilToInt(Cast<ALighter>(obj->_getUObject())->PowerLevel * 100.f);
 
 	return FText::FromString("Gas: " + FString::FromInt(power) + "%");
 }
@@ -32,7 +32,7 @@ FText UGameHUD::GetItem2Info()
 		return FText();
 
 	TScriptInterface<IPickupable> obj = Character->Inventory[Character->FlashlightIndex];
-	int power = Cast<AFlashlight>(obj->_getUObject())->PowerLevel * 100;
+	int power = FMath::CeilToInt(Cast<AFlashlight>(obj->_getUObject())->PowerLevel * 100.f);
 
 	return FText::FromString("Power: " + FString::FromInt(power) + "%");
 }

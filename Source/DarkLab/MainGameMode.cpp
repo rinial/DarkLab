@@ -2497,7 +2497,7 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 					// color = FLinearColor::FromSRGBColor(FColor(30, 144, 239));
 
 					color = RandColor();
-					while (color == FLinearColor::White)
+					while (color == FLinearColor::White || (color == FLinearColor::Black && VisitedOverall < MinVisitedBeforeBlackDoorcardCanSpawn))
 						color = RandColor();
 				}
 				EDirectionEnum direction = RandDirection();
@@ -2542,7 +2542,7 @@ TArray<AActor*> AMainGameMode::FillRoom(LabRoom* room, int minNumOfLampsOverride
 }
 
 // Activates all lamps in a single room
-void AMainGameMode::ActivateRoomLamps(LabRoom * room)
+void AMainGameMode::ActivateRoomLamps(LabRoom * room, bool forceAll)
 {
 	UE_LOG(LogTemp, Warning, TEXT("MainGameMode::ActivateRoomLamps"));
 
@@ -2572,7 +2572,7 @@ void AMainGameMode::ActivateRoomLamps(LabRoom * room)
 	{
 		bool turnedOffOne = false;
 		bool atLeastOneLampLeft = false;
-		bool turnOffAll = RandBool(AllLampsInRoomTurnOffProbability);
+		bool turnOffAll = forceAll || RandBool(AllLampsInRoomTurnOffProbability);
 		for (TScriptInterface<IDeactivatable> obj : SpawnedRoomObjects[room])
 		{
 			AWallLamp* lamp = Cast<AWallLamp>(obj->_getUObject());
@@ -2701,11 +2701,24 @@ void AMainGameMode::ExpandInDepth(LabRoom * start, int depth)
 		if (CanReachUnexpanded(start))
 			break;
 
+		// Disable nearby lamps
+		if (expandTries == MaxExpandTriesBeforeDisablingLights + 1)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("> !!! Disabled a lot of lamps"));
+			
+			// TODO should not turn off ALL lamps
+			for (int i = RoomsWithLampsOn.Num() - 1; i >= 0; --i)
+			{
+				LabRoom* room = RoomsWithLampsOn[i];
+				ActivateRoomLamps(room, true);
+			}
+		}
+
 		if (expandTries <= MaxExpandTriesOverall)
 		{
 			// UE_LOG(LogTemp, Warning, TEXT("> Try %d"), expandTries);
 
-			if (expandTries >= MinExpandTriesBeforeReshaping)
+			if (expandTries > MinExpandTriesBeforeReshaping)
 				ReshapeAllDarkness(); // We do his to prevend being stuck
 			// ExpandInDepth(start, depth + expandTries / 2, nullptr, true);
 			ExpandInDepth(start, depth, nullptr, true);

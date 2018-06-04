@@ -260,7 +260,7 @@ protected:
 	TArray<AActor*> FillRoom(LabRoom* room, int minNumOfLampsOverride = 0);
 
 	// Activates all lamps in a single room
-	void ActivateRoomLamps(LabRoom* room);
+	void ActivateRoomLamps(LabRoom* room, bool forceAll = false);
 
 	// Returns true if unexpanded rooms are reachable from here
 	bool CanReachUnexpanded(LabRoom* start, TArray<LabRoom*>& checkedRooms);
@@ -350,7 +350,8 @@ protected:
 	static const int NormalDoorWidth = 4; // Can't be lower than 2
 	static const int BigDoorWidth = 6;
 	static const int ExitDoorWidth = 8;
-	static const int MinVisitedBeforeExitCanSpawn = 20;
+	static const int MinVisitedBeforeExitCanSpawn = 25;
+	static const int MinVisitedBeforeBlackDoorcardCanSpawn = 15;
 	static const int MinDistanceBetweenPassages = 1; // Can't be lower than 1
 	static const int MinDistanceInsideToPassage = 2; // Maybe it should be 1
 	static const int MinRoomNumOfLamps = 0; 
@@ -359,7 +360,8 @@ protected:
 	static const int MinLampWidth = 1;
 	static const int MaxLampWidth = 2;
 	static const int MaxGenericSpawnTries = 3;
-	static const int MinExpandTriesBeforeReshaping = 3;
+	static const int MinExpandTriesBeforeReshaping = 2;
+	static const int MaxExpandTriesBeforeDisablingLights = 7;
 	static const int MaxExpandTriesOverall = 10;
 	// Probabilities
 	static const float ReshapeDarknessOnEnterProbability;
