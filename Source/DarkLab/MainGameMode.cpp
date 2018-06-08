@@ -2146,10 +2146,13 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room, int desiredNumOfPassa
 	// Room shouldn't be inner side of the exit
 	for (LabPassage* interPas : room->Passages)
 	{
+		if (!interPas)
+			continue;
 		bool interPasIsExit = interPas->bIsDoor && interPas->To == room && interPas->Width == ExitDoorWidth;
 		if (interPasIsExit)
 			return newRooms;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("> Not inner exit"));
 
 	//if (desiredNumOfPassagesOverride < MinRoomNumOfPassages && room->Passages.Num() == 1 && room->Passages[0]->bIsDoor && room->Passages[0]->Color != FLinearColor::White && RandBool(MakeRoomSpecialForCardProbability))
 	//{
@@ -2160,7 +2163,7 @@ TArray<LabRoom*> AMainGameMode::ExpandRoom(LabRoom * room, int desiredNumOfPassa
 	// The number of passages we want to have in the room
 	// These are not just new but overall
 	int desiredNumOfPassages = desiredNumOfPassagesOverride < MinRoomNumOfPassages ?FMath::RandRange(MinRoomNumOfPassages, MaxRoomNumOfPassages) : desiredNumOfPassagesOverride;
-	// UE_LOG(LogTemp, Warning, TEXT("Trying to add %d passages"), desiredNumOfPassages);
+	// UE_LOG(LogTemp, Warning, TEXT("> Trying to add %d passages"), desiredNumOfPassages);
 
 	// Maximum number of tries
 	int maxTries = MaxRoomPassageCreationTriesPerDesired * desiredNumOfPassages;
@@ -2305,49 +2308,61 @@ void AMainGameMode::FixRoom(LabRoom * room, int depth)
 						// else
 						// {
 
-						// If intersected can be deleted
-						if (!((intersected == PlayerRoom || intersected == ActualPlayerRoom))) // && intersected->Passages.Num() <= 1))
+						// We may delete smth and we will have new rooms to fix
+						TArray<LabRoom*> toFix;
+						do
 						{
-							bool noImportantPassages = true;
-							if (!absolutelyUndeleteable)
+							// If intersected can be deleted
+							if (!(intersected == PlayerRoom || intersected == ActualPlayerRoom)) // && intersected->Passages.Num() <= 1))
 							{
-								for (LabPassage* interPassage : intersected->Passages)
+								bool noImportantPassages = true;
+								if (!absolutelyUndeleteable)
 								{
-									if (IsPassageIlluminated(interPassage))
+									for (LabPassage* interPassage : intersected->Passages)
 									{
-										noImportantPassages = false;
-										break;
+										if (IsPassageIlluminated(interPassage))
+										{
+											noImportantPassages = false;
+											break;
+										}
 									}
 								}
-							}
 
-							if (noImportantPassages || absolutelyUndeleteable)
-							{
-								// UE_LOG(LogTemp, Warning, TEXT("> Forced refix"));
-
-								TArray<LabRoom*> toFix;
-								for (LabPassage* interPassage : intersected->Passages)
+								if (noImportantPassages || absolutelyUndeleteable)
 								{
-									if (interPassage->To && interPassage->To != intersected)
-										toFix.Add(interPassage->To);
-									if (interPassage->From && interPassage->From != intersected)
-										toFix.Add(interPassage->From);
-								}
-								PoolRoom(intersected);
+									// UE_LOG(LogTemp, Warning, TEXT("> Forced refix"));
 
-								// We create new room from min space
-								LabRoom* newRoom = CreateRandomRoom(minRoomSpace, true, !passage->To ? passage->GridDirection : GetReverseDirection(passage->GridDirection));
-								if (newRoom)
-									newRoom->AddPassage(passage);
-								for (LabRoom* roomToFix : toFix)
-									FixRoom(roomToFix, depth + 1);
-								if (newRoom)
-									continue;
-								// else delete
+									for (LabPassage* interPassage : intersected->Passages)
+									{
+										if (interPassage->To && interPassage->To != intersected)
+											toFix.Add(interPassage->To);
+										if (interPassage->From && interPassage->From != intersected)
+											toFix.Add(interPassage->From);
+									}
+									// toFix.Remove(room);
+									PoolRoom(intersected);
+
+									// We should exit the do/while cycle at this point but sometimes we don't, cause we may still intersect with something else
+								}
+								else break;
 							}
+							else break;
+						} 
+						while (!MapSpaceIsFree(true, false, minRoomSpace, intersected));
+
+						// If we deleted some room(s) and now space is free
+						if (MapSpaceIsFree(true, false, minRoomSpace, intersected))
+						{
+							// We create new room from min space
+							LabRoom* newRoom = CreateRandomRoom(minRoomSpace, true, !passage->To ? passage->GridDirection : GetReverseDirection(passage->GridDirection));
+							if (newRoom)
+								newRoom->AddPassage(passage);
+							for (LabRoom* roomToFix : toFix)
+								FixRoom(roomToFix, depth + 1);
+							if (newRoom)
+								continue;
+							// else delete
 						}
-						// else delete
-						// }
 						// else delete
 					}
 					// else delete
