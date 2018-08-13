@@ -1,8 +1,6 @@
 # Dark Lab
 
-## Description
-
-*Dark Lab* is my 2018 graduate project. It's a game in a [survival horror](https://en.wikipedia.org/wiki/Survival_horror) genre. In many ways it follows its genre's tropes: 
+*Dark Lab* is a survival horror game. In many ways it follows its genre's tropes: 
 * a player finds himself in a hazardous environment
 * something tries to locate the player and kill him
 * the player explores the lab, looking for a way to escape
@@ -11,17 +9,25 @@
 
 The **main feature** of the *Dark Lab* is the lab itself.
 It will change its layout whenever some part of it is left beyond player's sight.
-Effectively this happens whenever an area is left in the darkness.
+Effectively this happens whenever an area is left unlit in the darkness.
 
-## Main Influencers
+Made with Unreal Engine 4.19.
+
+## How to play
+
+The game is meant to be played with a mouse and a keyboard, though controllers are also supported.
+
+// TODO
+
+## Influencers
 
 * [Darkwood](http://www.darkwoodgame.com)
 * [SCP: Containment Breach](http://www.scpcbgame.com)
 * [Stanley Parable](http://www.stanleyparable.com) *(the looped corridors scene)*
 
-## Technologies
+## Screenshots
 
-[Unreal Engine 4.19](https://www.unrealengine.com/en-US/what-is-unreal-engine-4)
+// TODO
 
 ## Disclamer
 
