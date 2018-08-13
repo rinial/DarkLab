@@ -1,21 +1,31 @@
 # Dark Lab
 
-*Dark Lab* is a survival horror game. In many ways it follows its genre's tropes: 
-* a player finds himself in a hazardous environment
-* something tries to locate the player and kill him
-* the player explores the lab, looking for a way to escape
-* the player encounters various obstacles in his search
-* the player has a limited viewsight obscured by darkness
+**Dark Lab** is a survival horror game. In many ways it follows its genre's tropes: 
+* a player finds himself in a hazardous environment;
+* something tries to locate the player and kill him;
+* the player explores the lab, looking for a way to escape;
+* the player encounters various obstacles in his search;
+* the player has a limited viewsight obscured by darkness.
 
-The **main feature** of the *Dark Lab* is the lab itself.
-It will change its layout whenever some part of it is left beyond player's sight.
-Effectively this happens whenever an area is left unlit in the darkness.
+The **main feature** of the **Dark Lab** is the lab itself. It will change its layout whenever some part of it is left beyond player's sight. Effectively this happens whenever an area is left unlit in the darkness.
 
 Made with Unreal Engine 4.19.
+
+## Where to play
+
+// TODO
 
 ## How to play
 
 The game is meant to be played with a mouse and a keyboard, though controllers are also supported.
+
+* You will be able to move around, pick up and use some items, open doors. While doing so you should avoid the Darkness - the monster inhabiting the corridors of the lab - at all cost.
+* Wherever you move - the lab will change around you, generating in the darkness. Use light to your advantage.
+* Specific controls can be found in the game's help menu.
+
+**The goal:** find a black keycard, reach the exit, unlock it and escape the lab.
+
+## Screenshots
 
 // TODO
 
@@ -24,10 +34,6 @@ The game is meant to be played with a mouse and a keyboard, though controllers a
 * [Darkwood](http://www.darkwoodgame.com)
 * [SCP: Containment Breach](http://www.scpcbgame.com)
 * [Stanley Parable](http://www.stanleyparable.com) *(the looped corridors scene)*
-
-## Screenshots
-
-// TODO
 
 ## Disclamer
 
