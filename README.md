@@ -13,7 +13,14 @@ Made with Unreal Engine 4.19.
 
 ## Where to play
 
-// TODO
+You can download an archive with an executable of the game for Windows from Google Drive: [64-bit](https://drive.google.com/open?id=1o_XpCx8slSd4Haln4bVSN0JU3BrQNqVN), [32-bit](https://drive.google.com/open?id=1SNjXpPtyMc0BVzA_bvfyXoClDsNXa_Uo).  
+Or you can build the game on your own PC, following the instructions below.
+
+## Building
+
+1.  `git clone https://github.com/Ziririn/DarkLab.git`
+2.  Open the project in the Unreal editor.
+3.  Choose **File - Package Project - [*PlatformName*]** and select the desired build folder.
 
 ## How to play
 
