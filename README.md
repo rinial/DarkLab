@@ -27,7 +27,9 @@ The game is meant to be played with a mouse and a keyboard, though controllers a
 
 ## Screenshots
 
-// TODO
+<img src="Screenshots/MainMenu.png" alt="Main menu" width="750"/>
+<img src="Screenshots/Gameplay1.png" alt="Gameplay 1" width="750"/>
+<img src="Screenshots/Gameplay2.png" alt="Gameplay 2" width="750"/>
 
 ## Influencers
 
