@@ -1,4 +1,4 @@
-# Dark Lab (WIP)
+# Dark Lab
 
 ## Description
 
@@ -22,3 +22,13 @@ Effectively this happens whenever an area is left in the darkness.
 ## Technologies
 
 [Unreal Engine 4.19](https://www.unrealengine.com/en-US/what-is-unreal-engine-4)
+
+## Disclamer
+
+The game was written as a university project in 2018. It isn't currently updated or maintained.
+
+## License
+
+Copyright 2018 (C) Jan Fazli
+
+Licensed under the MIT License.
