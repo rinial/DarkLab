@@ -8,10 +8,11 @@
 # Do not ignore current project's `.uproject`.
 !/DarkLab.uproject
 
-# Do not ignore source, config and plugins dirs.
+# Do not ignore source, config, plugins and screenshots dirs.
 !/Source/**
 !/Config/**
 !/Plugins/**
+!/Screenshots/**
 
 # Only allow .uasset and .umap files from /Content dir.
 # They're tracked by git-lfs, don't forget to track other
