@@ -29,6 +29,6 @@ The game was written as a university project in 2018. It isn't currently updated
 
 ## License
 
-Copyright 2018 (C) Jan Fazli
+Copyright 2018 (C) Jan Fazli.
 
 Licensed under the MIT License.
